@@ -1,6 +1,8 @@
 use log::{debug, error, info};
 use walkdir::WalkDir;
 
+use crate::utils::get::*;
+
 use std::path::*;
 
 pub fn query_hosts() -> Vec<String> {
@@ -40,12 +42,12 @@ pub fn query_modules_all() -> Vec<String> {
 }
 
 pub fn query_modules_specific(dir: &str) -> Vec<String> {
-    let path = PathBuf::from(get_path(Paths::Modules)).join(dir).expect("Ordner nicht vorhanden");
+    let path = PathBuf::from(get_path(Paths::Modules)).join(dir);
     WalkDir::new(path)
         .sort_by_file_name()
         .into_iter()
         .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.file_type().is_files())
+        .filter(|entry| entry.file_type().is_file())
         .filter_map(|entry| {
             entry.path().to_str().map(|s| s.to_string())
         })

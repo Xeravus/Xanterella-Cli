@@ -1,8 +1,9 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 
 use crate::daemon::daemon::*;
 use crate::installer::core::*;
 use crate::usb::core::*;
+use crate::config::core::*;
 use crate::utils::core::*;
 use crate::utils::debug::{ListDebug, list_debug};
 
@@ -46,6 +47,37 @@ pub enum Commands {
         #[arg(long = "debug", short = 'd')]
         debug: bool,
     },
+    Config {
+        #[command(subcommand)]
+        subsubcommand: Config,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum Config {
+    List {
+        #[arg(value_enum)]
+        to_list: ToList,
+    },
+    AddHost {
+        name: String,
+        ip: String,
+    },
+    AddModul {
+        name: String,
+        dir: String,
+    },
+    AddProfil {
+        name: String,
+        dir: String,
+    },
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+pub enum ToList {
+    Hosts,
+    Modules,
+    Profiles,
 }
 
 pub async fn cli_parse() {
@@ -78,6 +110,23 @@ pub async fn cli_parse() {
         }
         Commands::Daemon { automate, fast, init, debug } => {
             start_daemon(*automate, *fast, *init, *debug).await;
+        }
+        Commands::Config { subsubcommand } => {
+            match subsubcommand {
+                Config::List { to_list } => {
+                    match to_list {
+                        ToList::Hosts => list_hosts(),
+                        ToList::Modules => list_modules(),
+                        ToList::Profiles => list_profiles(),
+                    }
+                }
+                Config::AddHost { name, ip } => {
+                }
+                Config::AddModul { name, dir } => {
+                }
+                Config::AddProfil { name, dir } => {
+                }
+            }
         }
     }
 }
