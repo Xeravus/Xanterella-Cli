@@ -52,3 +52,79 @@ pub fn config_parse() -> Data {
     let loaded_config: Data = serde_json::from_str(&file_content).unwrap();
     loaded_config
 }
+
+pub fn create_templates_host() {
+    let path = PathBuf::from(get_path(Paths::Config)).join("templates").join("host.nix");
+    let content = 
+        "
+        {
+        config,
+        lib,
+        pkgs,
+        ...
+        }: {
+        imports = [
+        ];
+        networking = {
+        hostName = ;
+        };
+        system = {
+        stateVersion = ;
+        };
+        }
+        ";
+
+    fs::write(path, content).expect("Konnte Datei nicht schreiben");
+}
+
+pub fn create_templates_modul() {
+    let path = PathBuf::from(get_path(Paths::Config)).join("templates").join("modul.nix");
+    let content = 
+        "
+        {
+        config,
+        lib,
+        pkgs,
+        ...
+        }: {
+        options = {
+        xanterella = {
+        };
+        };
+        }
+        ";
+
+    fs::write(path, content).expect("Konnte Datei nicht schreiben");
+}
+
+pub fn create_templates_default() {
+    let path = PathBuf::from(get_path(Paths::Config)).join("templates").join("default.nix");
+    let content = 
+        "
+        {
+        imports = [
+        ];
+        }
+        ";
+
+    fs::write(path, content).expect("Konnte Datei nicht schreiben");
+}
+
+pub fn create_templates_profile() {
+    let path = PathBuf::from(get_path(Paths::Config)).join("templates").join("profile.nix");
+    let content = 
+        "
+        {
+        config,
+        lib,
+        ...
+        }: {
+        config = {
+        xanterella = {
+        };
+        };
+        }
+        ";
+
+    fs::write(path, content).expect("Konnte Datei nicht schreiben");
+}

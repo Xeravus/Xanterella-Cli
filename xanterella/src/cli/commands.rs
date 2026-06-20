@@ -20,6 +20,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     Init,
+    InitTemplates,
     Ping {
         ip: String,
     },
@@ -92,6 +93,9 @@ pub async fn cli_parse() {
     match &cli.command {
         Commands::Init => {
             init();
+        }
+        Commands::InitTemplates => {
+            init_templates();
         }
         Commands::Ping { ip } => {
             ping_full(ip);

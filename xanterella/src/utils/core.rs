@@ -17,5 +17,20 @@ pub fn init() {
     config_create_dir();
     config_create_subdir();
     config_gen_basic();
+    create_templates_host();
+    create_templates_modul();
+    create_templates_default();
+    create_templates_profile();
+    info!("[ OK ] - Init Prozess erfolgreich");
+}
+
+pub fn init_templates() {
+    info!("[ RUN ] - Starte Init Prozess");
+
+    config_create_subdir();
+    create_templates_host();
+    create_templates_modul();
+    create_templates_default();
+    create_templates_profile();
     info!("[ OK ] - Init Prozess erfolgreich");
 }
