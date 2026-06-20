@@ -246,15 +246,16 @@ pub fn get_iso(mode: FlashMode, ip: &str) -> String {
 
             let iso_path = format!("realpath {}/result/iso/*.iso", get_path(Paths::Nixconf));
             let realpath =
-                Command::new("ssh").args(get_sshstring(ip, User::Root)).arg(iso_path).output().unwrap_or_else(|err| {
-                    error!("[ FAILED ] - Konnte den Result Ordner nicht auslesen: {}", err);
-                    process::exit(1);
-                });
+                Command::new("ssh")
+                    .args(get_sshstring(ip, User::Root))
+                    .arg(iso_path)
+                    .output()
+                    .unwrap_or_else(|err| {
+                        error!("[ FAILED ] - Konnte den Result Ordner nicht auslesen: {}", err);
+                        process::exit(1);
+                    });
             if !realpath.status.success() {
-                error!(
-                    "[ FAILED ] - Kontte den Result Ordner nicht auslesen: {}",
-                    String::from_utf8_lossy(&realpath.stderr)
-                );
+                error!("[ FAILED ] - Kontte den Result Ordner nicht auslesen: {}", String::from_utf8_lossy(&realpath.stderr));
                 process::exit(1);
             }
             let output = String::from_utf8_lossy(&realpath.stdout).trim().to_string();

@@ -28,15 +28,3 @@ pub async fn start_daemon(automate: bool, fast: bool, init: bool, debug: bool) {
         //check_for_crylia(*debug);
     }
 }
-
-/*
-pub fn check_for_installer(active_installs: &mut HashSet<String>, automate: bool, fast: bool, debug: bool) {
-    let devices: Taildevices = get_taildevices();
-    for (_nodekey, device) in devices.devices {
-        if device.name == "installer" && device.os == "linux" {
-            let ip = device.ip[0].clone();
-            if !active_installs.contains(&ip) {
-        }
-    }
-}
-*/
