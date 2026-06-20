@@ -6,10 +6,13 @@ use std::collections::HashSet;
 use crate::utils::get::*;
 use crate::installer::core::*;
 
-pub async fn start_daemon(automate: &bool, fast: &bool, init: &bool, debug: &bool) {
+pub async fn start_daemon(automate: bool, fast: bool, init: bool, debug: bool) {
     info!(" [ RUN ] - Starte Daemon");
-    if *debug {
+    if debug {
         info!(" [ OK ] - Daemon im debug Mode");
+    }
+    if init {
+        info!(" [ OK ] - Daemon im init Mode");
     }
 
     let mut interval = time::interval(time::Duration::from_secs(1));
@@ -21,7 +24,7 @@ pub async fn start_daemon(automate: &bool, fast: &bool, init: &bool, debug: &boo
             active_installs.insert(i.clone());
             let _ = sleep(time::Duration::from_secs(10));
             tokio::spawn(async move {
-                daemon_install(*automate, *fast, (*i.clone()).to_string(), *debug)
+                daemon_install(automate, fast, i.clone().to_string(), debug)
             });
         }
         //check_for_crylia(*debug);

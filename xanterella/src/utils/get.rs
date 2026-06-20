@@ -182,7 +182,7 @@ pub fn get_taildevices_specific(devices: Taildevices, name: &str, active_install
         if device.name == name && device.os == "linux" {
             let ip = device.ip[0].clone();
             if !active_installs.contains(&ip) {
-                &mut ips.push(ip.to_owned());
+                let _ = &mut ips.push(ip.to_owned());
             }
         }
     };

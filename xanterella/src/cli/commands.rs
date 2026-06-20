@@ -82,7 +82,7 @@ pub async fn cli_parse() {
             flash_usb(false);
         },
         Commands::Daemon { automate, fast, init, debug } => {
-            start_daemon(automate, fast, init, debug).await;
+            start_daemon(*automate, *fast, *init, *debug).await;
         },
     }
 }
