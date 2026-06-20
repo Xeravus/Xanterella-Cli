@@ -7,6 +7,7 @@ use std::path::*;
 
 pub fn query_hosts() -> Vec<String> {
     WalkDir::new(get_path(Paths::Hosts))
+        .min_depth(1)
         .sort_by_file_name()
         .into_iter()
         .filter_map(|entry| entry.ok())
@@ -19,6 +20,7 @@ pub fn query_hosts() -> Vec<String> {
 
 pub fn query_modules_dirs() -> Vec<String> {
     WalkDir::new(get_path(Paths::Modules))
+        .min_depth(1)
         .sort_by_file_name()
         .into_iter()
         .filter_map(|entry| entry.ok())
@@ -31,6 +33,7 @@ pub fn query_modules_dirs() -> Vec<String> {
 
 pub fn query_modules_all() -> Vec<String> {
     WalkDir::new(get_path(Paths::Modules))
+        .min_depth(1)
         .sort_by_file_name()
         .into_iter()
         .filter_map(|entry| entry.ok())
@@ -44,6 +47,7 @@ pub fn query_modules_all() -> Vec<String> {
 pub fn query_modules_specific(dir: &str) -> Vec<String> {
     let path = PathBuf::from(get_path(Paths::Modules)).join(dir);
     WalkDir::new(path)
+        .min_depth(1)
         .sort_by_file_name()
         .into_iter()
         .filter_map(|entry| entry.ok())
@@ -57,6 +61,7 @@ pub fn query_modules_specific(dir: &str) -> Vec<String> {
 
 pub fn query_profiles() -> Vec<String> {
     WalkDir::new(get_path(Paths::Profiles))
+        .min_depth(1)
         .sort_by_file_name()
         .into_iter()
         .filter_map(|entry| entry.ok())
