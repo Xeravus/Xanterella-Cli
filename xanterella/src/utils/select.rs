@@ -34,7 +34,7 @@ pub fn select_host(hosts: Taildevices) -> String {
 
 pub fn select_drive(target_ip: &str, automate: &bool) -> String {
     let mut options: Vec<String> = vec![];
-    let drives = get_sort_drives(get_drives(&target_ip)).blockdevices;
+    let drives = get_sort_drives(get_drives(target_ip)).blockdevices;
     for i in &drives {
         let input = format!("Name: {:<7} - Size: {}", i.name, i.size);
         options.push(input);

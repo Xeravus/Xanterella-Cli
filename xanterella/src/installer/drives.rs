@@ -9,7 +9,7 @@ pub fn part_efi(drive: &str, debug: &bool, ip: &str) {
     
     if !debug {
         let parted_efi = Command::new("ssh")
-            .arg(get_sshstring(ip, User::Root))
+            .args(get_sshstring(ip, User::Root))
             .arg("parted")
             .arg("-s")
             .arg(drive)
@@ -34,7 +34,7 @@ pub fn part_root(drive: &str, debug: &bool, ip: &str) {
 
     if !debug {
         let parted_root = Command::new("ssh")
-            .arg(get_sshstring(ip, User::Root))
+            .args(get_sshstring(ip, User::Root))
             .arg("parted")
             .arg("-s")
             .arg(drive)
@@ -56,7 +56,7 @@ pub fn format_efi(primdrive: &str, debug: &bool, ip: &str) {
     info!("[ RUN ] - Starte Formatierung von EFI");
     if !debug {
         let mkfs_efi = Command::new("ssh")
-            .arg(get_sshstring(ip, User::Root))
+            .args(get_sshstring(ip, User::Root))
             .arg("mkfs.fat")
             .arg(get_drives_name(primdrive, 1))
             .args(["-F", "32", "-n", "boot"])
@@ -77,7 +77,7 @@ pub fn format_root(primdrive: &str, debug: &bool, ip: &str) {
     info!("[ RUN ] - Starte Formatierung von ROOT");
     if !debug {
         let mkfs_root = Command::new("ssh")
-            .arg(get_sshstring(ip, User::Root))
+            .args(get_sshstring(ip, User::Root))
             .arg("mkfs.ext4")
             .arg(get_drives_name(primdrive, 2))
             .args(["-L", "nixos"])
@@ -98,7 +98,7 @@ pub fn mount_root(primdrive: &str, ip: &str) {
     info!("[ RUN ] - Starte Mounting von root");
 
     let root = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .arg("mount")
         .arg(get_drives_name(primdrive, 2))
         .arg("/mnt")
@@ -118,7 +118,7 @@ pub fn create_boot_dir(ip: &str) {
         info!("[ OK ] - Starte Erstellung des Boot Dir");
 
         let dir = Command::new("ssh")
-            .arg(get_sshstring(ip, User::Root))
+            .args(get_sshstring(ip, User::Root))
             .arg("mkdir")
             .arg("-p")
             .arg("/mnt/boot")
@@ -138,7 +138,7 @@ pub fn mount_boot(primdrive: &str, ip: &str) {
     info!("[ RUN ] - Starte Mounting von root");
 
     let boot = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .arg("mount")
         .arg(get_drives_name(primdrive, 1))
         .arg("/mnt/boot")
