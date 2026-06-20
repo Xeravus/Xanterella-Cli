@@ -12,6 +12,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cargo Check
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check"
+
       - name: Cargo Tests
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test"
 
