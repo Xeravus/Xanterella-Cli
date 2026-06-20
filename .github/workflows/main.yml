@@ -11,6 +11,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        
+      - name: Change Dir
+        uses: cd xanterella
 
       - name: Formatierung prüfen
         run: nix develop .#xanterella --command cargo fmt -- --check
