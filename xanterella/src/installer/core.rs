@@ -1,14 +1,14 @@
 use log::info;
 
-use crate::installer::install::*;
-use crate::installer::file::*;
+use crate::init::core::*;
 use crate::installer::drives::*;
-use crate::utils::git::git_full;
+use crate::installer::file::*;
+use crate::installer::install::*;
 use crate::utils::check::*;
 use crate::utils::core::*;
-use crate::utils::select::*;
 use crate::utils::get::*;
-use crate::init::core::*;
+use crate::utils::git::git_full;
+use crate::utils::select::*;
 
 pub fn remote_install(automate: &bool, fast: &bool, debug: &bool) {
     let target_ip = select_host(get_taildevices());
@@ -68,7 +68,7 @@ pub fn crylia_edit_start(config: String) {
 pub fn crylia_edit_finish() {
     info!("[ RUN ] - Starte Crylia Überarbeitung");
 
-    remove_hardware(); 
+    remove_hardware();
     write_config(edit_config(parse_config(), EditMode::Remove));
     files_alejandra();
     info!("[ OK ] - Crylia Überarbeitung erfolgreich");

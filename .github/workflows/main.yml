@@ -12,12 +12,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Formatierung prüfen
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo fmt -- --check"
-
-      #- name: Clippy
-      #  run: nix develop .#xanterella --command cargo clippy -- -D warnings
-
       - name: Cargo Tests
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test"
 

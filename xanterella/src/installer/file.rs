@@ -1,7 +1,7 @@
-use log::{debug, info, error};
+use log::{debug, error, info};
 
-use std::process::{self, Command};
 use std::fs;
+use std::process::{self, Command};
 
 use crate::utils::get::*;
 
@@ -14,11 +14,10 @@ pub fn create_hardware(config: String) {
     info!("[ RUN ] - Starte Erstellung der Hardware Config für Crylia");
 
     let file_path = format!("{}/hosts/crylia/hardware-configuration.nix", get_path(Paths::Nixconf));
-    fs::write(&file_path, &config)
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte die Hardware Config nicht schreiben: {}", err); 
-            process::exit(1); 
-        });
+    fs::write(&file_path, &config).unwrap_or_else(|err| {
+        error!("[ FAILED ] - Konnte die Hardware Config nicht schreiben: {}", err);
+        process::exit(1);
+    });
     info!("[ OK ] - Erstellung der Hardware Config für Crylia erfolgreich");
 }
 
@@ -26,11 +25,10 @@ pub fn remove_hardware() {
     info!("[ RUN ] - Starte Löschung von der Hardware Config von Crylia");
 
     let file_path = format!("{}/hosts/crylia/hardware-configuration.nix", get_path(Paths::Nixconf));
-    fs::remove_file(file_path)
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte die Hardware Config nicht löschen: {}", err); 
-            process::exit(1); 
-        });
+    fs::remove_file(file_path).unwrap_or_else(|err| {
+        error!("[ FAILED ] - Konnte die Hardware Config nicht löschen: {}", err);
+        process::exit(1);
+    });
     info!("[ OK ] - Löschung von der Hardware Config von Crylia erfolgreic erfolgreichh");
 }
 
@@ -38,11 +36,10 @@ pub fn parse_config() -> String {
     info!("[ RUN ] - Starte Parse für den Inhalt von Crylia");
 
     let file_path = format!("{}/hosts/crylia/configuration.nix", get_path(Paths::Nixconf));
-    let content = fs::read_to_string(file_path)
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte die Config von Crylia nicht auslesen: {}", err); 
-            process::exit(1); 
-        });
+    let content = fs::read_to_string(file_path).unwrap_or_else(|err| {
+        error!("[ FAILED ] - Konnte die Config von Crylia nicht auslesen: {}", err);
+        process::exit(1);
+    });
     info!("[ OK ] - Parse erfolgreich");
     content
 }
@@ -60,15 +57,17 @@ pub fn edit_config(content: String, mode: EditMode) -> String {
                 "{}
                 imports = [
                 ./hardware-configuration.nix
-                {}", anfang, ende);
+                {}",
+                anfang, ende
+            );
             debug!("Neuer Inhalt: \n{}", whole_content);
             whole_content
-        },
+        }
         EditMode::Remove => {
             let whole_content = content.replace("    ./hardware-configuration.nix\n", "");
             debug!("Neuer Inhalt: \n{}", whole_content);
             whole_content
-        },
+        }
     };
     info!("[ OK ] - Inhalt überarbeitung erfolgreich");
     result
@@ -78,28 +77,27 @@ pub fn write_config(content: String) {
     info!("[ RUN ] - Starte Schreibprozess von der Hardware Config von Crylia");
 
     let file_path = format!("{}/hosts/crylia/configuration.nix", get_path(Paths::Nixconf));
-    fs::write(file_path, content)
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte die Config von Crylia nicht überschreiben: {}", err); 
-            process::exit(1); 
-        });
+    fs::write(file_path, content).unwrap_or_else(|err| {
+        error!("[ FAILED ] - Konnte die Config von Crylia nicht überschreiben: {}", err);
+        process::exit(1);
+    });
     info!("[ OK ] - Schreibprozess von der Hardware Config von Crylia erfolgreich");
 }
 
 pub fn files_alejandra() {
     info!("[ RUN ] - Starte Alejandra");
 
-    let alejandra = Command::new("alejandra")
-        .arg(".")
-        .current_dir(get_path(Paths::Nixconf))
-        .output()
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte Alejandra nicht starten: {}", err); 
-            process::exit(1); 
+    let alejandra =
+        Command::new("alejandra").arg(".").current_dir(get_path(Paths::Nixconf)).output().unwrap_or_else(|err| {
+            error!("[ FAILED ] - Konnte Alejandra nicht starten: {}", err);
+            process::exit(1);
         });
     debug!("Alejandra: \n{}", String::from_utf8_lossy(&alejandra.stdout));
     if !alejandra.status.success() {
-        error!("[ FAILED ] - Konnte die Dateien mit Alejandra nicht formatieren: {}", String::from_utf8_lossy(&alejandra.stderr));
+        error!(
+            "[ FAILED ] - Konnte die Dateien mit Alejandra nicht formatieren: {}",
+            String::from_utf8_lossy(&alejandra.stderr)
+        );
         process::exit(1);
     }
     info!("[ OK ] - Alejandra erfolgreich");
@@ -112,9 +110,9 @@ mod tests {
     fn test_edit_config_add_hardware() {
         let dummy_config = String::from("\n{\n  imports = [\n    ./module.nix\n  ];\n}\n");
         let result = edit_config(dummy_config, EditMode::Add);
-        
+
         assert!(result.contains("./hardware-configuration.nix"));
-        assert!(result.contains("imports = [")); 
+        assert!(result.contains("imports = ["));
     }
 
     #[test]
@@ -126,4 +124,3 @@ mod tests {
         assert!(result.contains("./module.nix"));
     }
 }
-

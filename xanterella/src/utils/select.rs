@@ -1,9 +1,9 @@
-use log::{debug, error};
 use inquire::Select;
+use log::{debug, error};
 use strum::IntoEnumIterator;
 
-use std::process;
 use std::fmt::Display;
+use std::process;
 
 use crate::utils::get::*;
 
@@ -22,14 +22,14 @@ pub fn select_host(hosts: Taildevices) -> String {
                 let clean_ip: &str = ip.strip_prefix("IP: ").unwrap_or(ip).trim();
                 output_ip = String::from(clean_ip);
             }
-        },
+        }
         Err(e) => {
             error!("[ FAILED ] - Konnte den Input nicht auslesen: {}", e);
             process::exit(1);
         }
     }
     debug!("Output IP: {}", output_ip);
-    output_ip 
+    output_ip
 }
 
 pub fn select_drive(target_ip: &str, automate: &bool) -> String {
@@ -48,7 +48,7 @@ pub fn select_drive(target_ip: &str, automate: &bool) -> String {
                     let clean_name: &str = name.strip_prefix("Name: ").unwrap_or(name).trim();
                     output_name = String::from(clean_name);
                 }
-            },
+            }
             Err(e) => {
                 error!("[ FAILED ] - Konnte den Input nicht auslesen: {}", e);
                 process::exit(1);
@@ -62,7 +62,7 @@ pub fn select_drive(target_ip: &str, automate: &bool) -> String {
 }
 
 pub fn select_mode<T>(msg: &str) -> T
-where 
+where
     T: IntoEnumIterator + Display + Clone,
 {
     let options: Vec<T> = T::iter().collect();
