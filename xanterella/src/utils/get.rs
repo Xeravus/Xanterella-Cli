@@ -43,6 +43,9 @@ pub struct DeviceInfo {
 pub enum Paths {
     Home,
     Nixconf,
+    Hosts,
+    Modules,
+    Profiles,
     Config,
 }
 
@@ -208,10 +211,16 @@ pub fn get_drives_name(primdrive: &str, number: i8) -> String {
 pub fn get_path(option: Paths) -> String {
     let home = env::var("HOME").expect("[ FAILED ] - Konnte die Home Variable nicht extrahieren");
     let nixconfig = PathBuf::from(&home).join("xanterella").join("config");
+    let nixhosts = PathBuf::from(&nixconfig).join("hosts");
+    let nixmodules = PathBuf::from(&nixconfig).join("modules");
+    let nixprofiles = PathBuf::from(&nixconfig).join("profiles");
     let config = PathBuf::from(&home).join(".config").join("xanterella");
     let result: PathBuf = match option {
         Paths::Home => home.into(),
         Paths::Nixconf => nixconfig,
+        Paths::Hosts => nixhosts,
+        Paths::Modules => nixmodules,
+        Paths::Profiles => nixprofiles,
         Paths::Config => config,
     };
     result.to_str().expect("[ FAILED ] - Gen Path ist fehlgeschlagen").to_string()
