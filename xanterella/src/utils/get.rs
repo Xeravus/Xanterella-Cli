@@ -399,7 +399,17 @@ mod tests {
                     "type": "disk"
                 },
                 {
-                    "name": "sda1",
+                    "name": "sdb1",
+                    "size": "800G",
+                    "type": "part"
+                },
+                {
+                    "name": "sdc1",
+                    "size": "600G",
+                    "type": "part"
+                },
+                {
+                    "name": "sdd1",
                     "size": "400G",
                     "type": "part"
                 }
@@ -407,11 +417,12 @@ mod tests {
         }"#;
         let parsed: Drives = serde_json::from_str(mock_json).expect("Konnte das JSON nicht formatieren");
         let sorted: Drives = get_sort_drives(parsed);
-        assert_eq!(sorted.blockdevices.len(), 3);
+        assert_eq!(sorted.blockdevices.len(), 5);
         assert_eq!(sorted.blockdevices[0].name, "nvme0n1");
         assert_eq!(sorted.blockdevices[0].size, "1T");
         assert_eq!(sorted.blockdevices[0].device_type, "disk");
-        assert_eq!(sorted.blockdevices[2].name, "sda1");
-        assert_eq!(sorted.blockdevices[2].device_type, "part");
+        assert_eq!(sorted.blockdevices[1].name, "sdb1");
+        assert_eq!(sorted.blockdevices[1].device_type, "part");
+        assert_eq!(sorted.blockdevices[4].name, "sdd1");
     }
 }
