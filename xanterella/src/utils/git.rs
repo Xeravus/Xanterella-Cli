@@ -1,4 +1,4 @@
-use log::{debug, info, error};
+use log::{debug, error, info};
 
 use std::process::{self, Command};
 
@@ -12,14 +12,13 @@ pub enum Branches {
 pub fn git_full(cm_msg: String) {
     info!("[ RUN ] - Starte Git Prozedur");
 
-    let diff = Command::new("git")
-        .args(["diff", "--stat"])
-        .current_dir(get_path(Paths::Nixconf))
-        .output()
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte Git nicht starten: {}", err); 
-            process::exit(1); 
-        });
+    let diff =
+        Command::new("git").args(["diff", "--stat"]).current_dir(get_path(Paths::Nixconf)).output().unwrap_or_else(
+            |err| {
+                error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
+                process::exit(1);
+            },
+        );
     if !diff.status.success() {
         error!("[ FAILED ] - Git diff hat nicht funktioniert: {}", String::from_utf8_lossy(&diff.stderr));
         process::exit(1);
@@ -27,13 +26,10 @@ pub fn git_full(cm_msg: String) {
 
     debug!("{}", String::from_utf8_lossy(&diff.stdout));
 
-    let add = Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(get_path(Paths::Nixconf))
-        .output()
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte Git nicht starten: {}", err); 
-            process::exit(1); 
+    let add =
+        Command::new("git").args(["add", "-A"]).current_dir(get_path(Paths::Nixconf)).output().unwrap_or_else(|err| {
+            error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
+            process::exit(1);
         });
     if !add.status.success() {
         error!("[ FAILED ] - Git add hat nicht funktioniert: {}", String::from_utf8_lossy(&add.stderr));
@@ -46,9 +42,9 @@ pub fn git_full(cm_msg: String) {
         .args(["commit", "-am", &cm_msg])
         .current_dir(get_path(Paths::Nixconf))
         .output()
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte Git nicht starten: {}", err); 
-            process::exit(1); 
+        .unwrap_or_else(|err| {
+            error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
+            process::exit(1);
         });
     if !commit.status.success() {
         error!("[ FAILED ] - Git commit hat nicht funktioniert: {}", String::from_utf8_lossy(&commit.stderr));
@@ -66,9 +62,9 @@ pub fn git_checkout(branch: Branches) {
                 .arg("xanterella")
                 .current_dir(get_path(Paths::Nixconf))
                 .output()
-                .unwrap_or_else(|err| { 
-                    error!("[ FAILED ] - Konnte Git nicht starten: {}", err); 
-                    process::exit(1); 
+                .unwrap_or_else(|err| {
+                    error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
+                    process::exit(1);
                 });
             if !checkout.status.success() {
                 error!("[ FAILED ] - Konnte die Branch nicht wechseln");
@@ -78,27 +74,30 @@ pub fn git_checkout(branch: Branches) {
                     .args(["checkout", "-b", "xanterella"])
                     .current_dir(get_path(Paths::Nixconf))
                     .output()
-                    .unwrap_or_else(|err| { 
-                        error!("[ FAILED ] - Konnte Git nicht starten: {}", err); 
-                        process::exit(1); 
+                    .unwrap_or_else(|err| {
+                        error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
+                        process::exit(1);
                     });
                 if !create.status.success() {
-                    error!("[ FAILED ] - Fehler beim erstellen der Branch: Xanterella: {}", String::from_utf8_lossy(&create.stderr));
+                    error!(
+                        "[ FAILED ] - Fehler beim erstellen der Branch: Xanterella: {}",
+                        String::from_utf8_lossy(&create.stderr)
+                    );
                     process::exit(1);
                 }
 
                 info!("[ OK ] - Branch xanterella erstellt und gewechselt");
             }
-        },
+        }
         Branches::Main => {
             let checkout = Command::new("git")
                 .arg("checkout")
                 .arg("main")
                 .current_dir(get_path(Paths::Nixconf))
                 .output()
-                .unwrap_or_else(|err| { 
-                    error!("[ FAILED ] - Konnte Git nicht starten: {}", err); 
-                    process::exit(1); 
+                .unwrap_or_else(|err| {
+                    error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
+                    process::exit(1);
                 });
             if !checkout.status.success() {
                 error!("[ FAILED ] - Konnte die Branch nicht wechseln");
@@ -108,29 +107,34 @@ pub fn git_checkout(branch: Branches) {
                     .args(["checkout", "-b", "main"])
                     .current_dir(get_path(Paths::Nixconf))
                     .output()
-                    .unwrap_or_else(|err| { 
-                        error!("[ FAILED ] - Konnte Git nicht starten: {}", err); 
-                        process::exit(1); 
+                    .unwrap_or_else(|err| {
+                        error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
+                        process::exit(1);
                     });
                 if !create.status.success() {
-                    error!("[ FAILED ] - Fehler beim erstellen der Branch: Main: {}", String::from_utf8_lossy(&create.stderr));
+                    error!(
+                        "[ FAILED ] - Fehler beim erstellen der Branch: Main: {}",
+                        String::from_utf8_lossy(&create.stderr)
+                    );
                     process::exit(1);
                 }
 
                 info!("[ OK ] - Branch main erstellt und gewechselt");
             }
-        },
+        }
     }
 }
 
-
 pub fn git_auto_pr(added_host: String) {
     let title_message = format!("Xanterella: Added Host: {}", added_host);
-    let body_message = format!("
+    let body_message = format!(
+        "
         Xanterella hat einen neuen Host hinzugefügt
         Added Host: {}
         Diese Pull Request wurde durch 'git_auto_pr' getriggert
-        ", added_host);
+        ",
+        added_host
+    );
     git_checkout(Branches::Xanterella);
 
     let pr = Command::new("gh")
@@ -142,9 +146,9 @@ pub fn git_auto_pr(added_host: String) {
         .arg("--no-maintainer-edit")
         .current_dir(get_path(Paths::Nixconf))
         .output()
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte Git nicht starten: {}", err); 
-            process::exit(1); 
+        .unwrap_or_else(|err| {
+            error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
+            process::exit(1);
         });
     if !pr.status.success() {
         error!("[ FAILED ] - Fehler beim erstellen der PR: {}", String::from_utf8_lossy(&pr.stderr));

@@ -1,8 +1,8 @@
+use log::{error, info};
 use serde::{Deserialize, Serialize};
-use log::{info, error};
 
-use std::path::*; 
 use std::fs;
+use std::path::*;
 use std::process::{self};
 
 use crate::utils::get::*;
@@ -16,14 +16,12 @@ pub struct Data {
 pub fn config_create_dir() {
     info!("[ RUN ] - Erstelle Config Dir");
 
-    fs::create_dir_all(get_path(Paths::Config))
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte den Config Ordner nicht erstellen: {}", err); 
-            process::exit(1); 
-        });
+    fs::create_dir_all(get_path(Paths::Config)).unwrap_or_else(|err| {
+        error!("[ FAILED ] - Konnte den Config Ordner nicht erstellen: {}", err);
+        process::exit(1);
+    });
     info!("[ OK ] - Config Dir erstellt");
 }
-
 
 pub fn config_gen_basic() {
     info!("[ RUN ] - Erstelle config.json");

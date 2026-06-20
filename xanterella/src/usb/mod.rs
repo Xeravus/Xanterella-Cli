@@ -1,2 +1,2 @@
-pub mod flash;
 pub mod core;
+pub mod flash;

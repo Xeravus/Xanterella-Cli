@@ -1,4 +1,4 @@
-use log::{info, error};
+use log::{error, info};
 
 use std::process::{self, Command};
 
@@ -67,7 +67,7 @@ pub fn init_github(ip: &str) {
     } else {
         let mut c = Command::new("gh");
         c.args(["auth", "login", "--hostname", "github.com", "-w", "-p", "https"]);
-        c 
+        c
     };
     let status = gh.status().unwrap_or_else(|err| {
         error!("[ FAILED ] - Konnte gh nicht starten: {}", err);
@@ -88,9 +88,9 @@ pub fn init_pull_xanterella(ip: &str) {
         .args(["git", "pull", "https://github.com/Xeravus/Xanterella.git"])
         .current_dir(get_path(Paths::Home))
         .output()
-        .unwrap_or_else(|err| { 
-            error!("[ FAILED ] - Konnte das Repo nicht pullen: {}", err); 
-            process::exit(1); 
+        .unwrap_or_else(|err| {
+            error!("[ FAILED ] - Konnte das Repo nicht pullen: {}", err);
+            process::exit(1);
         });
     if !pull.status.success() {
         error!("[ FAILED ] - Konnte das Repo nicht pullen: {}", String::from_utf8_lossy(&pull.stderr));

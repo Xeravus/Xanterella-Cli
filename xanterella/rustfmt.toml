@@ -1,0 +1,12 @@
+reorder_imports = true
+group_imports = "StdExternalCrate"
+
+max_width = 120
+
+fn_params_layout = "Compressed"
+
+use_small_heuristics = "Max"
+
+format_strings = false
+format_macro_matchers = false
+array_width = 120

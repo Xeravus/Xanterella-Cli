@@ -1,10 +1,10 @@
-use log::{info};
+use log::info;
 use tokio::time::{self, sleep};
 
 use std::collections::HashSet;
 
-use crate::utils::get::*;
 use crate::installer::core::*;
+use crate::utils::get::*;
 
 pub async fn start_daemon(automate: bool, fast: bool, init: bool, debug: bool) {
     info!(" [ RUN ] - Starte Daemon");
@@ -23,9 +23,7 @@ pub async fn start_daemon(automate: bool, fast: bool, init: bool, debug: bool) {
             info!("[ OK ] - Installer gefunden: {}", i);
             active_installs.insert(i.clone());
             let _ = sleep(time::Duration::from_secs(10));
-            tokio::spawn(async move {
-                daemon_install(automate, fast, i.clone().to_string(), debug)
-            });
+            tokio::spawn(async move { daemon_install(automate, fast, i.clone().to_string(), debug) });
         }
         //check_for_crylia(*debug);
     }
