@@ -1,0 +1,28 @@
+name: Xanterella-Cli CI
+
+on:
+  pull_request:
+    branches: [ "stable" ]
+
+jobs:
+  build-and-test:
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Change Dir
+        uses: cd xanterella
+
+      - name: Formatierung prüfen
+        run: nix develop .#xanterella --command cargo fmt -- --check
+
+      #- name: Clippy
+      #  run: nix develop .#xanterella --command cargo clippy -- -D warnings
+
+      - name: Cargo Tests
+        run: nix develop .#xanterella --command cargo test
+
+      - name: Cargo Build
+        run: nix build .#xanterella
