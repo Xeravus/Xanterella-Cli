@@ -11,18 +11,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
-      - name: Change Dir
-        uses: cd xanterella
 
       - name: Formatierung prüfen
-        run: nix develop .#xanterella --command cargo fmt -- --check
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo fmt -- --check"
 
       #- name: Clippy
       #  run: nix develop .#xanterella --command cargo clippy -- -D warnings
 
       - name: Cargo Tests
-        run: nix develop .#xanterella --command cargo test
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test"
 
       - name: Cargo Build
         run: nix build .#xanterella
