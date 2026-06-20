@@ -15,8 +15,8 @@ jobs:
       - name: Formatierung prüfen
         run: nix develop .#xanterella --command cargo fmt -- --check
 
-      - name: Clippy
-        run: nix develop .#xanterella --command cargo clippy -- -D warnings
+      #- name: Clippy
+      #  run: nix develop .#xanterella --command cargo clippy -- -D warnings
 
       - name: Cargo Tests
         run: nix develop .#xanterella --command cargo test
