@@ -15,6 +15,7 @@ pub fn init() {
     info!("[ RUN ] - Starte Init Prozess");
 
     config_create_dir();
+    config_create_subdir();
     config_gen_basic();
     info!("[ OK ] - Init Prozess erfolgreich");
 }
