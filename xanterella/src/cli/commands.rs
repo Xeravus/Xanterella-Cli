@@ -12,7 +12,7 @@ use crate::utils::debug::{ListDebug, list_debug};
 pub struct Cli {
     #[command(subcommand)]
     command: Commands,
-    #[arg(long, global = true)]
+    #[arg(short = 'v', long = "verbose", global = true)]
     pub verbose: bool,
 }
 
