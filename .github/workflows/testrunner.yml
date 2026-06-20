@@ -1,0 +1,17 @@
+name: Runner Test
+
+# Erlaubt es dir, den Workflow manuell im Browser über einen Button zu starten
+on: workflow_dispatch 
+
+jobs:
+  sag-hallo:
+    # Hier nutzen wir genau die Labels, die du in deiner config definiert hast!
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: System-Check
+        run: |
+          echo "Hallo von Lutik! Der Runner funktioniert!"
+          echo "Architektur: $(uname -m)"
+          echo "Installierte Nix-Version:"
+          nix --version
