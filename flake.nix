@@ -1,5 +1,5 @@
 {
-  description = "Monorepo Flake für mehrere Rust Projekt";
+  description = "Flake für das Cli von Xanterella";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
@@ -15,50 +15,6 @@
     naerskLib = pkgs.callPackage naersk {};
   in {
     devShells."x86_64-linux" = {
-      parser = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          cargo
-          rustc
-          rustfmt
-          clippy
-          rust-analyzer
-          glib
-          tokei
-        ];
-        nativeBuildInputs = [
-          pkgs.pkg-config
-        ];
-        env.RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
-      };
-      switcher = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          cargo
-          rustc
-          rustfmt
-          clippy
-          rust-analyzer
-          glib
-          tokei
-        ];
-        nativeBuildInputs = [
-          pkgs.pkg-config
-        ];
-        env.RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
-      };
-      timetracker = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          cargo
-          rustc
-          rustfmt
-          clippy
-          rust-analyzer
-          tokei
-        ];
-        nativeBuildInputs = [
-          pkgs.pkg-config
-        ];
-        env.RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
-      };
       xanterella = pkgs.mkShell {
         buildInputs = with pkgs; [
           cargo
@@ -75,33 +31,6 @@
       };
     };
     packages."x86_64-linux" = {
-      parser = naerskLib.buildPackage {
-        src = ./nix-parser/.;
-        buildInputs = [
-          pkgs.glib
-        ];
-        nativeBuildInputs = [
-          pkgs.pkg-config
-        ];
-      };
-      switcher = naerskLib.buildPackage {
-        src = ./nix-switcher/.;
-        buildInputs = [
-          pkgs.pkg-config
-        ];
-        nativeBuildInputs = [
-          pkgs.pkg-config
-        ];
-      };
-      timetracker = naerskLib.buildPackage {
-        src = ./nix-timetracker/.;
-        buildInputs = [
-          pkgs.pkg-config
-        ];
-        nativeBuildInputs = [
-          pkgs.pkg-config
-        ];
-      };
       xanterella = naerskLib.buildPackage {
         src = ./xanterella/.;
         buildInputs = [

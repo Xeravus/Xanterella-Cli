@@ -42,6 +42,8 @@ pub enum Commands {
         automate: bool,
         #[arg(long = "fast", short = 'f')]
         fast: bool,
+        #[arg(long = "init", short = 'i')]
+        init: bool,
         #[arg(long = "debug", short = 'd')]
         debug: bool,
     },
@@ -79,8 +81,8 @@ pub async fn cli_parse() {
         Commands::Flash => {
             flash_usb(false);
         },
-        Commands::Daemon { automate, fast, debug } => {
-            start_daemon(automate, fast, debug).await;
+        Commands::Daemon { automate, fast, init, debug } => {
+            start_daemon(automate, fast, init, debug).await;
         },
     }
 }

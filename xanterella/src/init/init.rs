@@ -9,7 +9,7 @@ pub fn init_git_email(ip: &str) {
 
     let mut git = if ip != "127.0.0.1" {
         let mut c = Command::new("ssh");
-        c.arg(get_sshstring(ip, User::Cato));
+        c.args(get_sshstring(ip, User::Cato));
         c.args(["git", "config", "--global", "user.email", "cato.jenisch@gmail.com"]);
         let _ = c.output();
         c
@@ -35,7 +35,7 @@ pub fn init_git_name(ip: &str) {
 
     let mut git = if ip != "127.0.0.1" {
         let mut c = Command::new("ssh");
-        c.arg(get_sshstring(ip, User::Cato));
+        c.args(get_sshstring(ip, User::Cato));
         c.args(["git", "config", "--global", "user.name", "Xeravus"]);
         let _ = c.output();
         c
@@ -61,7 +61,7 @@ pub fn init_github(ip: &str) {
 
     let mut gh = if ip != "127.0.0.1" {
         let mut c = Command::new("ssh");
-        c.arg(get_sshstring(ip, User::Cato));
+        c.args(get_sshstring(ip, User::Cato));
         c.args(["gh", "auth", "login", "--hostname", "github.com", "-w", "-p", "https"]);
         c
     } else {
@@ -84,7 +84,7 @@ pub fn init_pull_xanterella(ip: &str) {
     info!("[ RUN ] - Pull Xanterella Git Repo");
 
     let pull = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .args(["git", "pull", "https://github.com/Xeravus/Xanterella.git"])
         .current_dir(get_path(Paths::Home))
         .output()

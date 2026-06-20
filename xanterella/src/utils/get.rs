@@ -2,6 +2,7 @@ use log::{debug, info, error};
 use serde::{Deserialize};
 
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::process::{self, Command};
 use std::env;
 use std::path::*;
@@ -54,7 +55,7 @@ pub fn get_hardware(ip: &str) -> String {
     info!("[ RUN ] - Generiere Hardware");
 
     let ssh = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .arg("nixos-generate-config --no-filesystems --show-hardware-config")
         .output()
         .unwrap_or_else(|err| { 
@@ -78,7 +79,7 @@ pub fn get_drives(ip: &str) -> Drives {
     let parsed_drives;
     if ip != "127.0.0.1" {
         let lsblk = Command::new("ssh")
-            .arg(get_sshstring(ip, User::Root))
+            .args(get_sshstring(ip, User::Root))
             .arg("lsblk")
             .arg("--json")
             .output()
@@ -90,7 +91,7 @@ pub fn get_drives(ip: &str) -> Drives {
             error!("[ FAILED ] - Fehler beim Auslesen der als root Partitionen: {}", String::from_utf8_lossy(&lsblk.stderr));
 
             let lsblk1 = Command::new("ssh")
-                .arg(get_sshstring(ip, User::Cato))
+                .args(get_sshstring(ip, User::Cato))
                 .arg("lsblk")
                 .arg("--json")
                 .output()
@@ -175,18 +176,31 @@ pub fn get_taildevices() -> Taildevices {
         })
 }
 
-pub fn get_sshstring(ip: &str, user: User) -> String {
-    let result = match user {
-        User::Root => {
-            format!("root@{}", ip)
-            //format!("root@{} -o StrictHostKeyChecking=no UserKnownHostsFile=/dev/null", ip)
-        },
-        User::Cato => {
-            format!("cato@{}", ip)
-            //format!("cato@{} -o StrictHostKeyChecking=no UserKnownHostsFile=/dev/null", ip)
-        },
+pub fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {
+    let mut ips: Vec<String> = vec![];
+    for (_nodekey, device) in devices.devices {
+        if device.name == name && device.os == "linux" {
+            let ip = device.ip[0].clone();
+            if !active_installs.contains(&ip) {
+                &mut ips.push(ip.to_owned());
+            }
+        }
     };
-    result
+    ips
+}
+
+pub fn get_sshstring(ip: &str, user: User) -> Vec<String> {
+    let target = match user {
+        User::Root => format!("root@{}", ip),
+        User::Cato => format!("cato@{}", ip),
+    };
+    vec![
+        "-o".to_string(),
+        "StrictHostKeyChecking=no".to_string(),
+        "-o".to_string(),
+        "UserKnownHostsFile=/dev/null".to_string(),
+        target,
+    ]
 }
 
 pub fn get_drives_name(primdrive: &str, number: i8) -> String {
@@ -202,7 +216,7 @@ pub fn get_drives_name(primdrive: &str, number: i8) -> String {
 
 pub fn get_path(option: Paths) -> String {
     let home = env::var("HOME").expect("[ FAILED ] - Konnte die Home Variable nicht extrahieren");
-    let nixconfig = PathBuf::from(&home).join("xanterella");
+    let nixconfig = PathBuf::from(&home).join("xanterella").join("config");
     let config = PathBuf::from(&home).join(".config").join("xanterella");
     let result: PathBuf = match option {
         Paths::Home => home.into(),
@@ -242,7 +256,7 @@ pub fn get_iso(mode: FlashMode, ip: &str) -> String {
 
             let iso_path = format!("realpath {}/result/iso/*.iso", get_path(Paths::Nixconf));
             let realpath = Command::new("ssh")
-                .arg(get_sshstring(ip, User::Root))
+                .args(get_sshstring(ip, User::Root))
                 .arg(iso_path)
                 .output()
                 .unwrap_or_else(|err| { 
@@ -287,7 +301,7 @@ mod tests {
 
     #[test]
     fn test_sshstring() {
-        assert_eq!(get_sshstring("192.125.142.2", User::Root), "root@192.125.142.2")
+        assert_eq!(get_sshstring("192.125.142.2", User::Root), ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@192.125.142.2"])
     }
 
     #[test]

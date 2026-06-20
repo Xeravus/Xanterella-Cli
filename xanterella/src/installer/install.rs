@@ -3,7 +3,6 @@ use log::{info, error, debug};
 use std::process::{self, Command};
 use std::fs;
 use std::time::Instant;
-use std::time::Duration;
 
 use crate::utils::get::*;
 
@@ -87,7 +86,7 @@ pub fn profile(ip: &str) {
     debug!("System-Pfad im Nix-Store: {}", system_path);
     let profile_cmd = format!("nix-env --store /mnt -p /mnt/nix/var/nix/profiles/system --set {}", system_path);
     let profile = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .arg(&profile_cmd)
         .output()
         .unwrap_or_else(|err| { error!("Konnte 'ssh' oder 'nix' nicht starten: {}", err); process::exit(1); });
@@ -103,7 +102,7 @@ pub fn prep(ip: &str) {
 
     let prep_cmd = "mkdir -m 0755 -p /mnt/etc && touch /mnt/etc/NIXOS";
     let prep = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .arg(prep_cmd)
         .output()
         .unwrap_or_else(|err| { error!("Konnte 'ssh' oder 'nix' nicht starten: {}", err); process::exit(1); });
@@ -120,7 +119,7 @@ pub fn activate(ip: &str) {
 
     let activate_cmd = "NIXOS_INSTALL_BOOTLOADER=1 nixos-enter --root /mnt --command '/nix/var/nix/profiles/system/activate'";
     let activate = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .arg(activate_cmd)
         .output()
         .unwrap_or_else(|err| { error!("Konnte 'ssh' oder 'nix' nicht starten: {}", err); process::exit(1); });
@@ -136,7 +135,7 @@ pub fn bootloader(ip: &str) {
 
     let bootloader_cmd = "nixos-enter --root /mnt --command 'NIXOS_INSTALL_BOOTLOADER=1 /nix/var/nix/profiles/system/bin/switch-to-configuration boot'";
     let bootloader = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .arg(bootloader_cmd)
         .output()
         .unwrap_or_else(|err| { error!("Konnte 'ssh' oder 'nix' nicht starten: {}", err); process::exit(1); });
@@ -153,7 +152,7 @@ pub fn reboot(ip: &str, debug: &bool) {
     if !debug {
         let magic_cmd = "nohup sh -c 'sleep 2 && tailscale logout && reboot' > /dev/null 2>&1 &";
         let logout_reboot = Command::new("ssh")
-            .arg(format!("root@{}", ip))
+            .args(get_sshstring(ip, User::Root))
             .arg(magic_cmd)
             .output();
         match logout_reboot {

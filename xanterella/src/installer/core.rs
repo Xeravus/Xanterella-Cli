@@ -31,19 +31,19 @@ pub fn remote_install(automate: &bool, fast: &bool, debug: &bool) {
 
 pub fn daemon_install(automate: bool, fast: bool, ip: String, debug: bool) {
     let target_ip: &str = &ip;
-    ping_full(&target_ip);
-    crylia_edit_start(get_hardware(&target_ip));
+    ping_full(target_ip);
+    crylia_edit_start(get_hardware(target_ip));
     git_full(String::from("Xanterella Remote-Install"));
     if !fast {
         nix_check();
     };
-    let primdrive = select_drive(&target_ip, &automate);
-    drives_part(&primdrive, &debug, &target_ip);
-    drives_format(&primdrive, &debug, &target_ip);
-    drives_mount(&primdrive, &target_ip);
+    let primdrive = select_drive(target_ip, &automate);
+    drives_part(&primdrive, &debug, target_ip);
+    drives_format(&primdrive, &debug, target_ip);
+    drives_mount(&primdrive, target_ip);
     build(&debug);
-    deploy(&target_ip, &fast, &debug);
-    reboot(&target_ip, &false);
+    deploy(target_ip, &fast, &debug);
+    reboot(target_ip, &false);
     // -----------------------------------------------------
     clean();
 }

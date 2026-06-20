@@ -10,7 +10,7 @@ pub fn inject_tailscale(ip: &str) {
 
     let cmd = format!("touch /mnt/etc/tailscale_key && echo '{}' > /mnt/etc/tailscale_key && chmod 600 /mnt/etc/tailscale_key", config_parse().tailkey);
     let inject = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .arg(cmd)
         .output()
         .unwrap_or_else(|err| { 
@@ -29,7 +29,7 @@ pub fn inject_wifi(ip: &str) {
 
     let cmd = format!("touch /mnt/etc/wifi_secrets && echo 'PSK_HOME={}' > /mnt/etc/wifi_secrets && chmod 600 /mnt/etc/wifi_secrets", config_parse().wifi);
     let inject = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .arg(cmd)
         .output()
         .unwrap_or_else(|err| { 

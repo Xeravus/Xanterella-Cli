@@ -28,7 +28,7 @@ pub fn ping_ssh(ip: &str) {
     info!("[ RUN ] - Starte SSH Ping");
 
     let ssh = Command::new("ssh")
-        .arg(get_sshstring(ip, User::Root))
+        .args(get_sshstring(ip, User::Root))
         .output()
         .unwrap_or_else(|err| { 
             error!("[ FAILED ] - Konnte Tailscale nicht starten: {}", err); 
