@@ -2,10 +2,12 @@ use crate::utils::get::*;
 
 use std::fs;
 
+#[derive(Debug)]
 pub struct ColmenaFile {
     pub hosts: Vec<ColmenaHost>,
 }
 
+#[derive(Debug)]
 pub struct ColmenaHost {
     pub name: String,
     pub ip: String,
@@ -41,7 +43,7 @@ pub fn colmena_split_marker(content: &str) -> String {
 }
 
 pub fn colmena_split_hosts(content: &str) -> Vec<String> {
-    let teile: Vec<&str> = content.split("
+    let teile: Vec<&str> = content.trim().split("
     ];
   };
   ").collect();
@@ -53,8 +55,9 @@ pub fn colmena_split_hosts(content: &str) -> Vec<String> {
 }
 
 pub fn colmena_extract_name(content: &str) -> String {
-    let (name, _rest) = content.split_once(" = {").unwrap();
-    name.to_string()
+    //println!("{}", content);
+    let (name, _rest) = content.trim().split_once(" = {").expect(&format!("[ FAILED ] - Fehler beim extrahieren des Names: {}", content));
+    name.trim().to_string()
 }
 
 pub fn colmena_extract_ip(content: &str) -> String {

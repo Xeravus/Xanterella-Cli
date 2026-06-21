@@ -4,6 +4,7 @@ use crate::daemon::daemon::*;
 use crate::installer::core::*;
 use crate::usb::core::*;
 use crate::config::core::*;
+use crate::config::colmena::*;
 use crate::utils::core::*;
 use crate::utils::debug::{ListDebug, list_debug};
 
