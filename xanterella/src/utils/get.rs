@@ -47,11 +47,32 @@ pub enum Paths {
     Modules,
     Profiles,
     Config,
+    Colmena,
 }
 
 pub enum User {
     Root,
     Cato,
+}
+
+pub fn get_path(option: Paths) -> String {
+    let home = env::var("HOME").expect("[ FAILED ] - Konnte die Home Variable nicht extrahieren");
+    let nixconfig = PathBuf::from(&home).join("xanterella").join("config");
+    let nixcolmena = PathBuf::from(&nixconfig).join("colmena-hosts.nix");
+    let nixhosts = PathBuf::from(&nixconfig).join("hosts");
+    let nixmodules = PathBuf::from(&nixconfig).join("modules");
+    let nixprofiles = PathBuf::from(&nixconfig).join("profiles");
+    let config = PathBuf::from(&home).join(".config").join("xanterella");
+    let result: PathBuf = match option {
+        Paths::Home => home.into(),
+        Paths::Nixconf => nixconfig,
+        Paths::Colmena => colmena,
+        Paths::Hosts => nixhosts,
+        Paths::Modules => nixmodules,
+        Paths::Profiles => nixprofiles,
+        Paths::Config => config,
+    };
+    result.to_str().expect("[ FAILED ] - Gen Path ist fehlgeschlagen").to_string()
 }
 
 pub fn get_hardware(ip: &str) -> String {
@@ -206,24 +227,6 @@ pub fn get_drives_name(primdrive: &str, number: i8) -> String {
     let p_suffix = if primdrive.contains("nvme") || primdrive.contains("mmclblk") { "p" } else { "" };
     let partition = format!("{}{}{}", drive, p_suffix, number);
     partition
-}
-
-pub fn get_path(option: Paths) -> String {
-    let home = env::var("HOME").expect("[ FAILED ] - Konnte die Home Variable nicht extrahieren");
-    let nixconfig = PathBuf::from(&home).join("xanterella").join("config");
-    let nixhosts = PathBuf::from(&nixconfig).join("hosts");
-    let nixmodules = PathBuf::from(&nixconfig).join("modules");
-    let nixprofiles = PathBuf::from(&nixconfig).join("profiles");
-    let config = PathBuf::from(&home).join(".config").join("xanterella");
-    let result: PathBuf = match option {
-        Paths::Home => home.into(),
-        Paths::Nixconf => nixconfig,
-        Paths::Hosts => nixhosts,
-        Paths::Modules => nixmodules,
-        Paths::Profiles => nixprofiles,
-        Paths::Config => config,
-    };
-    result.to_str().expect("[ FAILED ] - Gen Path ist fehlgeschlagen").to_string()
 }
 
 pub fn get_iso(mode: FlashMode, ip: &str) -> String {
