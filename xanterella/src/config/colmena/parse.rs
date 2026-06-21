@@ -15,7 +15,7 @@ pub struct ColmenaHost {
     pub imports: Vec<String>,
 }
 
-pub fn parse_colmena_hosts() -> ColmenaFile {
+pub fn colmena_parse_hosts() -> ColmenaFile {
     let content = fs::read_to_string(get_path(Paths::Colmena)).expect("[ FAILED ] - Konnte die Colmena Host Datei nicht auslesen");
     let mut output = ColmenaFile {
         hosts: vec![],
