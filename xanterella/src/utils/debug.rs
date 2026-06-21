@@ -7,7 +7,7 @@ use crate::usb::core::*;
 use crate::usb::flash::*;
 use crate::utils::get::*;
 use crate::utils::select::*;
-use crate::config::colmena::*;
+use crate::config::colmena::parse::*;
 
 #[derive(ValueEnum, Clone, Debug)]
 pub enum ListDebug {
