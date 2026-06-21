@@ -66,7 +66,7 @@ pub fn get_path(option: Paths) -> String {
     let result: PathBuf = match option {
         Paths::Home => home.into(),
         Paths::Nixconf => nixconfig,
-        Paths::Colmena => colmena,
+        Paths::Colmena => nixcolmena,
         Paths::Hosts => nixhosts,
         Paths::Modules => nixmodules,
         Paths::Profiles => nixprofiles,
