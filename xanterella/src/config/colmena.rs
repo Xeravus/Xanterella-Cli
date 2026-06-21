@@ -1,23 +1,36 @@
 use crate::utils::get::*;
 
+use std::fs;
+
 pub struct ColmenaFile {
-    hosts: Vec<ColmenaHost>,
+    pub hosts: Vec<ColmenaHost>,
 }
 
 pub struct ColmenaHost {
-    name: String,
-    ip: String,
-    remotebuilder: bool,
-    imports: Vec<String>,
+    pub name: String,
+    pub ip: String,
+    pub remotebuilder: bool,
+    pub imports: Vec<String>,
 }
 
-/*
 pub fn parse_colmena_hosts() -> ColmenaFile {
     let content = fs::read_to_string(get_path(Paths::Colmena)).expect("[ FAILED ] - Konnte die Colmena Host Datei nicht auslesen");
+    let mut output = ColmenaFile {
+        hosts: vec![],
+    };
+    for i in colmena_split_hosts(&colmena_split_marker(&content)) {
+        let host = ColmenaHost {
+            name: colmena_extract_name(&i),
+            ip: colmena_extract_ip(&i),
+            remotebuilder: colmena_extract_remotebuilder(&i),
+            imports: colmena_extract_imports(&i),
+        };
+        output.hosts.push(host)
+    }
+    output
 }
-*/
 
-pub fn colmena_split_marker(content: String) -> String {
+pub fn colmena_split_marker(content: &str) -> String {
     let (_start, hosts_start) = content
         .split_once("# --- Xanterella Hosts Start ---")
         .expect("[ FAILED ] - Konnte die Colmena Hosts nicht zerschneiden(# --- Xanterella Hosts Start ---)");
@@ -27,7 +40,7 @@ pub fn colmena_split_marker(content: String) -> String {
     host_final.to_string()
 }
 
-pub fn colmena_split_hosts(content: String) -> Vec<String> {
+pub fn colmena_split_hosts(content: &str) -> Vec<String> {
     let teile: Vec<&str> = content.split("
     ];
   };
@@ -39,25 +52,25 @@ pub fn colmena_split_hosts(content: String) -> Vec<String> {
     output
 }
 
-pub fn colmena_extract_name(content: String) -> String {
+pub fn colmena_extract_name(content: &str) -> String {
     let (name, _rest) = content.split_once(" = {").unwrap();
     name.to_string()
 }
 
-pub fn colmena_extract_ip(content: String) -> String {
+pub fn colmena_extract_ip(content: &str) -> String {
     let (_rest, ip_teil) = content.split_once("targetHost = ").unwrap();
     let (ip, _rest) = ip_teil.split_once(";").unwrap();
     ip.replace('"', "")
 }
 
-pub fn colmena_extract_remotebuilder(content: String) -> bool {
+pub fn colmena_extract_remotebuilder(content: &str) -> bool {
     let (_rest, remote_teil) = content.split_once("buildOnTarget = ").unwrap();
     let (remote, _rest) = remote_teil.split_once(";").unwrap();
     let remote_builder = remote.trim().parse::<bool>().unwrap();
     remote_builder
 }
 
-pub fn colmena_extract_imports(content: String) -> Vec<String> {
+pub fn colmena_extract_imports(content: &str) -> Vec<String> {
     let (_rest, remote_teil) = content.split_once("imports = [").unwrap();
     let (remote, _rest) = remote_teil.split_once("];").unwrap();
     let mut output: Vec<String> = vec![];
@@ -119,34 +132,29 @@ mod tests {
 
     #[test]
     fn test_colmena_split_marker() {
-        let extracted = colmena_split_marker(MOCK_COLMENA_FILE.to_string());
+        let extracted = colmena_split_marker(MOCK_COLMENA_FILE);
         
-        // Darf nicht mehr den Meta-Block oder das Dateiende enthalten
         assert!(!extracted.contains("meta = {"));
         assert!(!extracted.contains("# --- Xanterella Hosts Start ---"));
         
-        // Muss die Hosts enthalten
         assert!(extracted.contains("xeravus = {"));
         assert!(extracted.contains("vicuna = {"));
     }
 
     #[test]
     fn test_colmena_extract_name() {
-        let name = colmena_extract_name(MOCK_VICUNA_BLOCK.to_string());
-        // Erwartet, dass vor dem " = {" sauber abgeschnitten wird
+        let name = colmena_extract_name(MOCK_VICUNA_BLOCK);
         assert_eq!(name.trim(), "vicuna");
     }
 
     #[test]
     fn test_colmena_extract_ip() {
-        let ip = colmena_extract_ip(MOCK_VICUNA_BLOCK.to_string());
-        // Darf keine Anführungszeichen oder Semikolons mehr enthalten
+        let ip = colmena_extract_ip(MOCK_VICUNA_BLOCK);
         assert_eq!(ip.trim(), "192.168.178.30");
     }
 
     #[test]
     fn test_colmena_extract_ip_null() {
-        // Testet den Sonderfall xeravus (targetHost = null;)
         let xeravus_block = r#"
         xeravus = {
             deployment = {
@@ -154,22 +162,22 @@ mod tests {
               allowLocalDeployment = true;
               buildOnTarget = true;
             };"#;
-        let ip = colmena_extract_ip(xeravus_block.to_string());
+        let ip = colmena_extract_ip(xeravus_block);
         assert_eq!(ip.trim(), "null");
     }
 
     #[test]
     fn test_colmena_extract_remotebuilder() {
-        let is_remote = colmena_extract_remotebuilder(MOCK_VICUNA_BLOCK.to_string());
+        let is_remote = colmena_extract_remotebuilder(MOCK_VICUNA_BLOCK);
         assert_eq!(is_remote, false); // Vicuna hat false
         
         let mock_lutik = "buildOnTarget = true;";
-        assert_eq!(colmena_extract_remotebuilder(mock_lutik.to_string()), true); // Lutik hat true
+        assert_eq!(colmena_extract_remotebuilder(mock_lutik), true); // Lutik hat true
     }
 
     #[test]
     fn test_colmena_extract_imports() {
-        let imports = colmena_extract_imports(MOCK_VICUNA_BLOCK.to_string());
+        let imports = colmena_extract_imports(MOCK_VICUNA_BLOCK);
         
         assert_eq!(imports.len(), 3);
         assert_eq!(imports[0], "./hosts/vicuna/configuration.nix");
