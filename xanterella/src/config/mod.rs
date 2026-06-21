@@ -1,3 +1,4 @@
 pub mod core;
 pub mod query;
 pub mod filepaths;
+pub mod templates;

@@ -2,6 +2,7 @@ use log::info;
 
 use crate::utils::check::*;
 use crate::utils::config::*;
+use crate::config::templates::*;
 
 pub fn ping_full(ip: &str) {
     info!("[ RUN ] - Starte Ping Tests");
@@ -19,7 +20,7 @@ pub fn init() {
     config_gen_basic();
     create_templates_host();
     create_templates_modul();
-    create_templates_default();
+    create_templates_index();
     create_templates_profile();
     info!("[ OK ] - Init Prozess erfolgreich");
 }
@@ -30,7 +31,7 @@ pub fn init_templates() {
     config_create_subdir();
     create_templates_host();
     create_templates_modul();
-    create_templates_default();
+    create_templates_index();
     create_templates_profile();
     info!("[ OK ] - Init Prozess erfolgreich");
 }
