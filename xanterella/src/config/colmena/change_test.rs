@@ -91,4 +91,27 @@ mod tests {
         let sorted_file = sort_hosts(file);
         assert_eq!(sorted_file.hosts.len(), 0);
     }
+
+    #[test]
+    fn test_write_hosts_config_multiple_hosts() {
+        let file = ColmenaFile {
+            hosts: vec![
+                create_dummy_host("alpha_node"),
+                create_dummy_host("beta_node"),
+            ],
+        };
+        let result = write_hosts_config(file);
+        assert!(result.contains("alpha_node = {"));
+        assert!(result.contains("beta_node = {"));
+        assert!(result.contains('\n'));
+    }
+
+    #[test]
+    fn test_write_hosts_config_empty_file() {
+        let file = ColmenaFile {
+            hosts: vec![],
+        };
+        let result = write_hosts_config(file);
+        assert_eq!(result, "");
+    }
 }
