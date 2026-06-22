@@ -39,8 +39,10 @@ mod tests {
 
     #[test]
     fn test_convert() {
-        let filepath1 = "/home/cato/xanterella/config/test.nix";
-        let filepath2 = "/home/cato/xanterella/config/test/test.nix";
+        //let filepath1 = "/home/cato/xanterella/config/test.nix";
+        let filepath1 = PathBuf::from(get_path(Paths::Nixconf)).join("test.nix");
+        //let filepath2 = "/home/cato/xanterella/config/test/test.nix";
+        let filepath2 = PathBuf::from(get_path(Paths::Nixconf)).join("test).join("test.nix");
         assert_eq!(convert_filepath(&filepath1, OutPath::Full, false), "/home/cato/xanterella/config/test.nix");
         assert_eq!(convert_filepath(&filepath1, OutPath::Full, true), "/home/cato/xanterella/config/test");
         assert_eq!(convert_filepath(&filepath2, OutPath::Full, false), "/home/cato/xanterella/config/test/test.nix");
