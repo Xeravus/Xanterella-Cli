@@ -39,13 +39,22 @@ pub fn init_templates() {
     info!("[ OK ] - Init Prozess erfolgreich");
 }
 
-pub fn files_alejandra() {
+pub fn files_alejandra(injection_path: &str) {
     info!("[ RUN ] - Starte Alejandra");
 
-    let alejandra =
-        Command::new("alejandra").arg(".").current_dir(get_path(Paths::Nixconf)).output().unwrap_or_else(|err| {
+    let path = if injection_path == get_path(Paths::Colmena) {
+        get_path(Paths::Nixconf)
+    } else {
+        injection_path.to_string()
+    };
+    println!("Path: {}", path);
+    let alejandra = Command::new("alejandra")
+        .arg(path)
+        .output()
+        .unwrap_or_else(|err| {
             error!("[ FAILED ] - Konnte Alejandra nicht starten: {}", err);
-            process::exit(1);
+            //process::exit(1);
+            panic!("Alejandra 1");
         });
     debug!("Alejandra: \n{}", String::from_utf8_lossy(&alejandra.stdout));
     if !alejandra.status.success() {
@@ -53,7 +62,8 @@ pub fn files_alejandra() {
             "[ FAILED ] - Konnte die Dateien mit Alejandra nicht formatieren: {}",
             String::from_utf8_lossy(&alejandra.stderr)
         );
-        process::exit(1);
+        //process::exit(1);
+        panic!("Alejandra 2");
     }
     info!("[ OK ] - Alejandra erfolgreich");
 }

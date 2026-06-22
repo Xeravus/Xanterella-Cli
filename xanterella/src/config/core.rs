@@ -16,19 +16,19 @@ pub fn list_hosts() {
 
 pub fn write_add_host(injection_path: &str, name: &str, ip: &str, remotebuilder: bool) {
     write_hosts(injection_path, &colmena_get_content(&injection_path), sort_hosts(colmena_add_host(injection_path, name, ip, remotebuilder)));
-    files_alejandra();
+    files_alejandra(injection_path);
 }
 
 pub fn write_remove_host(injection_path: &str, name: Option<&str>, ip: Option<&str>) {
     write_hosts(injection_path, &colmena_get_content(injection_path), sort_hosts(colmena_remove_host(colmena_parse_hosts(injection_path), name, ip)));
-    files_alejandra();
+    files_alejandra(injection_path);
 }
 
 pub fn rewrite_hosts(injection_path: &str) {
     debug!("rewrite_hosts(content): \n{:#?}\n - - - - - - - - - - - - - ", colmena_get_content(injection_path));
     debug!("rewrite_hosts(parsed hosts): \n{:#?}\n - - - - - - - - - - - - - - - - - ", colmena_parse_hosts(injection_path));
     write_hosts(injection_path, &colmena_get_content(injection_path), sort_hosts(colmena_parse_hosts(injection_path)));
-    files_alejandra();
+    files_alejandra(injection_path);
 }
 
 pub fn list_modules() {

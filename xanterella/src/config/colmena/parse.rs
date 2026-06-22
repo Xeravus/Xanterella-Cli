@@ -19,7 +19,7 @@ pub struct ColmenaHost {
 }
 
 pub fn colmena_get_content(injection_path: &str) -> String {
-    files_alejandra();
+    files_alejandra(injection_path);
     fs::read_to_string(injection_path).expect("[ FAILED ] - Konnte die Colmena Host Datei nicht auslesen")
 }
 

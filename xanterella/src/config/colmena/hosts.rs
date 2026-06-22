@@ -13,7 +13,7 @@ pub fn colmena_add_host(injection_path: &str, name: &str, ip: &str, remotebuilde
         let mut input = colmena_parse_hosts(injection_path);
         let imports: Vec<String> = vec![
             format!("./hosts/{}/configuration.nix", name),
-            "./profile/ssh-keys.nix".to_string(),
+            "./profiles/ssh-keys.nix".to_string(),
         ];
         let add_host = ColmenaHost {
             name: name.to_string(),
