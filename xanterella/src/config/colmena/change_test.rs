@@ -114,4 +114,38 @@ mod tests {
         let result = write_hosts_config(file);
         assert_eq!(result, "");
     }
+    #[test]
+    fn test_write_host_config_no_imports() {
+        let host = ColmenaHost {
+            name: String::from("ghost_node"),
+            ip: String::from("192.168.1.100"),
+            remotebuilder: false,
+            imports: vec![], // Leer!
+        };
+        let result = write_host_config(host);
+        assert!(result.contains("ghost_node = {"));
+        assert!(result.contains("imports = [\n\n];")); 
+    }
+    #[test]
+    fn test_sort_hosts_case_sensitivity() {
+        let file = ColmenaFile {
+            hosts: vec![
+                create_dummy_host("Zeta"),
+                create_dummy_host("alpha"),
+            ],
+        };
+        let sorted_file = sort_hosts(file);
+        assert_eq!(sorted_file.hosts[0].name, "Zeta");
+        assert_eq!(sorted_file.hosts[1].name, "alpha");
+    }
+    #[test]
+    fn test_generate_colmena_content() {
+        let fake_content = "Dies ist ein Test.\n# --- Xanterella Hosts Start ---\nAlter Inhalt\n# --- Xanterella Hosts End ---";
+        let file = ColmenaFile {
+            hosts: vec![create_dummy_host("new_node")],
+        };
+        let result = generate_colmena_content(fake_content, file);
+        assert!(result.contains("Dies ist ein Test."));
+        assert!(result.contains("new_node = {"));
+    }
 }

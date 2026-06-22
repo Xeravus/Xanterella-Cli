@@ -6,8 +6,11 @@ use crate::config::colmena::parse::*;
 use crate::utils::get::*;
 
 pub fn write_hosts(content: &str, file: ColmenaFile) {
-    let replaced_content = content.replace(&colmena_split_marker(&content), &write_hosts_config(file));
-    let _ = fs::write(get_path(Paths::Colmena), replaced_content);
+    let _ = fs::write(get_path(Paths::Colmena), generate_colmena_content(content, file));
+}
+
+pub fn generate_colmena_content(content: &str, file: ColmenaFile) -> String {
+    content.replace(&colmena_split_marker(&content), &write_hosts_config(file))
 }
 
 pub fn sort_hosts(hosts: ColmenaFile) -> ColmenaFile {
