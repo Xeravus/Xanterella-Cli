@@ -84,25 +84,6 @@ pub fn write_config(content: String) {
     info!("[ OK ] - Schreibprozess von der Hardware Config von Crylia erfolgreich");
 }
 
-pub fn files_alejandra() {
-    info!("[ RUN ] - Starte Alejandra");
-
-    let alejandra =
-        Command::new("alejandra").arg(".").current_dir(get_path(Paths::Nixconf)).output().unwrap_or_else(|err| {
-            error!("[ FAILED ] - Konnte Alejandra nicht starten: {}", err);
-            process::exit(1);
-        });
-    debug!("Alejandra: \n{}", String::from_utf8_lossy(&alejandra.stdout));
-    if !alejandra.status.success() {
-        error!(
-            "[ FAILED ] - Konnte die Dateien mit Alejandra nicht formatieren: {}",
-            String::from_utf8_lossy(&alejandra.stderr)
-        );
-        process::exit(1);
-    }
-    info!("[ OK ] - Alejandra erfolgreich");
-}
-
 #[cfg(test)]
 #[path = "file_test.rs"]
 mod tests;

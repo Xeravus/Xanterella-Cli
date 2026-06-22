@@ -1,6 +1,9 @@
-use log::info;
+use log::{info, debug, error};
+
+use std::process::{self, Command};
 
 use crate::utils::check::*;
+use crate::utils::get::*;
 use crate::utils::config::*;
 use crate::config::templates::*;
 
@@ -34,4 +37,23 @@ pub fn init_templates() {
     create_templates_index();
     create_templates_profile();
     info!("[ OK ] - Init Prozess erfolgreich");
+}
+
+pub fn files_alejandra() {
+    info!("[ RUN ] - Starte Alejandra");
+
+    let alejandra =
+        Command::new("alejandra").arg(".").current_dir(get_path(Paths::Nixconf)).output().unwrap_or_else(|err| {
+            error!("[ FAILED ] - Konnte Alejandra nicht starten: {}", err);
+            process::exit(1);
+        });
+    debug!("Alejandra: \n{}", String::from_utf8_lossy(&alejandra.stdout));
+    if !alejandra.status.success() {
+        error!(
+            "[ FAILED ] - Konnte die Dateien mit Alejandra nicht formatieren: {}",
+            String::from_utf8_lossy(&alejandra.stderr)
+        );
+        process::exit(1);
+    }
+    info!("[ OK ] - Alejandra erfolgreich");
 }

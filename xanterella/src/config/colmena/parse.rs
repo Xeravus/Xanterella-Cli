@@ -1,8 +1,9 @@
 use log::debug;
 
-use crate::utils::get::*;
-
 use std::fs;
+
+use crate::utils::get::*;
+use crate::utils::core::*;
 
 #[derive(Debug)]
 pub struct ColmenaFile {
@@ -18,6 +19,7 @@ pub struct ColmenaHost {
 }
 
 pub fn colmena_get_content() -> String {
+    files_alejandra();
     fs::read_to_string(get_path(Paths::Colmena)).expect("[ FAILED ] - Konnte die Colmena Host Datei nicht auslesen")
 }
 

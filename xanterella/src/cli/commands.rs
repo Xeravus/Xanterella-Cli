@@ -68,6 +68,12 @@ pub enum Config {
         #[arg(long = "remote-builder", short = 'r')]
         remotebuilder: bool,
     },
+    RemoveHost {
+        #[arg(long = "name", short = 'n')]
+        name: Option<String>,
+        #[arg(long = "ip", short = 'i')]
+        ip: Option<String>,
+    },
     AddModul {
         name: String,
         dir: String,
@@ -131,6 +137,9 @@ pub async fn cli_parse() {
                 Config::SortHosts => rewrite_hosts(),
                 Config::AddHost { name, ip, remotebuilder } => {
                     write_add_host(name, ip, *remotebuilder);
+                }
+                Config::RemoveHost { name, ip } => {
+                    write_remove_host(name.as_deref(), ip.as_deref());
                 }
                 Config::AddModul { name, dir } => {
                 }

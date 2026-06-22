@@ -3,6 +3,7 @@ use log::{info, error};
 use std::process;
 
 use crate::config::colmena::parse::*;
+use crate::utils::core::*;
 
 pub fn colmena_add_host(name: &str, ip: &str, remotebuilder: bool) -> ColmenaFile {
     if check_for_host(name, ip) {
@@ -26,7 +27,17 @@ pub fn colmena_add_host(name: &str, ip: &str, remotebuilder: bool) -> ColmenaFil
     }
 }
 
-pub fn colmena_remove_host(name: Option<&str>, ip: Option<&str>) -> ColmenaFile {
+pub fn colmena_remove_host(content: ColmenaFile, name: Option<&str>, ip: Option<&str>) -> ColmenaFile {
+    let mut output = content;
+    output.hosts.retain(|host| {
+        match (name, ip) {
+            (Some(search_name), None) => host.name != search_name,
+            (None, Some(search_ip)) => host.ip != search_ip,
+            (Some(search_name), Some(search_ip)) => host.name != search_name && host.ip != search_ip,
+            (None, None) => true,
+        }
+    });
+    output
 }
 
 pub fn check_for_host(name: &str, ip: &str) -> bool {
