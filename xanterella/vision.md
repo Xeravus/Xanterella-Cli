@@ -27,7 +27,7 @@
 ## 0.5v Xanterella - Config
 - [x] Basic sort Host
 - [x] Basic add Host
-    - [ ] Basic remove Host
+    - [x] Basic remove Host
     - [ ] Basic diff Host feature
 - [ ] Basic list Modules for Host
 
