@@ -61,6 +61,7 @@ pub enum Config {
         #[arg(value_enum)]
         to_list: ToList,
     },
+    SortHosts,
     AddHost {
         name: String,
         ip: String,
@@ -125,6 +126,7 @@ pub async fn cli_parse() {
                         ToList::Profiles => list_profiles(),
                     }
                 }
+                Config::SortHosts => rewrite_hosts(),
                 Config::AddHost { name, ip } => {
                 }
                 Config::AddModul { name, dir } => {

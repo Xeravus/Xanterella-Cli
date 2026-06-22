@@ -43,7 +43,7 @@ deployment = {{
 imports = [
 {}
 ];
-}};",
+}};\n",
     host.name, deployment_block, imports_block
     )
 }

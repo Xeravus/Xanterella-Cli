@@ -15,12 +15,15 @@ pub struct ColmenaHost {
     pub imports: Vec<String>,
 }
 
+pub fn colmena_get_content() -> String {
+    fs::read_to_string(get_path(Paths::Colmena)).expect("[ FAILED ] - Konnte die Colmena Host Datei nicht auslesen")
+}
+
 pub fn colmena_parse_hosts() -> ColmenaFile {
-    let content = fs::read_to_string(get_path(Paths::Colmena)).expect("[ FAILED ] - Konnte die Colmena Host Datei nicht auslesen");
     let mut output = ColmenaFile {
         hosts: vec![],
     };
-    for i in colmena_split_hosts(&colmena_split_marker(&content)) {
+    for i in colmena_split_hosts(&colmena_split_marker(&colmena_get_content())) {
         let host = ColmenaHost {
             name: colmena_extract_name(&i),
             ip: colmena_extract_ip(&i),
@@ -55,7 +58,6 @@ pub fn colmena_split_hosts(content: &str) -> Vec<String> {
 }
 
 pub fn colmena_extract_name(content: &str) -> String {
-    //println!("{}", content);
     let (name, _rest) = content.trim().split_once(" = {").expect(&format!("[ FAILED ] - Fehler beim extrahieren des Names: {}", content));
     name.trim().to_string()
 }
