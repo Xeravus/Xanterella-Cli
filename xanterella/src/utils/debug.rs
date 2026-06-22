@@ -7,6 +7,7 @@ use crate::usb::core::*;
 use crate::usb::flash::*;
 use crate::utils::get::*;
 use crate::utils::select::*;
+use crate::config::colmena::parse::*;
 
 #[derive(ValueEnum, Clone, Debug)]
 pub enum ListDebug {
@@ -18,6 +19,7 @@ pub enum ListDebug {
     Flash,
     Hardware,
     Init,
+    Colmena,
 }
 
 pub fn list_debug(function: &ListDebug) {
@@ -56,6 +58,17 @@ pub fn list_debug(function: &ListDebug) {
         }
         ListDebug::Init => {
             init_git("127.0.0.1");
+        }
+        ListDebug::Colmena => {
+            let colmena = colmena_parse_hosts(&get_path(Paths::Colmena));
+            println!("{:#?}", colmena);
+            for i in &colmena.hosts {
+                println!(" - - - - - - - - - - ");
+                println!("Name: {}", i.name);
+                println!("IP: {}", i.ip);
+                println!("RemoteBuilder: {}", i.remotebuilder);
+                println!("Imports: {:#?}", i.imports);
+            }
         }
     }
 }

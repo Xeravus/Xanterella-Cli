@@ -23,6 +23,16 @@ pub fn config_create_dir() {
     info!("[ OK ] - Config Dir erstellt");
 }
 
+pub fn config_create_subdir() {
+    info!("[ RUN ] - Erstelle Config SubDir");
+
+    fs::create_dir_all(format!("{}/templates", get_path(Paths::Config))).unwrap_or_else(|err| {
+        error!("[ FAILED ] - Konnte den Config Ordner nicht erstellen: {}", err);
+        process::exit(1);
+    });
+    info!("[ OK ] - Config SubDir erstellt");
+}
+
 pub fn config_gen_basic() {
     info!("[ RUN ] - Erstelle config.json");
 
