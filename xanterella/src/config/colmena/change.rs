@@ -5,10 +5,16 @@ use crate::config::colmena::parse::*;
 /*
 pub fn write_hosts(file: ColmenaFile) {
 }
+*/
 
 pub fn sort_hosts(hosts: ColmenaFile) -> ColmenaFile {
+    let mut output: Vec<ColmenaHost> = hosts.hosts;
+    output.sort_by(|a, b| a.name.cmp(&b.name));
+    let data = ColmenaFile {
+        hosts: output,
+    };
+    data
 }
-*/
 
 pub fn write_host_config(host: ColmenaHost) -> String {
     let deployment_block = if host.remotebuilder {
