@@ -1,3 +1,5 @@
+use log::debug;
+
 use crate::utils::get::*;
 
 use std::fs;
@@ -47,13 +49,14 @@ pub fn colmena_split_marker(content: &str) -> String {
 
 pub fn colmena_split_hosts(content: &str) -> Vec<String> {
     let teile: Vec<&str> = content.trim().split("
-    ];
-  };
+    ];\n  };\n
   ").collect();
     let mut output: Vec<String> = vec![];
+    debug!("colmena_split_hosts(input): \n{:#?}\n - - - - - - - - - - - - - - - - - - - - - - - - ", output);
     for i in teile {
         output.push(format!("{} ]; }}; ", i))
     }
+    debug!("colmena_split_hosts(output): \n{:#?}\n - - - - - - - - - - - - - - - - - - - - - - - - ", output);
     output
 }
 

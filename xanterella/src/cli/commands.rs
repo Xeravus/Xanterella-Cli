@@ -14,7 +14,7 @@ use crate::utils::debug::{ListDebug, list_debug};
 pub struct Cli {
     #[command(subcommand)]
     command: Commands,
-    #[arg(short = 'v', long = "verbose", global = true)]
+    #[arg(long = "verbose", short = 'v', global = true)]
     pub verbose: bool,
 }
 
@@ -65,6 +65,8 @@ pub enum Config {
     AddHost {
         name: String,
         ip: String,
+        #[arg(long = "remote-builder", short = 'r')]
+        remotebuilder: bool,
     },
     AddModul {
         name: String,
@@ -127,7 +129,8 @@ pub async fn cli_parse() {
                     }
                 }
                 Config::SortHosts => rewrite_hosts(),
-                Config::AddHost { name, ip } => {
+                Config::AddHost { name, ip, remotebuilder } => {
+                    write_add_host(name, ip, *remotebuilder);
                 }
                 Config::AddModul { name, dir } => {
                 }
