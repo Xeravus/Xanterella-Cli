@@ -160,6 +160,42 @@ fn test_integration_remove_host_with_fixtures_with_name_and_ip2() {
 }
 
 #[test]
+fn test_integration_remove_host_with_fixtures_without_anything1() {
+    let initial_content = include_str!("fixtures/colmena/initial.nix");
+    let expected_content = include_str!("fixtures/colmena/initial.nix");
+
+    let temp_file = Builder::new()
+        .suffix(".nix")
+        .tempfile()
+        .unwrap();
+    let temp_path = temp_file.path().to_str().unwrap();
+    fs::write(temp_path, initial_content).unwrap();
+
+    write_remove_host(temp_path, None, None);
+    let result_content = fs::read_to_string(temp_path).unwrap();
+
+    assert_eq!(result_content, expected_content);
+}
+
+#[test]
+fn test_integration_remove_host_with_fixtures_without_anything2() {
+    let initial_content = include_str!("fixtures/colmena/added.nix");
+    let expected_content = include_str!("fixtures/colmena/added.nix");
+
+    let temp_file = Builder::new()
+        .suffix(".nix")
+        .tempfile()
+        .unwrap();
+    let temp_path = temp_file.path().to_str().unwrap();
+    fs::write(temp_path, initial_content).unwrap();
+
+    write_remove_host(temp_path, None, None);
+    let result_content = fs::read_to_string(temp_path).unwrap();
+
+    assert_eq!(result_content, expected_content);
+}
+
+#[test]
 fn test_integration_sort_hosts1() {
     let initial_content = include_str!("fixtures/colmena/unsorted.nix");
     let expected_content = include_str!("fixtures/colmena/initial.nix");
