@@ -43,4 +43,52 @@ mod tests {
         assert!(!result.contains("targetHost = null"));
         assert!(!result.contains("allowLocalDeployment"));
     }
+    fn create_dummy_host(name: &str) -> ColmenaHost {
+        ColmenaHost {
+            name: name.to_string(),
+            ip: "127.0.0.1".to_string(),
+            remotebuilder: false,
+            imports: vec![],
+        }
+    }
+
+    #[test]
+    fn test_sort_hosts_alphabetically() {
+        let file = ColmenaFile {
+            hosts: vec![
+                create_dummy_host("zeta"),
+                create_dummy_host("alpha"),
+                create_dummy_host("omega"),
+                create_dummy_host("beta"),
+            ],
+        };
+        let sorted_file = sort_hosts(file);
+        assert_eq!(sorted_file.hosts.len(), 4);
+        assert_eq!(sorted_file.hosts[0].name, "alpha");
+        assert_eq!(sorted_file.hosts[1].name, "beta");
+        assert_eq!(sorted_file.hosts[2].name, "omega");
+        assert_eq!(sorted_file.hosts[3].name, "zeta");
+    }
+
+    #[test]
+    fn test_sort_hosts_already_sorted() {
+        let file = ColmenaFile {
+            hosts: vec![
+                create_dummy_host("crylia"),
+                create_dummy_host("todesstern"),
+            ],
+        };
+        let sorted_file = sort_hosts(file);
+        assert_eq!(sorted_file.hosts[0].name, "crylia");
+        assert_eq!(sorted_file.hosts[1].name, "todesstern");
+    }
+
+    #[test]
+    fn test_sort_hosts_empty_list() {
+        let file = ColmenaFile {
+            hosts: vec![],
+        };
+        let sorted_file = sort_hosts(file);
+        assert_eq!(sorted_file.hosts.len(), 0);
+    }
 }
