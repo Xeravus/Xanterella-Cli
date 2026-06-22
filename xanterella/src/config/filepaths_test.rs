@@ -8,9 +8,7 @@ mod tests {
 
     #[test]
     fn test_convert() {
-        //let filepath1 = "/home/cato/xanterella/config/test.nix";
         let filepath1 = PathBuf::from(get_path(Paths::Nixconf)).join("test.nix").display().to_string();
-        //let filepath2 = "/home/cato/xanterella/config/test/test.nix";
         let filepath2 = PathBuf::from(get_path(Paths::Nixconf)).join("test").join("test.nix").display().to_string();
         assert_eq!(convert_filepath(&filepath1, OutPath::Full, false), "/home/cato/xanterella/config/test.nix");
         assert_eq!(convert_filepath(&filepath1, OutPath::Full, true), "/home/cato/xanterella/config/test");
