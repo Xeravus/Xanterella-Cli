@@ -4,7 +4,7 @@ use crate::config::query::*;
 use crate::config::filepaths::*;
 use crate::config::colmena::change::*;
 use crate::config::colmena::parse::*;
-use crate::config::colmena::add::*;
+use crate::config::colmena::hosts::*;
 
 pub fn list_hosts() {
     info!("Hosts: ");

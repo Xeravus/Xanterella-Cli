@@ -26,6 +26,9 @@ pub fn colmena_add_host(name: &str, ip: &str, remotebuilder: bool) -> ColmenaFil
     }
 }
 
+pub fn colmena_remove_host(name: Option<&str>, ip: Option<&str>) -> ColmenaFile {
+}
+
 pub fn check_for_host(name: &str, ip: &str) -> bool {
     if !check_for_host_name(name) && !check_for_host_ip(ip) {
         false 

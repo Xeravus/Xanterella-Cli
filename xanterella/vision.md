@@ -25,8 +25,9 @@
 - [ ] Tailscale Init
 
 ## 0.5v Xanterella - Config
-- [ ] Basic add Host
-- [ ] Basic Colmena changes
+- [x] Basic sort Host
+- [x] Basic add Host
+    - [ ] Basic remove Host
 - [ ] Basic list Modules for Host
 
 ## 0.6v Xanterella - TUI
