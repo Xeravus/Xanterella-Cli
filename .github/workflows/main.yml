@@ -2,7 +2,7 @@ name: Xanterella-Cli CI
 
 on:
   pull_request:
-    branches: [ "stable" ]
+    branches: [ "stable", "testing" ]
 
 jobs:
   build-and-test:
