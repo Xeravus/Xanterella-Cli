@@ -60,7 +60,7 @@ pub fn list_debug(function: &ListDebug) {
             init_git("127.0.0.1");
         }
         ListDebug::Colmena => {
-            let colmena = colmena_parse_hosts();
+            let colmena = colmena_parse_hosts(&get_path(Paths::Colmena));
             println!("{:#?}", colmena);
             for i in &colmena.hosts {
                 println!(" - - - - - - - - - - ");

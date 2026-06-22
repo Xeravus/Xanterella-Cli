@@ -5,8 +5,8 @@ use std::fs;
 use crate::config::colmena::parse::*;
 use crate::utils::get::*;
 
-pub fn write_hosts(content: &str, file: ColmenaFile) {
-    let _ = fs::write(get_path(Paths::Colmena), generate_colmena_content(content, file));
+pub fn write_hosts(injection_path: &str, content: &str, file: ColmenaFile) {
+    let _ = fs::write(injection_path, generate_colmena_content(content, file));
 }
 
 pub fn generate_colmena_content(content: &str, file: ColmenaFile) -> String {

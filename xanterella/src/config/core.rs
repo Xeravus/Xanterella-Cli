@@ -14,20 +14,20 @@ pub fn list_hosts() {
     }
 }
 
-pub fn write_add_host(name: &str, ip: &str, remotebuilder: bool) {
-    write_hosts(&colmena_get_content(), sort_hosts(colmena_add_host(name, ip, remotebuilder)));
+pub fn write_add_host(injection_path: &str, name: &str, ip: &str, remotebuilder: bool) {
+    write_hosts(injection_path, &colmena_get_content(&injection_path), sort_hosts(colmena_add_host(injection_path, name, ip, remotebuilder)));
     files_alejandra();
 }
 
-pub fn write_remove_host(name: Option<&str>, ip: Option<&str>) {
-    write_hosts(&colmena_get_content(), sort_hosts(colmena_remove_host(colmena_parse_hosts(), name, ip)));
+pub fn write_remove_host(injection_path: &str, name: Option<&str>, ip: Option<&str>) {
+    write_hosts(injection_path, &colmena_get_content(injection_path), sort_hosts(colmena_remove_host(colmena_parse_hosts(injection_path), name, ip)));
     files_alejandra();
 }
 
-pub fn rewrite_hosts() {
-    debug!("rewrite_hosts(content): \n{:#?}\n - - - - - - - - - - - - - ", colmena_get_content());
-    debug!("rewrite_hosts(parsed hosts): \n{:#?}\n - - - - - - - - - - - - - - - - - ", colmena_parse_hosts());
-    write_hosts(&colmena_get_content(), sort_hosts(colmena_parse_hosts()));
+pub fn rewrite_hosts(injection_path: &str) {
+    debug!("rewrite_hosts(content): \n{:#?}\n - - - - - - - - - - - - - ", colmena_get_content(injection_path));
+    debug!("rewrite_hosts(parsed hosts): \n{:#?}\n - - - - - - - - - - - - - - - - - ", colmena_parse_hosts(injection_path));
+    write_hosts(injection_path, &colmena_get_content(injection_path), sort_hosts(colmena_parse_hosts(injection_path)));
     files_alejandra();
 }
 

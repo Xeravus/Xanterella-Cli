@@ -18,16 +18,16 @@ pub struct ColmenaHost {
     pub imports: Vec<String>,
 }
 
-pub fn colmena_get_content() -> String {
+pub fn colmena_get_content(injection_path: &str) -> String {
     files_alejandra();
-    fs::read_to_string(get_path(Paths::Colmena)).expect("[ FAILED ] - Konnte die Colmena Host Datei nicht auslesen")
+    fs::read_to_string(injection_path).expect("[ FAILED ] - Konnte die Colmena Host Datei nicht auslesen")
 }
 
-pub fn colmena_parse_hosts() -> ColmenaFile {
+pub fn colmena_parse_hosts(injection_path: &str) -> ColmenaFile {
     let mut output = ColmenaFile {
         hosts: vec![],
     };
-    for i in colmena_split_hosts(&colmena_split_marker(&colmena_get_content())) {
+    for i in colmena_split_hosts(&colmena_split_marker(&colmena_get_content(injection_path))) {
         let host = ColmenaHost {
             name: colmena_extract_name(&i),
             ip: colmena_extract_ip(&i),

@@ -6,6 +6,7 @@ use crate::usb::core::*;
 use crate::config::core::*;
 use crate::config::colmena::*;
 use crate::utils::core::*;
+use crate::utils::get::*;
 use crate::utils::debug::{ListDebug, list_debug};
 
 #[derive(Parser)]
@@ -134,12 +135,12 @@ pub async fn cli_parse() {
                         ToList::Profiles => list_profiles(),
                     }
                 }
-                Config::SortHosts => rewrite_hosts(),
+                Config::SortHosts => rewrite_hosts(&get_path(Paths::Colmena)),
                 Config::AddHost { name, ip, remotebuilder } => {
-                    write_add_host(name, ip, *remotebuilder);
+                    write_add_host(&get_path(Paths::Colmena), name, ip, *remotebuilder);
                 }
                 Config::RemoveHost { name, ip } => {
-                    write_remove_host(name.as_deref(), ip.as_deref());
+                    write_remove_host(&get_path(Paths::Colmena), name.as_deref(), ip.as_deref());
                 }
                 Config::AddModul { name, dir } => {
                 }

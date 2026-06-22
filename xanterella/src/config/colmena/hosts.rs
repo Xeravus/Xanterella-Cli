@@ -5,12 +5,12 @@ use std::process;
 use crate::config::colmena::parse::*;
 use crate::utils::core::*;
 
-pub fn colmena_add_host(name: &str, ip: &str, remotebuilder: bool) -> ColmenaFile {
-    if check_for_host(name, ip) {
+pub fn colmena_add_host(injection_path: &str, name: &str, ip: &str, remotebuilder: bool) -> ColmenaFile {
+    if check_for_host(injection_path, name, ip) {
         error!("[ FAILED ] - Host existiert schon");
-        colmena_parse_hosts()
+        colmena_parse_hosts(injection_path)
     } else {
-        let mut input = colmena_parse_hosts();
+        let mut input = colmena_parse_hosts(injection_path);
         let imports: Vec<String> = vec![
             format!("./hosts/{}/configuration.nix", name),
             "./profile/ssh-keys.nix".to_string(),
@@ -40,8 +40,8 @@ pub fn colmena_remove_host(content: ColmenaFile, name: Option<&str>, ip: Option<
     output
 }
 
-pub fn check_for_host(name: &str, ip: &str) -> bool {
-    if !check_for_host_name(name) && !check_for_host_ip(ip) {
+pub fn check_for_host(injection_path: &str, name: &str, ip: &str) -> bool {
+    if !check_for_host_name(injection_path, name) && !check_for_host_ip(injection_path, ip) {
         false 
     } else {
         true
@@ -49,8 +49,8 @@ pub fn check_for_host(name: &str, ip: &str) -> bool {
 }
 
 
-pub fn check_for_host_name(name: &str) -> bool {
-    for i in colmena_parse_hosts().hosts {
+pub fn check_for_host_name(injection_path: &str, name: &str) -> bool {
+    for i in colmena_parse_hosts(injection_path).hosts {
         if i.name == name {
             return true
         }
@@ -58,8 +58,8 @@ pub fn check_for_host_name(name: &str) -> bool {
     false
 }
 
-pub fn check_for_host_ip(ip: &str) -> bool {
-    for i in colmena_parse_hosts().hosts {
+pub fn check_for_host_ip(injection_path: &str, ip: &str) -> bool {
+    for i in colmena_parse_hosts(injection_path).hosts {
         if i.ip == ip {
             return true
         }
