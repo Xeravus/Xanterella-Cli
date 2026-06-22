@@ -34,28 +34,5 @@ pub fn convert_filepath(input: &str, pathtype: OutPath, stem: bool) -> String {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_convert() {
-        //let filepath1 = "/home/cato/xanterella/config/test.nix";
-        let filepath1 = PathBuf::from(get_path(Paths::Nixconf)).join("test.nix");
-        //let filepath2 = "/home/cato/xanterella/config/test/test.nix";
-        let filepath2 = PathBuf::from(get_path(Paths::Nixconf)).join("test).join("test.nix");
-        assert_eq!(convert_filepath(&filepath1, OutPath::Full, false), "/home/cato/xanterella/config/test.nix");
-        assert_eq!(convert_filepath(&filepath1, OutPath::Full, true), "/home/cato/xanterella/config/test");
-        assert_eq!(convert_filepath(&filepath2, OutPath::Full, false), "/home/cato/xanterella/config/test/test.nix");
-        assert_eq!(convert_filepath(&filepath2, OutPath::Full, true), "/home/cato/xanterella/config/test/test");
-
-        assert_eq!(convert_filepath(&filepath1, OutPath::Shortend, false), "test.nix");
-        assert_eq!(convert_filepath(&filepath1, OutPath::Shortend, true), "test");
-        assert_eq!(convert_filepath(&filepath2, OutPath::Shortend, false), "test/test.nix");
-        assert_eq!(convert_filepath(&filepath2, OutPath::Shortend, true), "test/test");
-
-        assert_eq!(convert_filepath(&filepath1, OutPath::Last, false), "test.nix");
-        assert_eq!(convert_filepath(&filepath1, OutPath::Last, true), "test");
-        assert_eq!(convert_filepath(&filepath2, OutPath::Last, false), "test.nix");
-        assert_eq!(convert_filepath(&filepath2, OutPath::Last, true), "test");
-    }
-}
+#[path = "filepaths_test.rs"]
+mod tests; 
