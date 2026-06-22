@@ -28,6 +28,7 @@
 - [x] Basic sort Host
 - [x] Basic add Host
     - [ ] Basic remove Host
+    - [ ] Basic diff Host feature
 - [ ] Basic list Modules for Host
 
 ## 0.6v Xanterella - TUI
