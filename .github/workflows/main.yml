@@ -20,3 +20,6 @@ jobs:
 
       - name: Cargo Build
         run: nix build .#xanterella
+
+      - name: Cargo Sweep
+        run: nix develop .#xanterella --command bash -c "cargo sweep"
