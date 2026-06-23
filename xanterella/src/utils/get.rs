@@ -48,6 +48,7 @@ pub enum Paths {
     Profiles,
     Config,
     Colmena,
+    Templates,
 }
 
 pub enum User {
@@ -63,6 +64,7 @@ pub fn get_path(option: Paths) -> String {
     let nixmodules = PathBuf::from(&nixconfig).join("modules");
     let nixprofiles = PathBuf::from(&nixconfig).join("profiles");
     let config = PathBuf::from(&home).join(".config").join("xanterella");
+    let templates = PathBuf::from(&config).join("templates");
     let result: PathBuf = match option {
         Paths::Home => home.into(),
         Paths::Nixconf => nixconfig,
@@ -71,6 +73,7 @@ pub fn get_path(option: Paths) -> String {
         Paths::Modules => nixmodules,
         Paths::Profiles => nixprofiles,
         Paths::Config => config,
+        Paths::Templates => templates,
     };
     result.to_str().expect("[ FAILED ] - Gen Path ist fehlgeschlagen").to_string()
 }

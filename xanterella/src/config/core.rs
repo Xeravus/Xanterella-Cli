@@ -23,11 +23,11 @@ pub fn write_add_host(injection_path: &str, name: &str, ip: &str, remotebuilder:
 }
 
 pub fn write_remove_host(injection_path: &str, name: Option<&str>, ip: Option<&str>) {
-    info!("[ RUN ] - Lösche Host: {} aus Colmena", name);
+    info!("[ RUN ] - Lösche Host aus Colmena");
     
     write_hosts(injection_path, &colmena_get_content(injection_path), sort_hosts(colmena_remove_host(colmena_parse_hosts(injection_path), name, ip)));
     files_alejandra(injection_path);
-    info!("[ OK ] - Host: {} erfolgreich gelöscht aus Colmena", name);
+    info!("[ OK ] - Host erfolgreich gelöscht aus Colmena");
 }
 
 pub fn rewrite_hosts(injection_path: &str) {

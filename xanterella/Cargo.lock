@@ -862,6 +862,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "osi"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d18958727bf5316d271c96c59773c7277c1b28dfa5be746fe59ef75df995209c"
+
+[[package]]
 name = "parking"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1301,6 +1307,15 @@ name = "time-core"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7694e1cfe791f8d31026952abf09c69ca6f6fa4e1a1229e18988f06a04a12dca"
+
+[[package]]
+name = "tmp"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf079248d4c94cef7bad391bdf3faffb564400bc07c6639d047bf105e495ac6a"
+dependencies = [
+ "osi",
+]
 
 [[package]]
 name = "tokio"
@@ -1827,7 +1842,7 @@ dependencies = [
 
 [[package]]
 name = "xanterella"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "clap",
  "env_logger",
@@ -1838,6 +1853,8 @@ dependencies = [
  "serde_json",
  "strum",
  "strum_macros",
+ "tempfile",
+ "tmp",
  "tokio",
  "walkdir",
 ]

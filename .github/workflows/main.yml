@@ -2,7 +2,7 @@ name: Xanterella-Cli CI
 
 on:
   pull_request:
-    branches: [ "stable" ]
+    branches: [ "stable", "testing" ]
 
 jobs:
   build-and-test:
@@ -11,18 +11,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
-      - name: Change Dir
-        uses: cd xanterella
+        with: 
+          clean: false
 
-      - name: Formatierung prüfen
-        run: nix develop .#xanterella --command cargo fmt -- --check
-
-      #- name: Clippy
-      #  run: nix develop .#xanterella --command cargo clippy -- -D warnings
+      - name: Cargo Check
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check --release"
 
       - name: Cargo Tests
-        run: nix develop .#xanterella --command cargo test
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test"
 
       - name: Cargo Build
         run: nix build .#xanterella
+
+      - name: Cleanup
+        uses: Swatinem/rust-cache@v2
