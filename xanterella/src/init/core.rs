@@ -4,12 +4,11 @@ use crate::init::init::*;
 use crate::init::inject::*;
 
 pub fn init_git(ip: &str) {
-    info!("[ RUN ] - Starte Git und GitHub Authentikation");
+    info!("[ RUN ] - Starte Git Authentikation");
 
     init_git_email(ip);
     init_git_name(ip);
-    init_github(ip);
-    info!("[ OK ] - Git und GitHub Authentikation erfolgreich");
+    info!("[ OK ] - Git Authentikation erfolgreich");
 }
 
 pub fn inject(ip: &str) {
