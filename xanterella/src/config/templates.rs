@@ -32,6 +32,7 @@ pub fn parse_template(template: Template) -> String {
 }
 
 pub fn create_templates_host() {
+    info!("[ RUN ] - Erstelle Host Template");
     let path = PathBuf::from(get_path(Paths::Config)).join("templates").join("host.nix");
     let content = 
         "
@@ -53,9 +54,11 @@ pub fn create_templates_host() {
         ";
 
     fs::write(path, content).expect("Konnte Datei nicht schreiben");
+    info!("[ OK ] - Host Template erfolgreich erstellt");
 }
 
 pub fn create_templates_modul() {
+    info!("[ RUN ] - Erstelle Modul Template");
     let path = PathBuf::from(get_path(Paths::Config)).join("templates").join("modul.nix");
     let content = 
         "
@@ -73,9 +76,11 @@ pub fn create_templates_modul() {
         ";
 
     fs::write(path, content).expect("Konnte Datei nicht schreiben");
+    info!("[ OK ] - Modul Template erfolgreich erstellt");
 }
 
 pub fn create_templates_index() {
+    info!("[ RUN ] - Erstelle Index Template");
     let path = PathBuf::from(get_path(Paths::Config)).join("templates").join("index.nix");
     let content = 
         "
@@ -86,9 +91,11 @@ pub fn create_templates_index() {
         ";
 
     fs::write(path, content).expect("Konnte Datei nicht schreiben");
+    info!("[ OK ] - Index Template erfolgreich erstellt");
 }
 
 pub fn create_templates_profile() {
+    info!("[ RUN ] - Erstelle Profil Template");
     let path = PathBuf::from(get_path(Paths::Config)).join("templates").join("profile.nix");
     let content = 
         "
@@ -105,4 +112,5 @@ pub fn create_templates_profile() {
         ";
 
     fs::write(path, content).expect("Konnte Datei nicht schreiben");
+    info!("[ OK ] - Profil Template erfolgreich erstellt");
 }

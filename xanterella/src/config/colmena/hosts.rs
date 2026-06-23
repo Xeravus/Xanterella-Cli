@@ -21,7 +21,6 @@ pub fn colmena_add_host(injection_path: &str, name: &str, ip: &str, remotebuilde
             remotebuilder,
             imports,
         };
-        info!("[ RUN ] - Füge Host Hinzu");
         input.hosts.push(add_host);
         input
     }
