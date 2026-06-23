@@ -11,8 +11,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with: 
-          clean: false
 
       - name: Cargo Check
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check --release"
@@ -22,6 +20,3 @@ jobs:
 
       - name: Cargo Build
         run: nix build .#xanterella
-
-      - name: Cleanup
-        uses: Swatinem/rust-cache@v2
