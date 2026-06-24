@@ -135,12 +135,12 @@ pub async fn cli_parse() {
                         ToList::Profiles => list_profiles(),
                     }
                 }
-                Config::SortHosts => rewrite_hosts(&get_path(Paths::Colmena)),
+                Config::SortHosts => colmena_rewrite(&get_path(Paths::Colmena)),
                 Config::AddHost { name, ip, remotebuilder } => {
-                    write_add_host(&get_path(Paths::Colmena), name, ip, *remotebuilder);
+                    colmena_add(&get_path(Paths::Colmena), name, ip, *remotebuilder);
                 }
                 Config::RemoveHost { name, ip } => {
-                    write_remove_host(&get_path(Paths::Colmena), name.as_deref(), ip.as_deref());
+                    colmena_remove(&get_path(Paths::Colmena), name.as_deref(), ip.as_deref());
                 }
                 Config::AddModul { name, dir } => {
                 }
