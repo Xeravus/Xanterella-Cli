@@ -68,10 +68,14 @@ pub enum Config {
         ip: String,
         #[arg(long = "remote-builder", short = 'r')]
         remotebuilder: bool,
+        #[arg(long = "system-version", short = 's')]
+        system: Option<f32>,
+        #[arg(long = "hardware", short = 'h')]
+        hardware: Option<String>,
     },
     RemoveHost {
-        #[arg(long = "name", short = 'n')]
-        name: Option<String>,
+        //#[arg(long = "name", short = 'n')]
+        name: String,
         #[arg(long = "ip", short = 'i')]
         ip: Option<String>,
     },
@@ -136,11 +140,11 @@ pub async fn cli_parse() {
                     }
                 }
                 Config::SortHosts => colmena_rewrite(&get_path(Paths::Colmena)),
-                Config::AddHost { name, ip, remotebuilder } => {
-                    colmena_add(&get_path(Paths::Colmena), name, ip, *remotebuilder);
+                Config::AddHost { name, ip, remotebuilder, system, hardware } => {
+                    host_add(&get_path(Paths::Nixconf), name, ip, *remotebuilder, *system, hardware.clone());
                 }
                 Config::RemoveHost { name, ip } => {
-                    colmena_remove(&get_path(Paths::Colmena), name.as_deref(), ip.as_deref());
+                    host_remove(&get_path(Paths::Nixconf), name, ip.as_deref());
                 }
                 Config::AddModul { name, dir } => {
                 }

@@ -49,7 +49,7 @@ mod tests {
 
     #[test]
     fn test_colmena_sort() {
-        let mut file = ColmenaFile::init("/dummy/path");
+        let mut file = ColmenaManager::init("/dummy/path");
         file.hosts = vec![
             create_dummy_host("zeta"),
             create_dummy_host("alpha"),
@@ -68,7 +68,7 @@ mod tests {
 
     #[test]
     fn test_colmena_sort_already() {
-        let mut file = ColmenaFile::init("/dummy/path");
+        let mut file = ColmenaManager::init("/dummy/path");
         file.hosts = vec![create_dummy_host("crylia"), create_dummy_host("todesstern")];
         
         file.sort_hosts();
@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn test_colmena_sort_case_sens() {
-        let mut file = ColmenaFile::init("/dummy/path");
+        let mut file = ColmenaManager::init("/dummy/path");
         file.hosts = vec![create_dummy_host("Zeta"), create_dummy_host("alpha")];
         file.sort_hosts();
         assert_eq!(file.hosts[0].name, "Zeta"); 
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn test_colmena_gen_finished_string() {
-        let mut file = ColmenaFile::init("/dummy/path");
+        let mut file = ColmenaManager::init("/dummy/path");
         file.hosts = vec![create_dummy_host("alpha_node"), create_dummy_host("beta_node")];
         
         let result = file.gen_finished_string();
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn test_colmena_replace_content() {
-        let mut file = ColmenaFile::init("/dummy/path");
+        let mut file = ColmenaManager::init("/dummy/path");
         file.content = "Dies ist ein Test.\n# --- Xanterella Hosts Start ---\nAlter Inhalt\n# --- Xanterella Hosts End ---\nEnde.".to_string();
         file.hosts = vec![create_dummy_host("new_node")];
         
@@ -190,7 +190,7 @@ mod tests {
 
     #[test]
     fn test_colmena_file_parse_hosts() {
-        let mut file = ColmenaFile::init("/dummy/path");
+        let mut file = ColmenaManager::init("/dummy/path");
         file.content = MOCK_COLMENA_FILE.to_string();
         
         file.parse_hosts();

@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::utils::get::*;
 
@@ -6,6 +6,11 @@ pub enum OutPath {
     Full,
     Shortend,
     Last
+}
+
+pub enum Target {
+    Colmena,
+    Hosts,
 }
 
 pub fn convert_filepath(input: &str, pathtype: OutPath, stem: bool) -> String {
@@ -31,6 +36,14 @@ pub fn convert_filepath(input: &str, pathtype: OutPath, stem: bool) -> String {
         return result_path.with_extension("").to_string_lossy().into_owned();
     }
     result
+}
+
+pub fn convert_path(input: &str, target: Target) -> String {
+    let result = match target {
+        Target::Colmena => PathBuf::from(input).join("colmena-hosts.nix"),
+        Target::Hosts => PathBuf::from(input).join("hosts"),
+    };
+    result.display().to_string()
 }
 
 #[cfg(test)]

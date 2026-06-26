@@ -10,7 +10,7 @@ fn test_direct_nested_function() {
     let temp_path = temp.path().to_str().unwrap();
 
     fs::write(temp_path, "fake colmena config").unwrap();
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.get_content();
     assert_eq!(colmena.content, "fake colmena config");
 }
@@ -27,7 +27,7 @@ fn test_integration_add_host_with_fixtures1() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.add_host("prolyxena", "1.1.1.1", false);
     colmena.sort_hosts();
@@ -49,7 +49,7 @@ fn test_integration_add_host_with_fixtures2() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.add_host("vicuna", "192.168.178.30", false);
     colmena.sort_hosts();
@@ -72,7 +72,7 @@ fn test_integration_remove_host_with_fixtures_with_name1() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.remove_host(Some("vicuna"), None);
     colmena.sort_hosts();
@@ -95,7 +95,7 @@ fn test_integration_remove_host_with_fixtures_with_name2() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.remove_host(Some("prolyxena"), None);
     colmena.sort_hosts();
@@ -118,7 +118,7 @@ fn test_integration_remove_host_with_fixtures_with_ip1() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.remove_host(None, Some("192.168.178.30"));
     colmena.sort_hosts();
@@ -140,7 +140,7 @@ fn test_integration_remove_host_with_fixtures_with_ip2() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.remove_host(None, Some("1.1.1.1"));
     colmena.sort_hosts();
@@ -162,7 +162,7 @@ fn test_integration_remove_host_with_fixtures_with_name_and_ip1() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.remove_host(None, Some("192.168.178.30"));
     colmena.sort_hosts();
@@ -184,7 +184,7 @@ fn test_integration_remove_host_with_fixtures_with_name_and_ip2() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.remove_host(None, Some("1.1.1.1"));
     colmena.sort_hosts();
@@ -206,7 +206,7 @@ fn test_integration_remove_host_with_fixtures_without_anything1() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.remove_host(None, None);
     colmena.sort_hosts();
@@ -228,7 +228,7 @@ fn test_integration_remove_host_with_fixtures_without_anything2() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.remove_host(None, None);
     colmena.sort_hosts();
@@ -250,7 +250,7 @@ fn test_integration_sort_hosts1() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.sort_hosts();
     colmena.write();
@@ -271,7 +271,7 @@ fn test_integration_sort_hosts2() {
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
-    let mut colmena = ColmenaFile::init(temp_path);
+    let mut colmena = ColmenaManager::init(temp_path);
     colmena.load();
     colmena.sort_hosts();
     colmena.write();

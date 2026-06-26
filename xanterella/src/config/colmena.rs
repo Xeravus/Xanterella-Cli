@@ -6,7 +6,7 @@ use std::fs;
 use crate::utils::core::*;
 
 #[derive(Debug)]
-pub struct ColmenaFile {
+pub struct ColmenaManager {
     pub hosts: Vec<ColmenaHost>,
     pub injection_path: String,
     pub content: String,
@@ -22,7 +22,7 @@ pub struct ColmenaHost {
     pub finished_string: String,
 }
 
-impl ColmenaFile {
+impl ColmenaManager {
     pub fn init(injection_path: &str) -> Self {
         Self {
             hosts: vec![],
