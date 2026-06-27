@@ -1,3 +1,5 @@
+use prolyxena::cli::commands::*;
+
 fn main() {
-    println!("Hello, world!");
+    cli_parse();
 }
