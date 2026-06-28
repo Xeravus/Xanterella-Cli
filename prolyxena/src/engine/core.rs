@@ -31,9 +31,13 @@ pub enum ParseEvent {
     ParsedNumber,
     ParsedPath,
     ParsedWith,
+    ParsedIdentifier,
+    SkippedWhitespace,
+}
 
 pub struct Parser<'a> {
     pub chars: Peekable<Chars<'a>>,
+    pub event: Vec<ParseEvent>,
 }
 
 impl<'a> Parser<'a> {
