@@ -3,6 +3,7 @@ use clap::{Parser as CalpParser, Subcommand};
 use std::fs;
 
 use crate::engine::core::*;
+use crate::engine::lexer::core::*;
 
 #[derive(CalpParser)]
 #[command(name = "Prolyxena")]
