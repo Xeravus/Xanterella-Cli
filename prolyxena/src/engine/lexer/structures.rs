@@ -14,6 +14,7 @@ pub trait ParseStructures {
 
 impl<'a> ParseStructures for Parser<'a> {
     fn parse_attr_set(&mut self) -> Result<NixValue, String> {
+        self.event.push(ParseEvent::StartAttrSet);
         self.chars.next();
         let mut map = HashMap::new();
         loop {
@@ -80,10 +81,12 @@ impl<'a> ParseStructures for Parser<'a> {
             }
             map.insert(key, value);
         }
+        self.event.push(ParseEvent::EndAttrSet);
         Ok(NixValue::AttrSet(map))
     }
 
     fn parse_list(&mut self) -> Result<NixValue, String> {
+        self.event.push(ParseEvent::StartList);
         self.chars.next();
         let mut output_vec: Vec<NixValue> = vec![];
         loop {
@@ -96,6 +99,7 @@ impl<'a> ParseStructures for Parser<'a> {
             let value = self.parse_value()?;
             output_vec.push(value);
         }
+        self.event.push(ParseEvent::EndList);
         Ok(NixValue::List(output_vec))
     }
 }

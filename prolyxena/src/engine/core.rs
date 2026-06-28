@@ -20,19 +20,30 @@ pub enum NixValue {
 
 #[derive(Debug, Clone)]
 pub enum ParseEvent {
+    // Start
     StartAttrSet,
-    EndAttrSet,
     StartList,
-    EndList,
     StartLetIn,
+    StartLambda,
+    StartWith,
+    StartString,
+    StartPath,
+    StartNumber,
+    StartIdentifier,
+    StartWhitespace,
+    StartValue,
+    // End
+    EndAttrSet,
+    EndList,
     EndLetIn,
-    FoundLambda,
-    ParsedString,
-    ParsedNumber,
-    ParsedPath,
-    ParsedWith,
-    ParsedIdentifier,
-    SkippedWhitespace,
+    EndLambda,
+    EndWith,
+    EndString,
+    EndPath,
+    EndNumber,
+    EndIdentifier,
+    EndWhitespace,
+    EndValue,
 }
 
 pub struct Parser<'a> {
@@ -44,6 +55,7 @@ impl<'a> Parser<'a> {
     pub fn new(content: &'a str) -> Self {
         Parser {
             chars: content.chars().peekable(),
+            event: vec![],
         }
     }
 }

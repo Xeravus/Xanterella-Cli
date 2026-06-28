@@ -14,6 +14,7 @@ pub trait ParseCore {
 
 impl<'a> ParseCore for Parser<'a> {
     fn skip_whitespace(&mut self) {
+        self.event.push(ParseEvent::StartWhitespace);
         loop {
             match self.chars.peek() {
                 Some(&c) if c.is_whitespace() => {
@@ -35,9 +36,11 @@ impl<'a> ParseCore for Parser<'a> {
                 }
             }
         }
+        self.event.push(ParseEvent::EndWhitespace);
     }
 
     fn parse_value(&mut self) -> Result<NixValue, String> {
+        self.event.push(ParseEvent::StartValue);
         let mut expr = self.parse_single_value()?;
         loop {
             self.skip_whitespace();
@@ -66,6 +69,7 @@ impl<'a> ParseCore for Parser<'a> {
                 }
             }
         }
+        self.event.push(ParseEvent::EndValue);
         Ok(expr)
     }
 }

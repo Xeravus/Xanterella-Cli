@@ -16,6 +16,7 @@ pub trait ParseFunctions {
 
 impl<'a> ParseFunctions for Parser<'a> {
     fn parse_let_in(&mut self) ->  Result<NixValue, String> {
+        self.event.push(ParseEvent::StartLetIn);
         let mut map = HashMap::new();
         loop {
             self.skip_whitespace();
@@ -56,10 +57,12 @@ impl<'a> ParseFunctions for Parser<'a> {
         }
         self.skip_whitespace();
         let body = self.parse_value()?;
+        self.event.push(ParseEvent::EndLetIn);
         Ok(NixValue::LetIn(map, Box::new(body)))
     }
 
     fn parse_with(&mut self) -> Result<NixValue, String> {
+        self.event.push(ParseEvent::StartWith);
         self.skip_whitespace();
         let namespace = self.parse_value()?;
         self.skip_whitespace();
@@ -72,6 +75,7 @@ impl<'a> ParseFunctions for Parser<'a> {
 
         self.skip_whitespace();
         let body = self.parse_value()?;
+        self.event.push(ParseEvent::EndWith);
         Ok(NixValue::With(Box::new(namespace), Box::new(body)))
     }
 
@@ -109,6 +113,7 @@ impl<'a> ParseFunctions for Parser<'a> {
     }
 
     fn parse_lambda(&mut self) -> Result<NixValue, String> {
+        self.event.push(ParseEvent::StartLambda);
         self.chars.next();
         let mut vec: Vec<String> = vec![];
         let mut alias = None;
@@ -156,6 +161,7 @@ impl<'a> ParseFunctions for Parser<'a> {
         }
         self.skip_whitespace();
         let body = self.parse_value()?;
+        self.event.push(ParseEvent::EndLambda);
         Ok(NixValue::Lambda(vec, alias, Box::new(body)))
     }
 }
