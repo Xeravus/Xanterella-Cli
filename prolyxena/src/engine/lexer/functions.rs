@@ -14,7 +14,7 @@ pub trait ParseFunctions {
     fn parse_lambda(&mut self) -> Result<NixValue, String>;
 }
 
-impl<'a> ParseFunctions for Parser<'a> {
+impl<'a> ParseFunctions for Lexer<'a> {
     fn parse_let_in(&mut self) ->  Result<NixValue, String> {
         self.event.push(ParseEvent::StartLetIn);
         let mut map = HashMap::new();
@@ -30,7 +30,7 @@ impl<'a> ParseFunctions for Parser<'a> {
             }
 
             if key.is_empty() {
-                return Err("Syntax-Fehler: Leerer Key im Let-In Statment".to_string());
+                return Err(format!("Syntax-Fehler: Leerer Key im Let-In Statment\nDatei: {}", &self.path));
             }
 
             if key == "in" {
@@ -42,7 +42,7 @@ impl<'a> ParseFunctions for Parser<'a> {
             if let Some(&'=') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartetes '=' nach Key '{}'", key));
+                return Err(format!("Syntax-Fehler: Erwartetes '=' nach Key '{}'\nDatei: {}", key, &self.path));
             }
 
             let value = self.parse_value()?;
@@ -51,7 +51,7 @@ impl<'a> ParseFunctions for Parser<'a> {
             if let Some(&';') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartetes ';' nach dem Wert von'{}'", key));
+                return Err(format!("Syntax-Fehler: Erwartetes ';' nach dem Wert von'{}'\nDatei: {}", key, &self.path));
             }
             map.insert(key, value);
         }
@@ -70,7 +70,7 @@ impl<'a> ParseFunctions for Parser<'a> {
         if let Some(&';') = self.chars.peek() {
             self.chars.next();
         } else {
-            return Err("Syntax-Fehler: Erwartetes ';' im 'with' Statment".to_string());
+            return Err(format!("Syntax-Fehler: Erwartetes ';' im 'with' Statment\nDatei: {}", &self.path));
         }
 
         self.skip_whitespace();
@@ -149,7 +149,7 @@ impl<'a> ParseFunctions for Parser<'a> {
                 NixValue::Identifier(name) => {
                     alias = Some(name);
                 },
-                _ => return Err("Syntax-Fehler: Gültiger Variablename nach '@' erwartet".to_string()),
+                _ => return Err(format!("Syntax-Fehler: Gültiger Variablename nach '@' erwartet\nDatei: {}", &self.path)),
             }
         }
         self.skip_whitespace();
@@ -157,7 +157,7 @@ impl<'a> ParseFunctions for Parser<'a> {
         if let Some(&':') = self.chars.peek() {
             self.chars.next();
         } else {
-            return Err("Syntax-Erro: Erwartetes ':' nach den Funktions-Argumenten".to_string());
+            return Err(format!("Syntax-Fehler: Erwartetes ':' nach den Funktions-Argumenten\nDatei: {}", &self.path));
         }
         self.skip_whitespace();
         let body = self.parse_value()?;

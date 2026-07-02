@@ -2,6 +2,7 @@ use clap::{Parser as CalpParser, Subcommand};
 
 use std::fs;
 
+use crate::core::parsing::*;
 use crate::cli::output::*;
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
@@ -19,7 +20,6 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     Show {
-        #[arg(short, long)]
         path: String,
         #[arg(short, long)]
         animation: bool,
@@ -38,27 +38,17 @@ pub fn cli_parse() {
 }
 
 pub fn prolyxena_parse(file: String, animation: bool, output: bool) {
-    println!("Lese Datei: {}", file);
-    let content = match fs::read_to_string(&file) {
-        Ok(text) => text,
-        Err(e) => {
-            eprintln!("Fehler beim Lesen der Datei: {}", e);
-            return;
+    let hashmap = parse_rec(file);
+    /*
+    if animation {
+        for (_key, value) in &hashmap {
+            value.show_parse_timeline();
         }
-    };
-    let mut prolyxena = Parser::new(&content);
-    match prolyxena.parse_value() {
-        Ok(ast) => {
-            println!("Erfolgreich geparst");
-            if output {
-                println!("{:#?}", ast);
-            }
-            if animation {
-                prolyxena.show_parse_timeline();
-            }
-        },
-        Err(e) => {
-            eprintln!("Parse-Fehler: {}", e);
+    }
+    */
+    if output {
+        for (key, value) in &hashmap {
+            println!("Datei: {}: \n{:#?}", key, value);
         }
     }
 }

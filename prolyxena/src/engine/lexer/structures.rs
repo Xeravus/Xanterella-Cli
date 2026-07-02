@@ -12,7 +12,7 @@ pub trait ParseStructures {
     fn parse_list(&mut self) -> Result<NixValue, String>;
 }
 
-impl<'a> ParseStructures for Parser<'a> {
+impl<'a> ParseStructures for Lexer<'a> {
     fn parse_attr_set(&mut self) -> Result<NixValue, String> {
         self.event.push(ParseEvent::StartAttrSet);
         self.chars.next();
@@ -34,7 +34,7 @@ impl<'a> ParseStructures for Parser<'a> {
             }
 
             if key.is_empty() {
-                return Err("Syntax-Fehler: Leerer Key im AttrSet".to_string());
+                return Err(format!("Syntax-Fehler: Leerer Key im AttrSet\nDatei: {}", &self.path));
             }
 
             if key == "inherit" {
@@ -54,7 +54,7 @@ impl<'a> ParseStructures for Parser<'a> {
                         self.chars.next();
                     }
                     if inherit.is_empty() {
-                        return Err("Syntax-Fehler: Unerwartetes Zeichen im 'inherit' Statment".to_string());
+                        return Err(format!("Syntax-Fehler: Unerwartetes Zeichen im 'inherit' Statment\nDatei: {}", &self.path));
                     }
                     map.insert(
                         inherit.clone(),
@@ -68,7 +68,7 @@ impl<'a> ParseStructures for Parser<'a> {
             if let Some(&'=') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartetes '=' nach Key '{}'", key));
+                return Err(format!("Syntax-Fehler: Erwartetes '=' nach Key '{}'\nDatei: {}", key, &self.path));
             }
 
             let value = self.parse_value()?;
@@ -77,7 +77,7 @@ impl<'a> ParseStructures for Parser<'a> {
             if let Some(&';') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartetes ';' nach dem Wert von '{}'", key));
+                return Err(format!("Syntax-Fehler: Erwartetes ';' nach dem Wert von '{}'\nDatei: {}", key, &self.path));
             }
             map.insert(key, value);
         }

@@ -15,7 +15,7 @@ pub trait ParsePrimitves {
     fn parse_identifier(&mut self) -> Result<NixValue, String>;
 }
 
-impl<'a> ParsePrimitves for Parser<'a> {
+impl<'a> ParsePrimitves for Lexer<'a> {
     fn parse_single_value(&mut self) -> Result<NixValue, String> {
         self.skip_whitespace();
         match self.chars.peek() {
@@ -33,8 +33,8 @@ impl<'a> ParsePrimitves for Parser<'a> {
             Some(&'~') => self.parse_path(),
             Some(c) if c.is_ascii_digit() => self.parse_number(),
             Some(c) if c.is_alphanumeric() || *c == '_' => self.parse_identifier(),
-            None => Err("Syntax-Fehler: Unerwaretes Ende der Datei".to_string()),
-            Some(c) => Err(format!("Syntax-Fehler: Unerwartetes Zeichen '{}'", c)),
+            None => Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei\nDatei: {}", &self.path)),
+            Some(c) => Err(format!("Syntax-Fehler: Unerwartetes Zeichen '{}'\nDatei: {}", c, &self.path)),
         }
     }
 
@@ -93,7 +93,7 @@ impl<'a> ParsePrimitves for Parser<'a> {
                     self.event.push(ParseEvent::EndNumber);
                     Ok(NixValue::Float(float_val))
                     },
-                Err(_) => Err(format!("Syntax-Fehler: Ungültige Kommazahl: '{}'", value_str)),
+                Err(_) => Err(format!("Syntax-Fehler: Ungültige Kommazahl: '{}'\nDatei: {}", value_str, &self.path)),
             }
         } else {
             match value_str.parse::<u64>() {
@@ -101,7 +101,7 @@ impl<'a> ParsePrimitves for Parser<'a> {
                     self.event.push(ParseEvent::EndNumber);
                     Ok(NixValue::Int(int_val))
                 },
-                Err(_) => Err(format!("Syntax-Fehler: Ungültige Ganzzahl '{}'", value_str)),
+                Err(_) => Err(format!("Syntax-Fehler: Ungültige Ganzzahl '{}'\nDatei: {}", value_str, &self.path)),
             }
         }
     }
@@ -118,17 +118,17 @@ impl<'a> ParsePrimitves for Parser<'a> {
             }
         }
         if word.is_empty() {
-            return Err("Syntax-Fehler: Unerwartet leerer Identifier".to_string());
+            return Err(format!("Syntax-Fehler: Unerwartet leerer Identifier\nDatei: {}", &self.path));
         }
 
         match word.as_str() {
             "let" => {
                 self.parse_let_in()
-                    .map_err(|_| "Syntax-Fehler: Unerwartetes Let-In Statment".to_string())
+                    .map_err(|_| format!("Syntax-Fehler: Unerwartetes Let-In Statment\nDatei: {}", &self.path))
             },
             "with" => {
                 self.parse_with()
-                    .map_err(|_| "Syntax-Fehler: Unerwartetes 'With' Statment".to_string())
+                    .map_err(|_| format!("Syntax-Fehler: Unerwartetes 'With' Statment\nDatei: {}", &self.path))
                 
             },
             "true" => {

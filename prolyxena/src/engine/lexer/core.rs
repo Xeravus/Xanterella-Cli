@@ -15,7 +15,7 @@ pub trait ParseCore {
     fn show_parse_timeline(&self);
 }
 
-impl<'a> ParseCore for Parser<'a> {
+impl<'a> ParseCore for Lexer<'a> {
     fn skip_whitespace(&mut self) {
         self.event.push(ParseEvent::StartWhitespace);
         loop {
