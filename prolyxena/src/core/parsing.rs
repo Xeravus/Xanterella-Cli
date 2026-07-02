@@ -33,7 +33,12 @@ pub fn parse_rec(folder: String) -> HashMap<String, NixValue> {
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_file())
         .filter_map(|entry| {
-            entry.path().to_str().map(|s| s.to_string())
+            let path_str = entry.path().to_str()?;
+            if path_str.ends_with(".nix") {
+                Some(path_str.to_string())
+            } else {
+                None
+            }
         })
         .collect();
     let mut output: HashMap<String, NixValue> = HashMap::new();
