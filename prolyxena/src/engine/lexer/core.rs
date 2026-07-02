@@ -75,35 +75,56 @@ impl<'a> ParseCore for Lexer<'a> {
         self.event.push(ParseEvent::EndValue);
         Ok(expr)
     }
+
     fn show_parse_timeline(&self) {
+        let mut indent = 0;
         for i in &self.event {
-            match i {
-                // Start
-                ParseEvent::StartAttrSet => println!("Event: Starte Attribut Set"),
-                ParseEvent::StartList => println!("Event: Starte Liste"),
-                ParseEvent::StartLetIn => println!("Event: Starte Let-In"),
-                ParseEvent::StartLambda => println!("Event: Starte Lambda"),
-                ParseEvent::StartWith => println!("Event: Starte With"),
-                ParseEvent::StartString => println!("Event: Starte String"),
-                ParseEvent::StartPath => println!("Event: Starte Path"),
-                ParseEvent::StartNumber => println!("Event: Starte Number"),
-                ParseEvent::StartIdentifier => println!("Event: Starte Identifier"),
-                ParseEvent::StartWhitespace => println!("Event: Starte Whitespace"),
-                ParseEvent::StartValue => println!("Event: Starte Value"),
-                // End 
-                ParseEvent::EndAttrSet => println!("Event: Ende Attribut Set"),
-                ParseEvent::EndList => println!("Event: End Liste"),
-                ParseEvent::EndLetIn => println!("Event: End Let-In"),
-                ParseEvent::EndLambda => println!("Event: End Lambda"),
-                ParseEvent::EndWith => println!("Event: End With"),
-                ParseEvent::EndString => println!("Event: End String"),
-                ParseEvent::EndPath => println!("Event: End Path"),
-                ParseEvent::EndNumber => println!("Event: End Number"),
-                ParseEvent::EndIdentifier => println!("Event: End Identifier"),
-                ParseEvent::EndWhitespace => println!("Event: End Whitespace"),
-                ParseEvent::EndValue => println!("Event: End Whitespace"),
+            let (is_start, name) = match i {
+                ParseEvent::StartAttrSet => (true, "Attribut Set"),
+                ParseEvent::EndAttrSet => (false, "Attribut Set"),
+
+                ParseEvent::StartList => (true, "Liste"),
+                ParseEvent::EndList => (false, "Liste"),
+
+                ParseEvent::StartLetIn => (true, "LetIn"),
+                ParseEvent::EndLetIn => (false, "LetIn"),
+
+                ParseEvent::StartLambda => (true, "Lambda"),
+                ParseEvent::EndLambda => (false, "Lambda"),
+
+                ParseEvent::StartWith => (true, "With"),
+                ParseEvent::EndWith => (false, "With"),
+
+                ParseEvent::StartString => (true, "String"),
+                ParseEvent::EndString => (false, "String"),
+
+                ParseEvent::StartPath => (true, "Path"),
+                ParseEvent::EndPath => (false, "Path"),
+
+                ParseEvent::StartNumber => (true, "Number"),
+                ParseEvent::EndNumber => (false, "Number"),
+
+                ParseEvent::StartIdentifier => (true, "Identifier"),
+                ParseEvent::EndIdentifier => (false, "Identifier"),
+
+                ParseEvent::StartWhitespace => (true, "Whitespace"),
+                ParseEvent::EndWhitespace => (false, "Whitespace"),
+
+                ParseEvent::StartValue => (true, "Value"),
+                ParseEvent::EndValue => (false, "Value"),
+            };
+            if !is_start && indent > 0 {
+                indent -= 1;
             }
-            sleep(Duration::from_millis(10));
+
+            let indent_string = "  ".repeat(indent);
+            if is_start {
+                println!("{}├── Starte {}", indent_string, name);
+                indent += 1;
+            } else {
+                println!("{}└── Schließe {}", indent_string, name);
+            }
+            sleep(Duration::from_millis(15));
         }
     }
 }

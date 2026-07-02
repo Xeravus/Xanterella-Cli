@@ -7,7 +7,7 @@ use std::process;
 use crate::engine::lexer::core::*;
 use crate::engine::core::*;
 
-pub fn parse(path: String) -> NixValue {
+pub fn parse(path: String) -> (NixValue, Vec<ParseEvent>) {
     let content = match fs::read_to_string(&path) {
         Ok(text) => text,
         Err(e) => {
@@ -17,7 +17,7 @@ pub fn parse(path: String) -> NixValue {
     };
     let mut prolyxena = Lexer::new(&content, path);
     match prolyxena.parse_value() {
-        Ok(ast) => ast,
+        Ok(ast) => (ast, prolyxena.event),
         Err(e) => {
             eprintln!("Fehler beim Lexen: \n{}", e);
             process::exit(1);
@@ -25,7 +25,7 @@ pub fn parse(path: String) -> NixValue {
     }
 }
 
-pub fn parse_rec(folder: String) -> HashMap<String, NixValue> {
+pub fn parse_rec(folder: String) -> HashMap<String, (NixValue, Vec<ParseEvent>)> {
     let files: Vec<String> = WalkDir::new(folder)
         .min_depth(1)
         .sort_by_file_name()
@@ -41,7 +41,7 @@ pub fn parse_rec(folder: String) -> HashMap<String, NixValue> {
             }
         })
         .collect();
-    let mut output: HashMap<String, NixValue> = HashMap::new();
+    let mut output: HashMap<String, (NixValue, Vec<ParseEvent>)> = HashMap::new();
     for i in files {
         output.insert(i.clone(), parse(i));
     }

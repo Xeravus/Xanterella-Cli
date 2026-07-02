@@ -39,16 +39,14 @@ pub fn cli_parse() {
 
 pub fn prolyxena_parse(file: String, animation: bool, output: bool) {
     let hashmap = parse_rec(file);
-    /*
-    if animation {
-        for (_key, value) in &hashmap {
-            value.show_parse_timeline();
+    for (key, (ast, events)) in hashmap {
+        if animation {
+            println!("\n = = = Starte Parsing Animation für: {} = = =\n", key);
+            show_parse_timeline(events);
         }
-    }
-    */
-    if output {
-        for (key, value) in &hashmap {
-            println!("Datei: {}: \n{:#?}", key, value);
+        
+        if output {
+            println!("\n AST für: {}: \n{:#?}", key, ast);
         }
     }
 }
