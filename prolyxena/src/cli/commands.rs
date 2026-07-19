@@ -25,19 +25,21 @@ pub enum Commands {
         animation: bool,
         #[arg(short, long)]
         output: bool,
+        #[arg(short, long)]
+        recursive: bool,
     },
 }
 
 pub fn cli_parse() {
     let cli = Cli::parse();
     match &cli.command {
-        Commands::Show { path, animation, output } => {
-            prolyxena_parse(path.to_string(), *animation, *output);
+        Commands::Show { path, animation, output, recursive } => {
+            prolyxena_parse(path.to_string(), *animation, *output, *recursive);
         },
     }
 }
 
-pub fn prolyxena_parse(file: String, animation: bool, output: bool) {
+pub fn prolyxena_parse(file: String, animation: bool, output: bool, recurisve: bool) {
     let hashmap = parse_rec(file);
     for (key, (ast, events)) in hashmap {
         if animation {
