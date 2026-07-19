@@ -1,0 +1,50 @@
+name: Xanterella-Cli CI Staging
+
+on:
+  pull_request:
+    branches: [ "final/staging" ]
+
+jobs:
+  xanterella:
+    name: Xanterella (Staging)
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          clean: false
+
+      - name: Cargo Check
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check --release"
+
+      - name: Cargo Tests
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test"
+
+      - name: Cargo Build
+        run: nix build .#xanterella
+
+      - name: Cleanup
+        uses: Swatinem/rust-cache@v2
+
+  prolyxena:
+    name: Prolyxena (Staging)
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          clean: false
+
+      - name: Cargo Check
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo check --release"
+
+      - name: Cargo Tests
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo test"
+
+      - name: Cargo Build
+        run: nix build .#prolyxena
+
+      - name: Cleanup
+        uses: Swatinem/rust-cache@v2

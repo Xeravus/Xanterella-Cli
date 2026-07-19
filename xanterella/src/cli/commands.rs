@@ -70,7 +70,7 @@ pub enum Config {
         remotebuilder: bool,
         #[arg(long = "system-version", short = 's')]
         system: Option<f32>,
-        #[arg(long = "hardware", short = 'h')]
+        #[arg(long = "hardware", short = 'H')]
         hardware: Option<String>,
     },
     RemoveHost {
