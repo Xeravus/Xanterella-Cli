@@ -1,0 +1,54 @@
+name: Xanterella-Cli CI Stable
+
+on:
+  pull_request:
+    branches: [ "final/stable", "stable" ]
+
+jobs:
+  xanterella:
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          clean: false
+
+      - name: Cargo Check
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check --release"
+
+      - name: Cargo Tests
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test"
+
+      - name: Cargo Build
+        run: nix build .#xanterella
+
+      - name: Cargo Clippy
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo clippy"
+
+      - name: Cleanup
+        uses: Swatinem/rust-cache@v2
+
+  prolyxena:
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          clean: false
+
+      - name: Cargo Check
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo check --release"
+
+      - name: Cargo Tests
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo test"
+
+      - name: Cargo Build
+        run: nix build .#prolyxena
+
+      - name: Cargo Clippy
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo clippy"
+
+      - name: Cleanup
+        uses: Swatinem/rust-cache@v2
