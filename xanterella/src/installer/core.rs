@@ -61,7 +61,7 @@ pub fn crylia_edit_start(config: String) {
 
     create_hardware(config);
     write_config(edit_config(parse_config(), EditMode::Add));
-    files_alejandra();
+    files_alejandra(&get_path(Paths::Nixconf));
     info!("[ OK ] - Crylia Überarbeitung erfolgreich");
 }
 
@@ -70,7 +70,7 @@ pub fn crylia_edit_finish() {
 
     remove_hardware();
     write_config(edit_config(parse_config(), EditMode::Remove));
-    files_alejandra();
+    files_alejandra(&get_path(Paths::Nixconf));
     info!("[ OK ] - Crylia Überarbeitung erfolgreich");
 }
 

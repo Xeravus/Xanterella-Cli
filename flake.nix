@@ -29,10 +29,33 @@
         ];
         env.RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
       };
+      prolyxena = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          cargo
+          rustc
+          rustfmt
+          clippy
+          rust-analyzer
+          tokei
+        ];
+        nativeBuildInputs = [
+          pkgs.pkg-config
+        ];
+        env.RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+      };
     };
     packages."x86_64-linux" = {
       xanterella = naerskLib.buildPackage {
         src = ./xanterella/.;
+        buildInputs = [
+          pkgs.pkg-config
+        ];
+        nativeBuildInputs = [
+          pkgs.pkg-config
+        ];
+      };
+      prolyxena = naerskLib.buildPackage {
+        src = ./prolyxena/.;
         buildInputs = [
           pkgs.pkg-config
         ];

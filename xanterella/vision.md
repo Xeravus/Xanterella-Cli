@@ -25,8 +25,10 @@
 - [ ] Tailscale Init
 
 ## 0.5v Xanterella - Config
-- [ ] Basic add Host
-- [ ] Basic Colmena changes
+- [x] Basic sort Host
+- [x] Basic add Host
+    - [x] Basic remove Host
+    - [ ] Basic diff Host feature
 - [ ] Basic list Modules for Host
 
 ## 0.6v Xanterella - TUI
@@ -34,10 +36,35 @@
 
 ## 0.7v Xanterella - Extended Daemon
 - [ ] Advanced Daemon
-    - [ ] Approval App/Flow
-    - [ ] Aggressive Mode
+    - [ ] Approval Flow(with PR(maybe))
     - [ ] Remote Builder
 - [ ] Auto add Host
     - [ ] Add Host in hosts/
     - [ ] Add Host in Colmena-Hosts
     - [ ] Auto colmena deploy after install
+
+# Sidequests
+## CiCd Pipelin
+### Ci Part - Zero-Click Tests
+- [x] - Self Hosted Github Runner
+    - [x] - Deklaritiv selfhosted GitHub runner
+- [x] - GitHub Action
+    - [x] - On Pull Request
+        - [ ] - Multiple Scipts for different branches
+    - [ ] - On Workflow run
+### Cd Part - Zero-Click Release
+- [x] - Self hosted GitHub Runner
+    - [x] - Deklaritiv selfhosted GitHub runner
+- [ ] - GitHub Action
+    - [ ] - On Pull Request / Tag
+        - [ ] - Tests
+        - [ ] - Release 
+            - [ ] - Autocompiled Binaries
+                - [ ] - Cross compiled
+                    - [ ] - x86_64
+                    - [ ] - aarch64
+### Ephermeral Integration Testing (Testing of the installer virtualy using QEMU)
+- [x] - Self hosted GitHub Runner
+    - [x] - Deklaritiv selfhosted GitHub runner
+- [ ] - GitHub Action
+    - [ ] - 
