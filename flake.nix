@@ -23,6 +23,7 @@
           clippy
           rust-analyzer
           tokei
+          alejandra
         ];
         nativeBuildInputs = [
           pkgs.pkg-config
