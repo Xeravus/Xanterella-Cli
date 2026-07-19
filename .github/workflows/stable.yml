@@ -6,6 +6,7 @@ on:
 
 jobs:
   xanterella:
+    name: Xanterella (Stable)
     runs-on: [self-hosted, xanterella]
 
     steps:
@@ -30,6 +31,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
   prolyxena:
+    name: Prolyxena (Stable)
     runs-on: [self-hosted, xanterella]
 
     steps:
