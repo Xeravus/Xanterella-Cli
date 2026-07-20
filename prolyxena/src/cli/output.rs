@@ -49,8 +49,6 @@ pub fn show_parse_timeline(vec: Vec<ParseEvent>) {
 
             ParseEvent::StartValue => (true, "Value"),
             ParseEvent::EndValue => (false, "Value"),
-
-            _ => (true, "Element"),
         };
 
         let action = if is_start { 

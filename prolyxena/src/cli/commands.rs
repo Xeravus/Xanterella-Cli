@@ -6,6 +6,7 @@ use crate::core::parsing::*;
 use crate::cli::output::*;
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
+use crate::engine::lexer::vfs::*;
 
 #[derive(CalpParser)]
 #[command(name = "Prolyxena")]
@@ -25,22 +26,25 @@ pub enum Commands {
         animation: bool,
         #[arg(short, long)]
         output: bool,
-        #[arg(short, long)]
-        recursive: bool,
     },
 }
 
 pub fn cli_parse() {
     let cli = Cli::parse();
     match &cli.command {
-        Commands::Show { path, animation, output, recursive } => {
-            prolyxena_parse(path.to_string(), *animation, *output, *recursive);
+        Commands::Show { path, animation, output } => {
+            prolyxena_parse(path.to_string(), *animation, *output);
         },
     }
 }
 
-pub fn prolyxena_parse(file: String, animation: bool, output: bool, recurisve: bool) {
-    let hashmap = parse_rec(file);
+pub fn prolyxena_parse(file: String, animation: bool, output: bool) {
+    let mut data = FsData::new(&file);
+    data.load();
+    if output {
+        println!("\n AST: \n{:#?}", data.fsnodes);
+    }
+    /*
     for (key, (ast, events)) in hashmap {
         if animation {
             println!("\n = = = Starte Parsing Animation für: {} = = =\n", key);
@@ -50,5 +54,5 @@ pub fn prolyxena_parse(file: String, animation: bool, output: bool, recurisve: b
         if output {
             println!("\n AST für: {}: \n{:#?}", key, ast);
         }
-    }
+    */
 }
