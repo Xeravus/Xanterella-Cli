@@ -28,7 +28,7 @@ mod tests {
         assert_eq!(vfs.files[0], "einzelne_datei.nix");
     }
     #[test]
-    fn test_egine_lexer_vfs_gen_tree_with_real_files() {
+    fn test_engine_lexer_vfs_gen_tree_with_real_files() {
         let temp_dir = env::temp_dir().join("prolyxena_test_vfs");
         let sub_dir = temp_dir.join("hosts").join("node1");
         fs::create_dir_all(&sub_dir).unwrap();
