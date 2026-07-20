@@ -165,3 +165,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
         Ok(NixValue::Lambda(vec, alias, Box::new(body)))
     }
 }
+
+#[cfg(test)]
+#[path = "functions_test.rs"]
+mod tests;
