@@ -93,7 +93,13 @@ impl FsData {
             if let FsNodes::Dir(map) = pointer {
                 let content = fs::read_to_string(&i).unwrap();
                 let mut file_data = Lexer::new(&content, i.clone());
-                let ast = file_data.parse_value().unwrap();
+                let ast = match file_data.parse_value() {
+                    Ok(_) => continue,
+                    Err(e) => {
+                        eprintln!("Fehler beim Parsen: \n{}", e);
+                        process::exit(1);
+                    },
+                };
                 map.insert(file_name.to_string(), FsNodes::File {
                     name: file_name.to_string(), 
                     ast

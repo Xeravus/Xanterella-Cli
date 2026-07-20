@@ -33,8 +33,8 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             Some(&'~') => self.parse_path(),
             Some(c) if c.is_ascii_digit() => self.parse_number(),
             Some(c) if c.is_alphanumeric() || *c == '_' => self.parse_identifier(),
-            None => Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei\nDatei: {}", &self.path)),
-            Some(c) => Err(format!("Syntax-Fehler: Unerwartetes Zeichen '{}'\nDatei: {}", c, &self.path)),
+            None => Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei \n Datei: {}", &self.path)),
+            Some(c) => Err(format!("Syntax-Fehler: Unerwartetes Zeichen '{}' \n Datei: {}", c, &self.path)),
         }
     }
 
@@ -118,18 +118,15 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             }
         }
         if word.is_empty() {
-            return Err(format!("Syntax-Fehler: Unerwartet leerer Identifier\nDatei: {}", &self.path));
+            return Err(format!("Syntax-Fehler: Unerwartet leerer Identifier \n Datei: {}", &self.path));
         }
 
         match word.as_str() {
             "let" => {
                 self.parse_let_in()
-                    .map_err(|_| format!("Syntax-Fehler: Unerwartetes Let-In Statment\nDatei: {}", &self.path))
             },
             "with" => {
                 self.parse_with()
-                    .map_err(|_| format!("Syntax-Fehler: Unerwartetes 'With' Statment\nDatei: {}", &self.path))
-                
             },
             "true" => {
                 self.event.push(ParseEvent::EndIdentifier);
