@@ -64,7 +64,7 @@ impl FsData {
                 process::exit(1);
                 vec![]
             };
-        self.files = files;;
+        self.files = files;
     }
 
     pub fn gen_tree(&mut self) {
@@ -102,3 +102,7 @@ impl FsData {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "vfs_test.rs"]
+mod tests;
