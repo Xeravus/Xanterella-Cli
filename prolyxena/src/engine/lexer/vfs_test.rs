@@ -8,7 +8,7 @@ mod tests {
     use std::io::Write;
 
     #[test]
-    fn test_fsdata_initialization() {
+    fn test_engine_lexer_vfs_fsdata_initialization() {
         let vfs = FsData::new("/dummy/path"); 
         
         assert_eq!(vfs.path, "/dummy/path");
@@ -20,7 +20,7 @@ mod tests {
         }
     }
     #[test]
-    fn test_get_files_single_nix_file() {
+    fn test_engine_lexer_vfs_get_files_single_nix_file() {
         let mut vfs = FsData::new("einzelne_datei.nix");
         vfs.get_files(); 
         
@@ -28,7 +28,7 @@ mod tests {
         assert_eq!(vfs.files[0], "einzelne_datei.nix");
     }
     #[test]
-    fn test_gen_tree_with_real_files() {
+    fn test_egine_lexer_vfs_gen_tree_with_real_files() {
         let temp_dir = env::temp_dir().join("prolyxena_test_vfs");
         let sub_dir = temp_dir.join("hosts").join("node1");
         fs::create_dir_all(&sub_dir).unwrap();

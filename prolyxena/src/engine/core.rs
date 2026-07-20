@@ -18,7 +18,7 @@ pub enum NixValue {
     Path(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ParseEvent {
     // Start
     StartAttrSet,
@@ -61,3 +61,7 @@ impl<'a> Lexer<'a> {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "core_test.rs"]
+mod tests;
