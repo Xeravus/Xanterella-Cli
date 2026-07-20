@@ -146,3 +146,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "primitives_test.rs"]
+mod tests;
