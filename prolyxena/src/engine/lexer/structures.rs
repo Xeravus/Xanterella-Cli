@@ -103,3 +103,7 @@ impl<'a> ParseStructures for Lexer<'a> {
         Ok(NixValue::List(output_vec))
     }
 }
+
+#[cfg(test)]
+#[path = "structures_test.rs"]
+mod tests;
