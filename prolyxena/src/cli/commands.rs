@@ -3,7 +3,6 @@ use clap::{Parser as CalpParser, Subcommand};
 use std::fs;
 
 use crate::core::parsing::*;
-use crate::cli::output::*;
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
 use crate::engine::lexer::vfs::*;
@@ -44,15 +43,4 @@ pub fn prolyxena_parse(file: String, animation: bool, output: bool) {
     if output {
         println!("\n AST: \n{:#?}", data.fsnodes);
     }
-    /*
-    for (key, (ast, events)) in hashmap {
-        if animation {
-            println!("\n = = = Starte Parsing Animation für: {} = = =\n", key);
-            show_parse_timeline(events);
-        }
-        
-        if output {
-            println!("\n AST für: {}: \n{:#?}", key, ast);
-        }
-    */
 }
