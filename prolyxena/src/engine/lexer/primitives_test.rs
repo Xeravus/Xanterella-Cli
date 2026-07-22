@@ -265,4 +265,59 @@ mod tests {
         assert!(!matches!(result1, Ok(NixValue::AttrSet(_))));
         assert!(!matches!(result2, Ok(NixValue::AttrSet(_))));
     }
+
+    #[test]
+    fn test_engine_lexer_primitves_parse_expression() {
+        let test1 = String::from("test");
+        let test2 = String::from("test");
+        let test3 = String::from("test");
+        let content1 = "test";
+        let content2 = "test ++ test";
+        let content3 = "test ++ ";
+        let content4 = ";test";
+        
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
+        let mut data4 = Lexer::new(content4, String::from("path.nix"));
+
+        let result1 = data1.parse_expression();
+        let result2 = data2.parse_expression();
+        let result3 = data3.parse_expression();
+        let result4 = data4.parse_expression();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_ok());
+        assert!(result3.is_err());
+        assert!(result4.is_err());
+
+        assert!(matches!(result1, Ok(NixValue::Identifier(test1))));
+        assert!(matches!(result2, Ok(NixValue::BinaryOp { left: test2, operator: Operator::Concat, right: test3,})));
+    }
+
+    #[test]
+    fn test_engine_lexer_primitives_parse_operator() {
+        let content1 = "++";
+        let content2 = "+";
+        let content3 = "=";
+        let content4 = "r";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
+        let mut data4 = Lexer::new(content4, String::from("path.nix"));
+    
+        let result1 = data1.parse_operator();
+        let result2 = data2.parse_operator();
+        let result3 = data3.parse_operator();
+        let result4 = data4.parse_operator();
+
+        assert!(result1.is_some());
+        assert!(result2.is_some());
+        assert!(result3.is_none());
+        assert!(result4.is_none());
+
+        assert_eq!(result1, Some(Operator::Concat));
+        assert_eq!(result2, Some(Operator::Add));
+    }
 }
