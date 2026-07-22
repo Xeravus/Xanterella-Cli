@@ -17,6 +17,7 @@ pub enum NixValue {
     Lambda(Vec<String>, Option<String>, Box<NixValue>),
     Apply(Box<NixValue>, Box<NixValue>),
     Path(String),
+    Antiquotation(Box<NixValue>),
     BinaryOp {
         left: Box<NixValue>,
         operator: Operator,
@@ -51,6 +52,7 @@ pub enum ParseEvent {
     StartWhitespace,
     StartValue,
     StartGroup,
+    StartAntiquotation,
     // End
     EndAttrSet,
     EndList,
@@ -66,6 +68,7 @@ pub enum ParseEvent {
     EndWhitespace,
     EndValue,
     EndGroup,
+    EndAntiquotation,
 }
 
 pub struct Lexer<'a> {

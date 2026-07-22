@@ -110,6 +110,30 @@ mod tests {
         assert!(matches!(result1, Ok(NixValue::Group(_))));
     }
     #[test]
+    fn test_engine_lexer_primitives_parse_single_value_antiquotation() {
+        let content1 = "${test}";
+        let content2 = "${test";
+        let content3 = "$test}";
+        let content4 = "$test";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
+        let mut data4 = Lexer::new(content4, String::from("path.nix"));
+
+        let result1 = data1.parse_single_value();
+        let result2 = data2.parse_single_value();
+        let result3 = data3.parse_single_value();
+        let result4 = data4.parse_single_value();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+        assert!(result3.is_err());
+        assert!(result4.is_err());
+
+        assert!(matches!(result1, Ok(NixValue::Antiquotation(_))));
+    }
+    #[test]
     fn test_engine_lexer_primitives_parse_single_value_digit() {
         let content1 = "1";
         let content2 = ",";

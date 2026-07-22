@@ -41,13 +41,31 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 self.skip_whitespace();
                 if let Some(&')') = self.chars.peek() {
                     self.chars.next();
-                self.event.push(ParseEvent::EndGroup);
+                    self.event.push(ParseEvent::EndGroup);
                     Ok(expr)
                 } else {
                     Err(format!("Syntax-Fehler: Erwartetes ')' nach dem Ausdruck\n Datei: {}", &self.path))
                 }
             },
-
+            Some(&'$') => {
+                self.chars.next();
+                if let Some(&'{') = self.chars.peek() {
+                    self.chars.next();
+                    self.event.push(ParseEvent::StartAntiquotation);
+                    let parsed_expr = self.parse_expression()?;
+                    let expr = NixValue::Antiquotation(Box::new(parsed_expr));
+                    self.skip_whitespace();
+                    if let Some(&'}') = self.chars.peek() {
+                        self.chars.next();
+                        self.event.push(ParseEvent::EndAntiquotation);
+                        Ok(expr)
+                    } else {
+                        Err(format!("Syntax-Fehler: Erwartetes '}}' nach der Antiquotation\n Datei: {}", &self.path))
+                    }
+                } else {
+                    Err(format!("Syntax-Fehler: Erwartet '{{' nach '$' für eine Antiquotation\n Datei: {}", &self.path))
+                }
+            },
             Some(c) if c.is_ascii_digit() => self.parse_number(),
             Some(c) if c.is_alphanumeric() || *c == '_' => self.parse_identifier(),
             None => Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei \n Datei: {}", &self.path)),

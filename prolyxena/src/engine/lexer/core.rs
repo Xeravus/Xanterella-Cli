@@ -121,6 +121,9 @@ impl<'a> ParseCore for Lexer<'a> {
 
                 ParseEvent::StartGroup => (true, "Group"),
                 ParseEvent::EndGroup => (false, "Group"),
+
+                ParseEvent::StartAntiquotation => (true, "Antiquotation"),
+                ParseEvent::EndAntiquotation => (false, "Antiquotation"),
             };
             if !is_start && indent > 0 {
                 indent -= 1;
