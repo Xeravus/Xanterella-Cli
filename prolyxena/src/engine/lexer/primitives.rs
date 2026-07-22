@@ -33,6 +33,21 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             Some(&'.') => self.parse_path(),
             Some(&'/') => self.parse_path(),
             Some(&'~') => self.parse_path(),
+            Some(&'(') => {
+                self.chars.next();
+                self.event.push(ParseEvent::StartGroup);
+                let parsed_expr = self.parse_expression()?;
+                let expr = NixValue::Group(Box::new(parsed_expr));
+                self.skip_whitespace();
+                if let Some(&')') = self.chars.peek() {
+                    self.chars.next();
+                self.event.push(ParseEvent::EndGroup);
+                    Ok(expr)
+                } else {
+                    Err(format!("Syntax-Fehler: Erwartetes ')' nach dem Ausdruck\n Datei: {}", &self.path))
+                }
+            },
+
             Some(c) if c.is_ascii_digit() => self.parse_number(),
             Some(c) if c.is_alphanumeric() || *c == '_' => self.parse_identifier(),
             None => Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei \n Datei: {}", &self.path)),

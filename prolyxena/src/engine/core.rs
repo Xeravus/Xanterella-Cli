@@ -11,6 +11,7 @@ pub enum NixValue {
     Float(f64),
     Bool(bool),
     Identifier(String),
+    Group(Box<NixValue>),
     LetIn(HashMap<String, NixValue>, Box<NixValue>),
     With(Box<NixValue>, Box<NixValue>),
     Lambda(Vec<String>, Option<String>, Box<NixValue>),
@@ -49,6 +50,7 @@ pub enum ParseEvent {
     StartIdentifier,
     StartWhitespace,
     StartValue,
+    StartGroup,
     // End
     EndAttrSet,
     EndList,
@@ -63,6 +65,7 @@ pub enum ParseEvent {
     EndIdentifier,
     EndWhitespace,
     EndValue,
+    EndGroup,
 }
 
 pub struct Lexer<'a> {

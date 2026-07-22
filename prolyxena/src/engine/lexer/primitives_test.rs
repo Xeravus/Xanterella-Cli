@@ -94,6 +94,22 @@ mod tests {
         assert!(result3.is_ok());
     }
     #[test]
+    fn test_engine_lexer_primitives_parse_single_value_group() {
+        let content1 = "(test)";
+        let content2 = "(test";
+
+        let mut data1 = Lexer::new(content1, String::from("path"));
+        let mut data2 = Lexer::new(content2, String::from("path"));
+
+        let result1 = data1.parse_single_value();
+        let result2 = data2.parse_single_value();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+
+        assert!(matches!(result1, Ok(NixValue::Group(_))));
+    }
+    #[test]
     fn test_engine_lexer_primitives_parse_single_value_digit() {
         let content1 = "1";
         let content2 = ",";
