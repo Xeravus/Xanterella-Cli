@@ -16,6 +16,21 @@ pub enum NixValue {
     Lambda(Vec<String>, Option<String>, Box<NixValue>),
     Apply(Box<NixValue>, Box<NixValue>),
     Path(String),
+    BinaryOp {
+        left: Box<NixValue>,
+        operator: Operator,
+        right: Box<NixValue>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Operator {
+    Add,
+    Sub,
+    Concat,
+    Equal,
+    Merge,
+    Divide,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -29,6 +44,8 @@ pub enum ParseEvent {
     StartString,
     StartPath,
     StartNumber,
+    StartExpression,
+    StartOperator,
     StartIdentifier,
     StartWhitespace,
     StartValue,
@@ -41,6 +58,8 @@ pub enum ParseEvent {
     EndString,
     EndPath,
     EndNumber,
+    EndExpression,
+    EndOperator,
     EndIdentifier,
     EndWhitespace,
     EndValue,

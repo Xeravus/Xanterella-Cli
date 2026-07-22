@@ -13,6 +13,8 @@ pub trait ParsePrimitves {
     fn parse_string(&mut self) -> Result<NixValue, String>;
     fn parse_number(&mut self) -> Result<NixValue, String>;
     fn parse_identifier(&mut self) -> Result<NixValue, String>;
+    fn parse_expression(&mut self) -> Result<NixValue, String>;
+    fn parse_operator(&mut self) -> Option<Operator>;
 }
 
 impl<'a> ParsePrimitves for Lexer<'a> {
@@ -140,6 +142,74 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 self.event.push(ParseEvent::EndIdentifier);
                 Ok(NixValue::Identifier(word))
             }
+        }
+    }
+
+    fn parse_expression(&mut self) -> Result<NixValue, String> {
+        self.event.push(ParseEvent::StartExpression);
+        let mut left = self.parse_single_value()?;
+        while let Some(op) = self.parse_operator() {
+            let right = self.parse_single_value()?;
+            left = NixValue::BinaryOp {
+                left: Box::new(left),
+                operator: op,
+                right: Box::new(right),
+            }
+        }
+        self.event.push(ParseEvent::EndExpression);
+        Ok(left)
+    }
+
+    fn parse_operator(&mut self) -> Option<Operator> {
+        self.skip_whitespace();
+        let mut scout = &mut self.chars.clone();
+        let first = &scout.next()?;
+        match first {
+            '+' => {
+                if let Some(&'+') = scout.peek() {
+                    self.chars.next();
+                    self.chars.next();
+                    self.event.push(ParseEvent::StartOperator);
+                    self.event.push(ParseEvent::EndOperator);
+                    Some(Operator::Concat)
+                } else {
+                    self.chars.next();
+                    self.event.push(ParseEvent::StartOperator);
+                    self.event.push(ParseEvent::EndOperator);
+                    Some(Operator::Add)
+                }
+            }
+            '-' => {
+                self.chars.next();
+                self.event.push(ParseEvent::StartOperator);
+                self.event.push(ParseEvent::EndOperator);
+                Some(Operator::Sub)
+            }
+            '=' => {
+                if let Some(&'=') = scout.peek() {
+                    self.chars.next();
+                    self.chars.next();
+                    self.event.push(ParseEvent::StartOperator);
+                    self.event.push(ParseEvent::EndOperator);
+                    Some(Operator::Equal)
+                } else {
+                    None
+                }
+            }
+            '/' => {
+                if let Some(&'/') = scout.peek() {
+                    self.chars.next();
+                    self.chars.next();
+                    self.event.push(ParseEvent::StartOperator);
+                    self.event.push(ParseEvent::EndOperator);
+                    Some(Operator::Merge)
+                } else {
+                    self.event.push(ParseEvent::StartOperator);
+                    self.event.push(ParseEvent::EndOperator);
+                    Some(Operator::Divide)
+                }
+            }
+            _ => None
         }
     }
 }

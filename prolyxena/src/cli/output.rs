@@ -1,4 +1,4 @@
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{Progressshow_parseBar, ProgressStyle};
 
 use std::thread::sleep;
 use std::time::Duration;
@@ -40,6 +40,12 @@ pub fn show_parse_timeline(vec: Vec<ParseEvent>) {
 
             ParseEvent::StartNumber => (true, "Number"),
             ParseEvent::EndNumber => (false, "Number"),
+
+            ParseEvent::StartExpression => (true, "Expression"),
+            ParseEvent::EndExpression => (false, "Expression"),
+
+            ParseEvent::StartOperator => (true, "Operator"),
+            ParseEvent::EndOperator => (false, "Operator"),
 
             ParseEvent::StartIdentifier => (true, "Identifier"),
             ParseEvent::EndIdentifier => (false, "Identifier"),
