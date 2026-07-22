@@ -105,6 +105,25 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 break;
             }
         }
+
+        if let Some(&'@') = scout.peek() {
+            scout.next();
+            while let Some(&c) = scout.peek() {
+                if c.is_whitespace() || c.is_alphanumeric() || c == '_' || c == '-' {
+                    scout.next();
+                } else {
+                    break;
+                }
+            }
+        }
+
+        while let Some(&c) = scout.peek() {
+            if c.is_whitespace() {
+                scout.next();
+            } else {
+                break;
+            }
+        }
         
         match scout.peek() {
             Some(&':') => true,
