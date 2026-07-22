@@ -94,7 +94,7 @@ impl FsData {
                 let content = fs::read_to_string(&i).unwrap();
                 let mut file_data = Lexer::new(&content, i.clone());
                 let ast = match file_data.parse_value() {
-                    Ok(_) => continue,
+                    Ok(parsed_ast) => parsed_ast,
                     Err(e) => {
                         eprintln!("Fehler beim Parsen: \n{}", e);
                         process::exit(1);
