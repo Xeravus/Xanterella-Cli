@@ -310,7 +310,6 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             output.push(StringFragment::Text(string.clone()));
         }
         if let Some(&';') = self.chars.peek() {
-            self.chars.next();
         } else {
             return Err(format!("Syntax-Fehler: Erwartet ';' nach dem Indented String \nDatei: {} \nErwartet: Indented String", &self.path));
         }
