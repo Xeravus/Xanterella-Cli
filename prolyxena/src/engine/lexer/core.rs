@@ -44,7 +44,7 @@ impl<'a> ParseCore for Lexer<'a> {
 
     fn parse_value(&mut self) -> Result<NixValue, String> {
         self.event.push(ParseEvent::StartValue);
-        let mut expr = self.parse_single_value()?;
+        let mut expr = self.parse_expression()?;
         loop {
             self.skip_whitespace();
             match self.chars.peek() {
@@ -104,6 +104,12 @@ impl<'a> ParseCore for Lexer<'a> {
                 ParseEvent::StartNumber => (true, "Number"),
                 ParseEvent::EndNumber => (false, "Number"),
 
+                ParseEvent::StartExpression => (true, "Expression"),
+                ParseEvent::EndExpression => (false, "Expression"),
+
+                ParseEvent::StartOperator => (true, "Operator"),
+                ParseEvent::EndOperator => (false, "Operator"),
+
                 ParseEvent::StartIdentifier => (true, "Identifier"),
                 ParseEvent::EndIdentifier => (false, "Identifier"),
 
@@ -112,6 +118,15 @@ impl<'a> ParseCore for Lexer<'a> {
 
                 ParseEvent::StartValue => (true, "Value"),
                 ParseEvent::EndValue => (false, "Value"),
+
+                ParseEvent::StartGroup => (true, "Group"),
+                ParseEvent::EndGroup => (false, "Group"),
+
+                ParseEvent::StartAntiquotation => (true, "Antiquotation"),
+                ParseEvent::EndAntiquotation => (false, "Antiquotation"),
+
+                ParseEvent::StartIndentedString => (true, "Intented String"),
+                ParseEvent::EndIndentedString => (false, "Intented String"),
             };
             if !is_start && indent > 0 {
                 indent -= 1;
