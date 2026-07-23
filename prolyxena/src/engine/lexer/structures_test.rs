@@ -31,4 +31,17 @@ mod tests {
         assert!(!matches!(result1, Ok(NixValue::List(_)))); 
         assert!(!matches!(result2, Ok(NixValue::List(_)))); 
     }
+
+    #[test]
+    fn test_engine_lexer_strucutres_parse_list() {
+        let content1 = "[ test ]";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+
+        let result1 = data1.parse_list();
+
+        assert!(result1.is_ok());
+
+        assert!(matches!(result1, Ok(NixValue::List(_))));
+    }
 }
