@@ -262,13 +262,20 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         let mut string = String::new();
         while let Some(&c) = self.chars.peek() {
             if let Some(&'$') = self.chars.peek() {
-                if !&string.is_empty() {
-                    output.push(StringFragment::Text(string.clone()));
-                    string.clear();
+                let scout = &mut self.chars.clone();
+                scout.next();
+                if let Some(&'{') = scout.peek() {
+                    if !&string.is_empty() {
+                        output.push(StringFragment::Text(string.clone()));
+                        string.clear();
+                    }
+                    let parsed_expr = self.parse_single_value()?;
+                    let expr = StringFragment::Antiquotation(Box::new(parsed_expr));
+                    output.push(expr)
+                } else {
+                    string.push(c);
+                    self.chars.next();
                 }
-                let parsed_expr = self.parse_single_value()?;
-                let expr = StringFragment::Antiquotation(Box::new(parsed_expr));
-                output.push(expr)
             } 
             if let Some(&'\'') = self.chars.peek() {
                 string.push(c);
