@@ -3,9 +3,16 @@ use clap::{Parser as CalpParser, Subcommand};
 use std::fs;
 
 use crate::core::parsing::*;
+
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
 use crate::engine::lexer::vfs::*;
+
+use crate::tui::core::*;
+
+use std::{
+    sync::mpsc, thread, time::Duration
+};
 
 #[derive(CalpParser)]
 #[command(name = "Prolyxena")]
@@ -26,6 +33,7 @@ pub enum Commands {
         #[arg(short, long)]
         output: bool,
     },
+    Tui,
 }
 
 pub fn cli_parse() {
@@ -33,6 +41,9 @@ pub fn cli_parse() {
     match &cli.command {
         Commands::Show { path, animation, output } => {
             prolyxena_parse(path.to_string(), *animation, *output);
+        },
+        Commands::Tui => {
+            start_tui();
         },
     }
 }
