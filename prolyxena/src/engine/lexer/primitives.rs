@@ -90,7 +90,6 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         let mut string = String::new();
         while let Some(&c) = self.chars.peek() {
             if c.is_whitespace() || c == ';' {
-                self.chars.next();
                 break;
             }
             string.push(c);
