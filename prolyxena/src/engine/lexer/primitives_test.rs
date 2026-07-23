@@ -396,4 +396,17 @@ mod tests {
         assert!(matches!(result3, Ok(NixValue::IndStr(_))));
         assert!(matches!(result4, Ok(NixValue::IndStr(_))));
     }
+
+    #[test]
+    fn test_engine_lexer_primitives_parse_application() {
+        let content1 = "test test";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+
+        let result1 = data1.parse_application();
+
+        assert!(result1.is_ok());
+
+        assert!(matches!(result1, Ok(NixValue::Apply(..))));
+    }
 }

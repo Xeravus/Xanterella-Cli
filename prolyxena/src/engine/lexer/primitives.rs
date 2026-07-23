@@ -16,6 +16,7 @@ pub trait ParsePrimitves {
     fn parse_expression(&mut self) -> Result<NixValue, String>;
     fn parse_operator(&mut self) -> Option<Operator>;
     fn parse_indented_string(&mut self) -> Result<NixValue, String>;
+    fn parse_application(&mut self) -> Result<NixValue, String>;
 }
 
 impl<'a> ParsePrimitves for Lexer<'a> {
@@ -55,7 +56,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     self.event.push(ParseEvent::EndGroup);
                     Ok(expr)
                 } else {
-                    Err(format!("Syntax-Fehler: Erwartet ')' nach der Gruppe \nDatei: {} \nErwartet: Group", &self.path))
+                    Err(format!("Syntax-Fehler: Erwartet ')' nach der Gruppe: '{:#?}' \nDatei: {} \nErwartet: Group", expr, &self.path))
                 }
             },
             Some(&'$') => {
@@ -191,9 +192,9 @@ impl<'a> ParsePrimitves for Lexer<'a> {
 
     fn parse_expression(&mut self) -> Result<NixValue, String> {
         self.event.push(ParseEvent::StartExpression);
-        let mut left = self.parse_single_value()?;
+        let mut left = self.parse_application()?;
         while let Some(op) = self.parse_operator() {
-            let right = self.parse_single_value()?;
+            let right = self.parse_application()?;
             left = NixValue::BinaryOp {
                 left: Box::new(left),
                 operator: op,
@@ -315,6 +316,35 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         }
         self.event.push(ParseEvent::EndIndentedString);
         Ok(NixValue::IndStr(output))
+    }
+    fn parse_application(&mut self) -> Result<NixValue, String> {
+        let mut expr = self.parse_single_value()?;
+        loop {
+            self.skip_whitespace();
+            match self.chars.peek() {
+                None => break,
+                //Klammern
+                Some(&';') => break,
+                Some(&'}') => break,
+                Some(&']') => break,
+                Some(&')') => break,
+                Some(&'=') => break,
+                Some(&',') => break,
+                //Operatoren
+                Some(&'+') => break,
+                Some(&'-') => break,
+                Some(&'/') => break,
+                Some(&'*') => break,
+                Some(&'<') => break,
+                Some(&'>') => break,
+                Some(&'$') => break,
+                _ => {
+                    let arg = self.parse_single_value()?;
+                    expr = NixValue::Apply(Box::new(expr), Box::new(arg));
+                }
+            }
+        }
+        Ok(expr)
     }
 }
 
