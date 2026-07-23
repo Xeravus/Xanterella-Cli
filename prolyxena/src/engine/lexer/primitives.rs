@@ -287,6 +287,9 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     if let Some(&'\'') = self.chars.peek() {
                         string.push(c);
                         self.chars.next();
+                    } else if let Some(&'$') = self.chars.peek() {
+                        string.push(c);
+                        self.chars.next();
                     } else {
                         string.pop();
                         string.pop();

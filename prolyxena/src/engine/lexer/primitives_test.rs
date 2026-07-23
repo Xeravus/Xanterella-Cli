@@ -367,8 +367,9 @@ mod tests {
         let content2 = "${test}'';";
         let content3 = "test${test}test'';";
         let content4 = "test$(test)test'';";
-        let content5 = "test''";
-        let content6 = "test';";
+        let content5 = "test''$(test)test'';";
+        let content6 = "test''";
+        let content7 = "test';";
 
         let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let mut data2 = Lexer::new(content2, String::from("path.nix"));
@@ -376,6 +377,7 @@ mod tests {
         let mut data4 = Lexer::new(content4, String::from("path.nix"));
         let mut data5 = Lexer::new(content5, String::from("path.nix"));
         let mut data6 = Lexer::new(content6, String::from("path.nix"));
+        let mut data7 = Lexer::new(content7, String::from("path.nix"));
 
         let result1 = data1.parse_indented_string();
         let result2 = data2.parse_indented_string();
@@ -383,18 +385,21 @@ mod tests {
         let result4 = data4.parse_indented_string();
         let result5 = data5.parse_indented_string();
         let result6 = data6.parse_indented_string();
+        let result7 = data7.parse_indented_string();
 
         assert!(result1.is_ok());
         assert!(result2.is_ok());
         assert!(result3.is_ok());
         assert!(result4.is_ok());
-        assert!(result5.is_err());
+        assert!(result5.is_ok());
         assert!(result6.is_err());
+        assert!(result7.is_err());
 
         assert!(matches!(result1, Ok(NixValue::IndStr(_))));
         assert!(matches!(result2, Ok(NixValue::IndStr(_))));
         assert!(matches!(result3, Ok(NixValue::IndStr(_))));
         assert!(matches!(result4, Ok(NixValue::IndStr(_))));
+        assert!(matches!(result5, Ok(NixValue::IndStr(_))));
     }
 
     #[test]
