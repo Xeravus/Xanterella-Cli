@@ -30,7 +30,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
             }
 
             if key.is_empty() {
-                return Err(format!("Syntax-Fehler: Leerer Key im Let-In Statment\nDatei: {}", &self.path));
+                return Err(format!("Syntax-Fehler: Leerer Key im Let-In Statment \nDatei: {} \nErwartet: Let-In Statment", &self.path));
             }
 
             if key == "in" {
@@ -42,7 +42,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
             if let Some(&'=') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartetes '=' nach Key '{}'\nDatei: {}", key, &self.path));
+                return Err(format!("Syntax-Fehler: Erwartetes '=' nach Key '{}' \nDatei: {} \nErwartet: Let-In Statment", key, &self.path));
             }
 
             let value = self.parse_value()?;
@@ -51,7 +51,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
             if let Some(&';') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartetes ';' nach dem Wert von'{}'\nDatei: {}", key, &self.path));
+                return Err(format!("Syntax-Fehler: Erwartetes ';' nach dem Wert von'{}' \nDatei: {} \nErwartet: Let-In Statment", key, &self.path));
             }
             map.insert(key, value);
         }
@@ -70,7 +70,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
         if let Some(&';') = self.chars.peek() {
             self.chars.next();
         } else {
-            return Err(format!("Syntax-Fehler: Erwartetes ';' im 'with' Statment\nDatei: {}", &self.path));
+            return Err(format!("Syntax-Fehler: Erwartet ';' im 'with' Statment \nDatei: {} \nErwartet: With Statment", &self.path));
         }
 
         self.skip_whitespace();
@@ -168,7 +168,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 NixValue::Identifier(name) => {
                     alias = Some(name);
                 },
-                _ => return Err(format!("Syntax-Fehler: Gültiger Variablename nach '@' erwartet\nDatei: {}", &self.path)),
+                _ => return Err(format!("Syntax-Fehler: Gültiger Variablename nach '@' erwartet \nDatei: {} \nErwartet: Lambda", &self.path)),
             }
         }
         self.skip_whitespace();
@@ -176,7 +176,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
         if let Some(&':') = self.chars.peek() {
             self.chars.next();
         } else {
-            return Err(format!("Syntax-Fehler: Erwartetes ':' nach den Funktions-Argumenten\nDatei: {}", &self.path));
+            return Err(format!("Syntax-Fehler: Erwartetes ':' nach den Funktions-Argumenten \nDatei: {} \nErwartet: Lambda", &self.path));
         }
         self.skip_whitespace();
         let body = self.parse_value()?;

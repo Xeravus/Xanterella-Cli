@@ -41,7 +41,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     self.event.push(ParseEvent::StartIndentedString);
                     self.parse_indented_string()
                 } else {
-                    Err(format!("Syntax-Fehler: Erwartet ''' um einen Indented String zu starten\n Datei: {}", &self.path))
+                    Err(format!("Syntax-Fehler: Erwartet ''' um einen Indented String zu starten \nDatei: {} \nErwartet: Indented String", &self.path))
                 }
             },
             Some(&'(') => {
@@ -55,7 +55,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     self.event.push(ParseEvent::EndGroup);
                     Ok(expr)
                 } else {
-                    Err(format!("Syntax-Fehler: Erwartetes ')' nach dem Ausdruck\n Datei: {}", &self.path))
+                    Err(format!("Syntax-Fehler: Erwartet ')' nach der Gruppe \nDatei: {} \nErwartet: Group", &self.path))
                 }
             },
             Some(&'$') => {
@@ -71,16 +71,16 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                         self.event.push(ParseEvent::EndAntiquotation);
                         Ok(expr)
                     } else {
-                        Err(format!("Syntax-Fehler: Erwartetes '}}' nach der Antiquotation\n Datei: {}", &self.path))
+                        Err(format!("Syntax-Fehler: Erwartet '}}' nach der Antiquotation \nDatei: {} \nErwartet: Antiquotation", &self.path))
                     }
                 } else {
-                    Err(format!("Syntax-Fehler: Erwartet '{{' nach '$' für eine Antiquotation\n Datei: {}", &self.path))
+                    Err(format!("Syntax-Fehler: Erwartet '{{' nach '$' für eine Antiquotation \nDatei: {} \nErwartet: Antiquotation", &self.path))
                 }
             },
             Some(c) if c.is_ascii_digit() => self.parse_number(),
             Some(c) if c.is_alphanumeric() || *c == '_' => self.parse_identifier(),
-            None => Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei \n Datei: {}", &self.path)),
-            Some(c) => Err(format!("Syntax-Fehler: Unerwartetes Zeichen '{}' \n Datei: {}", c, &self.path)),
+            None => Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei \nDatei: {} \nErwartet: Unknown", &self.path)),
+            Some(c) => Err(format!("Syntax-Fehler: Unerwartetes Zeichen '{}' \nDatei: {} \nErwartet: Unknown", c, &self.path)),
         }
     }
 
@@ -139,7 +139,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     self.event.push(ParseEvent::EndNumber);
                     Ok(NixValue::Float(float_val))
                     },
-                Err(_) => Err(format!("Syntax-Fehler: Ungültige Kommazahl: '{}'\nDatei: {}", value_str, &self.path)),
+                Err(_) => Err(format!("Syntax-Fehler: Ungültige Kommazahl: '{}' \nDatei: {} \nErwartet: Number(f64)", value_str, &self.path)),
             }
         } else {
             match value_str.parse::<u64>() {
@@ -147,7 +147,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     self.event.push(ParseEvent::EndNumber);
                     Ok(NixValue::Int(int_val))
                 },
-                Err(_) => Err(format!("Syntax-Fehler: Ungültige Ganzzahl '{}'\nDatei: {}", value_str, &self.path)),
+                Err(_) => Err(format!("Syntax-Fehler: Ungültige Ganzzahl '{}' \nDatei: {} \nErwartet: Number(u64)", value_str, &self.path)),
             }
         }
     }
@@ -164,7 +164,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             }
         }
         if word.is_empty() {
-            return Err(format!("Syntax-Fehler: Unerwartet leerer Identifier \n Datei: {}", &self.path));
+            return Err(format!("Syntax-Fehler: Unerwartet leerer Identifier \nDatei: {} \nErwartet: Identifier", &self.path));
         }
 
         match word.as_str() {
@@ -287,12 +287,12 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                         string.push(c);
                         self.chars.next();
                     } else {
+                        string.pop();
+                        string.pop();
                         if !&string.is_empty() {
                             output.push(StringFragment::Text(string.clone()));
                             string.clear();
                         }
-                        string.pop();
-                        string.pop();
                         break;
                     }
                 } else {
@@ -312,7 +312,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         if let Some(&';') = self.chars.peek() {
             self.chars.next();
         } else {
-            return Err(format!("Syntax-Fehler: Erwartet ';' nach dem Indented String \n Datei: {}", &self.path));
+            return Err(format!("Syntax-Fehler: Erwartet ';' nach dem Indented String \nDatei: {} \nErwartet: Indented String", &self.path));
         }
         self.event.push(ParseEvent::EndIndentedString);
         Ok(NixValue::IndStr(output))
