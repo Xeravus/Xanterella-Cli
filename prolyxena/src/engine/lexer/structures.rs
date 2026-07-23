@@ -25,8 +25,12 @@ impl<'a> ParseStructures for Lexer<'a> {
             }
 
             let mut key = String::new();
+            let mut quotes = false;
             while let Some(&c) = self.chars.peek() {
-                if c.is_whitespace() || c == '=' {
+                if c == '"' {
+                    quotes = !quotes;
+                }
+                if !quotes && (c.is_whitespace() || c == '=') {
                     break;
                 }
                 key.push(c);
