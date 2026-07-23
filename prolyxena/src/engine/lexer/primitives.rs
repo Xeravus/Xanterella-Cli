@@ -15,6 +15,7 @@ pub trait ParsePrimitves {
     fn parse_identifier(&mut self) -> Result<NixValue, String>;
     fn parse_expression(&mut self) -> Result<NixValue, String>;
     fn parse_operator(&mut self) -> Option<Operator>;
+    fn parse_indented_string(&mut self) -> Result<NixValue, String>;
 }
 
 impl<'a> ParsePrimitves for Lexer<'a> {
@@ -33,6 +34,16 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             Some(&'.') => self.parse_path(),
             Some(&'/') => self.parse_path(),
             Some(&'~') => self.parse_path(),
+            Some(&'\'') => {
+                self.chars.next();
+                if let Some(&'\'') = self.chars.peek() {
+                    self.chars.next();
+                    self.event.push(ParseEvent::StartIndentedString);
+                    self.parse_indented_string()
+                } else {
+                    Err(format!("Syntax-Fehler: Erwartet ''' um einen Indented String zu starten\n Datei: {}", &self.path))
+                }
+            },
             Some(&'(') => {
                 self.chars.next();
                 self.event.push(ParseEvent::StartGroup);
@@ -244,6 +255,60 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             }
             _ => None
         }
+    }
+
+    fn parse_indented_string(&mut self) -> Result<NixValue, String> {
+        let mut output = vec![];
+        let mut string = String::new();
+        while let Some(&c) = self.chars.peek() {
+            if let Some(&'$') = self.chars.peek() {
+                if !&string.is_empty() {
+                    output.push(StringFragment::Text(string.clone()));
+                    string.clear();
+                }
+                let parsed_expr = self.parse_single_value()?;
+                let expr = StringFragment::Antiquotation(Box::new(parsed_expr));
+                output.push(expr)
+            } 
+            if let Some(&'\'') = self.chars.peek() {
+                string.push(c);
+                self.chars.next();
+                if let Some(&'\'') = self.chars.peek() {
+                    string.push(c);
+                    self.chars.next();
+                    if let Some(&'\'') = self.chars.peek() {
+                        string.push(c);
+                        self.chars.next();
+                    } else {
+                        if !&string.is_empty() {
+                            output.push(StringFragment::Text(string.clone()));
+                            string.clear();
+                        }
+                        string.pop();
+                        string.pop();
+                        break;
+                    }
+                } else {
+                    string.push(c);
+                    self.chars.next();
+                }
+            }
+
+            if let Some(&s) = self.chars.peek() {
+                string.push(s);
+                self.chars.next();
+            }
+        }
+        if !&string.is_empty() {
+            output.push(StringFragment::Text(string.clone()));
+        }
+        if let Some(&';') = self.chars.peek() {
+            self.chars.next();
+        } else {
+            return Err(format!("Syntax-Fehler: Erwartet ';' nach dem Indented String \n Datei: {}", &self.path));
+        }
+        self.event.push(ParseEvent::EndIndentedString);
+        Ok(NixValue::IndStr(output))
     }
 }
 

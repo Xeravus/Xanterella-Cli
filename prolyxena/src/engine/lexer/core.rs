@@ -124,6 +124,9 @@ impl<'a> ParseCore for Lexer<'a> {
 
                 ParseEvent::StartAntiquotation => (true, "Antiquotation"),
                 ParseEvent::EndAntiquotation => (false, "Antiquotation"),
+
+                ParseEvent::StartIndentedString => (true, "Intented String"),
+                ParseEvent::EndIndentedString => (false, "Intented String"),
             };
             if !is_start && indent > 0 {
                 indent -= 1;

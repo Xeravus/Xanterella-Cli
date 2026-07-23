@@ -360,4 +360,41 @@ mod tests {
         assert_eq!(result1, Some(Operator::Concat));
         assert_eq!(result2, Some(Operator::Add));
     }
+
+    #[test]
+    fn test_engine_lexer_primitives_parse_indented_string() {
+        let content1 = "test'';";
+        let content2 = "${test}'';";
+        let content3 = "test${test}test'';";
+        let content4 = "test''";
+        let content5 = "test';";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
+        let mut data4 = Lexer::new(content4, String::from("path.nix"));
+        let mut data5 = Lexer::new(content5, String::from("path.nix"));
+
+        let result1 = data1.parse_indented_string();
+        let result2 = data2.parse_indented_string();
+        let result3 = data3.parse_indented_string();
+        let result4 = data4.parse_indented_string();
+        let result5 = data5.parse_indented_string();
+
+        println!("Result1: {:#?}", result1);
+        println!("Result2: {:#?}", result2);
+        println!("Result3: {:#?}", result3);
+        println!("Result4: {:#?}", result4);
+        println!("Result5: {:#?}", result5);
+
+        assert!(result1.is_ok());
+        assert!(result2.is_ok());
+        assert!(result3.is_ok());
+        assert!(result4.is_err());
+        assert!(result5.is_err());
+
+        assert!(matches!(result1, Ok(NixValue::IndStr(_))));
+        assert!(matches!(result2, Ok(NixValue::IndStr(_))));
+        assert!(matches!(result3, Ok(NixValue::IndStr(_))));
+    }
 }

@@ -2,11 +2,12 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 use std::str::Chars;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum NixValue {
     AttrSet(HashMap<String, NixValue>),
     List(Vec<NixValue>),
     Str(String),
+    IndStr(Vec<StringFragment>),
     Int(u64),
     Float(f64),
     Bool(bool),
@@ -36,6 +37,12 @@ pub enum Operator {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum StringFragment {
+    Text(String),
+    Antiquotation(Box<NixValue>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ParseEvent {
     // Start
     StartAttrSet,
@@ -53,6 +60,7 @@ pub enum ParseEvent {
     StartValue,
     StartGroup,
     StartAntiquotation,
+    StartIndentedString,
     // End
     EndAttrSet,
     EndList,
@@ -69,6 +77,7 @@ pub enum ParseEvent {
     EndValue,
     EndGroup,
     EndAntiquotation,
+    EndIndentedString,
 }
 
 pub struct Lexer<'a> {
