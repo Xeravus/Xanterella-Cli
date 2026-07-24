@@ -1,27 +1,3 @@
-use std::io;
-use crossterm::{
-    event::{
-        self, Event, KeyCode
-    },
-    execute,
-    terminal::{
-        disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen
-    },
-};
-use ratatui::{
-    backend::CrosstermBackend,
-    layout::{
-        Alignment, Constraint, Direction, Layout
-    },
-    widgets::{
-        Block, Borders, Paragraph, List, ListItem, ListState
-    },
-    Frame,
-    Terminal,
-};
-
-
-/*
 use crossterm::event::{self, Event, KeyCode};
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
@@ -31,8 +7,8 @@ use ratatui::layout::{Alignment, Constraint, Direction, Layout};
 use ratatui::widgets::{Block, Borders, Paragraph, List, ListItem, ListState};
 use ratatui::Frame;
 use ratatui::Terminal;
-*/
 
+use std::io;
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::Duration;
