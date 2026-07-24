@@ -2,6 +2,9 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 use std::str::Chars;
 use std::sync::mpsc::Sender;
+use std::time::Duration;
+
+use humantime::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum NixValue {
@@ -45,6 +48,9 @@ pub enum StringFragment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParseEvent {
+    // Special
+    Finished(String),
+    // Error(Err),
     // Start
     StartAttrSet,
     StartList,

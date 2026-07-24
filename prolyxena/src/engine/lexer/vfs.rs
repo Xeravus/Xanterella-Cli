@@ -8,6 +8,7 @@ use std::fs;
 use std::process;
 use std::path::PathBuf;
 use std::sync::mpsc::Sender;
+use std::time::Instant;
 
 #[derive(Debug, Clone)]
 pub struct FsData {
@@ -15,6 +16,7 @@ pub struct FsData {
     pub path: String,
     pub fsnodes: FsNodes,
     pub trans: Option<Sender<ParseEvent>>,
+    pub time: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -33,6 +35,7 @@ impl FsData {
             path: path.to_string(),
             fsnodes: FsNodes::Dir(HashMap::new()),
             trans: None,
+            time: 0.0,
         }
     }
 
@@ -42,12 +45,18 @@ impl FsData {
             path: path.to_string(),
             fsnodes: FsNodes::Dir(HashMap::new()),
             trans: Some(trans),
+            time: 0.0,
         }
     }
 
     pub fn load(&mut self) {
+        let start = Instant::now();
         self.get_files();
         self.gen_tree();
+        self.time = start.elapsed().as_secs_f64();
+        if let Some(tx) = &self.trans {
+            tx.send(ParseEvent::Finished(self.get_time())).ok();
+        }
     }
 
     pub fn get_files(&mut self) {
@@ -118,6 +127,10 @@ impl FsData {
                 });
             }
         }
+    }
+
+    pub fn get_time(&self) -> String {
+        format!("{:.3}s", &self.time)
     }
 }
 
