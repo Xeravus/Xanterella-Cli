@@ -113,7 +113,10 @@ impl FsData {
             let file_name = parts.last().unwrap();
             if let FsNodes::Dir(map) = pointer {
                 let content = fs::read_to_string(&i).unwrap();
-                let mut file_data = Lexer::new(&content, i.clone());
+                let mut file_data = match &self.trans {
+                    Some(tx) => Lexer::new_trans(&content, i.clone(), tx.clone()),
+                    None => Lexer::new(&content, i.clone()),
+                };
                 let ast = match file_data.parse_value() {
                     Ok(parsed_ast) => parsed_ast,
                     Err(e) => {

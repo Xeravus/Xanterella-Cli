@@ -14,7 +14,7 @@ use ratatui::{
         Alignment, Constraint, Direction, Layout
     },
     widgets::{
-        Block, Borders, Paragraph
+        Block, Borders, Paragraph, List, ListItem, ListState
     },
     Frame,
     Terminal,
@@ -28,7 +28,7 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScree
 
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Alignment, Constraint, Direction, Layout};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::{Block, Borders, Paragraph, List, ListItem, ListState};
 use ratatui::Frame;
 use ratatui::Terminal;
 */
@@ -40,6 +40,7 @@ use std::time::Duration;
 use crate::engine::core::*;
 use crate::engine::lexer::vfs::*;
 
+#[derive(Debug)]
 pub struct Tui {
     logs: Vec<String>,
     path: String,
@@ -55,6 +56,10 @@ impl Tui {
             time: None,
             trans: None,
         }
+    }
+
+    fn inject_trans(&mut self, trans: Receiver<ParseEvent>) {
+        self.trans = Some(trans);
     }
     
     pub fn load(&mut self, path: &str) {
@@ -119,22 +124,35 @@ impl Tui {
             .title(" Prolyxena Parsegraph ")
             .borders(Borders::ALL);
 
+        let scroll_area = main_block.inner(chunks[1]);
+        let lines = self.logs.len() as u16;
+        let scroll_y = lines.saturating_sub(scroll_area.height);
+
         let sidebar = Paragraph::new(sidebar_text).block(sidebar_block);
-        let main = Paragraph::new(log_text).block(main_block);
+        
+        let items: Vec<ListItem> = self.logs
+            .iter()
+            .map(|log| ListItem::new(log.as_str()))
+            .collect();
+        let list = List::new(items) .block(main_block);
+        let mut list_state = ListState::default();
+        if !self.logs.is_empty() {
+            list_state.select(Some(self.logs.len() - 1));
+        }
 
         frame.render_widget(sidebar, chunks[0]);
-        frame.render_widget(main, chunks[1]);
+        frame.render_stateful_widget(list, chunks[1], &mut list_state);
     }
 
     pub fn parse_events(&mut self, indent: &mut usize) {
         if let Some(rx) = &self.trans {
             while let Ok(event) = rx.try_recv() {
-                if let ParseEvent::Finished(time_str) = event {
-                    self.time = Some(time_str);
+                if let ParseEvent::Finished(time_str) = &event {
+                    self.time = Some(time_str.clone());
                     continue;
                 };
                 let (is_start, name) = match event {
-                    ParseEvent::Finished(time_str) => (true, "Finished"),
+                    ParseEvent::Finished(_) => (false, "Finished"),
 
                     ParseEvent::StartAttrSet => (true, "Attribut Set"),
                     ParseEvent::EndAttrSet => (false, "Attribut Set"),
@@ -192,12 +210,20 @@ impl Tui {
                 let indent_string = "  ".repeat(*indent);
 
                 if is_start {
-                    self.logs.push(format!("{} Starte {}", indent_string, name));
-                    *indent += 1;
+                    if name != "Finished" {
+                        self.logs.push(format!("{} Starte {}", indent_string, name));
+                        *indent += 1;
+                    } else {
+                        self.logs.push(format!("Parse erfolgreich"));
+                    }
                 } else {
-                    self.logs.push(format!(" {} Scließe {}", indent_string, name));
+                    self.logs.push(format!("{} Schließe {}", indent_string, name));
                 }
             }
         }
     }
 }
+
+#[cfg(test)]
+#[path = "core_test.rs"]
+mod tests;
