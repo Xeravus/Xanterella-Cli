@@ -43,7 +43,7 @@ pub fn cli_parse() {
             prolyxena_parse(path.to_string(), *animation, *output);
         },
         Commands::Tui => {
-            start_tui();
+            start_tui("~/xanterella/config/", 32);
         },
     }
 }

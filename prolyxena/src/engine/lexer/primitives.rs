@@ -39,7 +39,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 self.chars.next();
                 if let Some(&'\'') = self.chars.peek() {
                     self.chars.next();
-                    self.event.push(ParseEvent::StartIndentedString);
+                    self.log_event(ParseEvent::StartIndentedString);
                     self.parse_indented_string()
                 } else {
                     Err(format!("Syntax-Fehler: Erwartet ''' um einen Indented String zu starten \nDatei: {} \nErwartet: Indented String", &self.path))
@@ -47,13 +47,13 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             },
             Some(&'(') => {
                 self.chars.next();
-                self.event.push(ParseEvent::StartGroup);
+                self.log_event(ParseEvent::StartGroup);
                 let parsed_expr = self.parse_expression()?;
                 let expr = NixValue::Group(Box::new(parsed_expr));
                 self.skip_whitespace();
                 if let Some(&')') = self.chars.peek() {
                     self.chars.next();
-                    self.event.push(ParseEvent::EndGroup);
+                    self.log_event(ParseEvent::EndGroup);
                     Ok(expr)
                 } else {
                     Err(format!("Syntax-Fehler: Erwartet ')' nach der Gruppe: '{:#?}' \nDatei: {} \nErwartet: Group", expr, &self.path))
@@ -63,13 +63,13 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 self.chars.next();
                 if let Some(&'{') = self.chars.peek() {
                     self.chars.next();
-                    self.event.push(ParseEvent::StartAntiquotation);
+                    self.log_event(ParseEvent::StartAntiquotation);
                     let parsed_expr = self.parse_expression()?;
                     let expr = NixValue::Antiquotation(Box::new(parsed_expr));
                     self.skip_whitespace();
                     if let Some(&'}') = self.chars.peek() {
                         self.chars.next();
-                        self.event.push(ParseEvent::EndAntiquotation);
+                        self.log_event(ParseEvent::EndAntiquotation);
                         Ok(expr)
                     } else {
                         Err(format!("Syntax-Fehler: Erwartet '}}' nach der Antiquotation \nDatei: {} \nErwartet: Antiquotation", &self.path))
@@ -86,7 +86,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
     }
 
     fn parse_path(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartPath);
+        self.log_event(ParseEvent::StartPath);
         let mut string = String::new();
         while let Some(&c) = self.chars.peek() {
             if c.is_whitespace() || c == ';' {
@@ -95,13 +95,13 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             string.push(c);
             self.chars.next();
         }
-        self.event.push(ParseEvent::EndPath);
+        self.log_event(ParseEvent::EndPath);
         Ok(NixValue::Path(string))
     }
 
 
     fn parse_string(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartString);
+        self.log_event(ParseEvent::StartString);
         self.chars.next();
         let mut value = String::new();
         while let Some(&c) = self.chars.peek() {
@@ -113,12 +113,12 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 self.chars.next();
             }
         }
-        self.event.push(ParseEvent::EndString);
+        self.log_event(ParseEvent::EndString);
         Ok(NixValue::Str(value))
     }
 
     fn parse_number(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartNumber);
+        self.log_event(ParseEvent::StartNumber);
         let mut value_str = String::new();
         let mut is_float = false;
         while let Some(&c) = self.chars.peek() {
@@ -136,7 +136,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         if is_float {
             match value_str.parse::<f64>() {
                 Ok(float_val) => {
-                    self.event.push(ParseEvent::EndNumber);
+                    self.log_event(ParseEvent::EndNumber);
                     Ok(NixValue::Float(float_val))
                     },
                 Err(_) => Err(format!("Syntax-Fehler: Ungültige Kommazahl: '{}' \nDatei: {} \nErwartet: Number(f64)", value_str, &self.path)),
@@ -144,7 +144,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         } else {
             match value_str.parse::<u64>() {
                 Ok(int_val) =>  {
-                    self.event.push(ParseEvent::EndNumber);
+                    self.log_event(ParseEvent::EndNumber);
                     Ok(NixValue::Int(int_val))
                 },
                 Err(_) => Err(format!("Syntax-Fehler: Ungültige Ganzzahl '{}' \nDatei: {} \nErwartet: Number(u64)", value_str, &self.path)),
@@ -153,7 +153,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
     }
 
     fn parse_identifier(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartIdentifier);
+        self.log_event(ParseEvent::StartIdentifier);
         let mut word = String::new();
         while let Some(&c) = self.chars.peek() {
             if c.is_alphanumeric() || c == '_' || c == '-' || c == '.' {
@@ -175,22 +175,22 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 self.parse_with()
             },
             "true" => {
-                self.event.push(ParseEvent::EndIdentifier);
+                self.log_event(ParseEvent::EndIdentifier);
                 Ok(NixValue::Bool(true))
             }
             "false" => {
-                self.event.push(ParseEvent::EndIdentifier);
+                self.log_event(ParseEvent::EndIdentifier);
                 Ok(NixValue::Bool(false))
             }
             _ => {
-                self.event.push(ParseEvent::EndIdentifier);
+                self.log_event(ParseEvent::EndIdentifier);
                 Ok(NixValue::Identifier(word))
             }
         }
     }
 
     fn parse_expression(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartExpression);
+        self.log_event(ParseEvent::StartExpression);
         let mut left = self.parse_application()?;
         while let Some(op) = self.parse_operator() {
             let right = self.parse_application()?;
@@ -200,7 +200,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 right: Box::new(right),
             }
         }
-        self.event.push(ParseEvent::EndExpression);
+        self.log_event(ParseEvent::EndExpression);
         Ok(left)
     }
 
@@ -213,28 +213,28 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 if let Some(&'+') = scout.peek() {
                     self.chars.next();
                     self.chars.next();
-                    self.event.push(ParseEvent::StartOperator);
-                    self.event.push(ParseEvent::EndOperator);
+                    self.log_event(ParseEvent::StartOperator);
+                    self.log_event(ParseEvent::EndOperator);
                     Some(Operator::Concat)
                 } else {
                     self.chars.next();
-                    self.event.push(ParseEvent::StartOperator);
-                    self.event.push(ParseEvent::EndOperator);
+                    self.log_event(ParseEvent::StartOperator);
+                    self.log_event(ParseEvent::EndOperator);
                     Some(Operator::Add)
                 }
             }
             '-' => {
                 self.chars.next();
-                self.event.push(ParseEvent::StartOperator);
-                self.event.push(ParseEvent::EndOperator);
+                self.log_event(ParseEvent::StartOperator);
+                self.log_event(ParseEvent::EndOperator);
                 Some(Operator::Sub)
             }
             '=' => {
                 if let Some(&'=') = scout.peek() {
                     self.chars.next();
                     self.chars.next();
-                    self.event.push(ParseEvent::StartOperator);
-                    self.event.push(ParseEvent::EndOperator);
+                    self.log_event(ParseEvent::StartOperator);
+                    self.log_event(ParseEvent::EndOperator);
                     Some(Operator::Equal)
                 } else {
                     None
@@ -244,12 +244,12 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 if let Some(&'/') = scout.peek() {
                     self.chars.next();
                     self.chars.next();
-                    self.event.push(ParseEvent::StartOperator);
-                    self.event.push(ParseEvent::EndOperator);
+                    self.log_event(ParseEvent::StartOperator);
+                    self.log_event(ParseEvent::EndOperator);
                     Some(Operator::Merge)
                 } else {
-                    self.event.push(ParseEvent::StartOperator);
-                    self.event.push(ParseEvent::EndOperator);
+                    self.log_event(ParseEvent::StartOperator);
+                    self.log_event(ParseEvent::EndOperator);
                     Some(Operator::Divide)
                 }
             }
@@ -316,7 +316,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         } else {
             return Err(format!("Syntax-Fehler: Erwartet ';' nach dem Indented String \nDatei: {} \nErwartet: Indented String", &self.path));
         }
-        self.event.push(ParseEvent::EndIndentedString);
+        self.log_event(ParseEvent::EndIndentedString);
         Ok(NixValue::IndStr(output))
     }
     fn parse_application(&mut self) -> Result<NixValue, String> {

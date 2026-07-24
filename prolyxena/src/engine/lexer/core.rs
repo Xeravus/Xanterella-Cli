@@ -12,12 +12,12 @@ use crate::engine::lexer::functions::*;
 pub trait ParseCore {
     fn skip_whitespace(&mut self);
     fn parse_value(&mut self) -> Result<NixValue, String>;
-    fn show_parse_timeline(&self);
+    // fn show_parse_timeline(&self);
 }
 
 impl<'a> ParseCore for Lexer<'a> {
     fn skip_whitespace(&mut self) {
-        self.event.push(ParseEvent::StartWhitespace);
+        self.log_event(ParseEvent::StartWhitespace);
         loop {
             match self.chars.peek() {
                 Some(&c) if c.is_whitespace() => {
@@ -39,11 +39,11 @@ impl<'a> ParseCore for Lexer<'a> {
                 }
             }
         }
-        self.event.push(ParseEvent::EndWhitespace);
+        self.log_event(ParseEvent::EndWhitespace);
     }
 
     fn parse_value(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartValue);
+        self.log_event(ParseEvent::StartValue);
         let mut expr = self.parse_expression()?;
         loop {
             self.skip_whitespace();
@@ -72,10 +72,11 @@ impl<'a> ParseCore for Lexer<'a> {
                 }
             }
         }
-        self.event.push(ParseEvent::EndValue);
+        self.log_event(ParseEvent::EndValue);
         Ok(expr)
     }
 
+    /*
     fn show_parse_timeline(&self) {
         let mut indent = 0;
         for i in &self.event {
@@ -142,4 +143,5 @@ impl<'a> ParseCore for Lexer<'a> {
             sleep(Duration::from_millis(15));
         }
     }
+    */
 }

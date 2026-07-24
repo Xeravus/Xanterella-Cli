@@ -7,12 +7,14 @@ use std::collections::HashMap;
 use std::fs;
 use std::process;
 use std::path::PathBuf;
+use std::sync::mpsc::Sender;
 
 #[derive(Debug, Clone)]
 pub struct FsData {
     pub files: Vec<String>,
     pub path: String,
     pub fsnodes: FsNodes,
+    pub trans: Option<Sender<ParseEvent>>,
 }
 
 #[derive(Debug, Clone)]
@@ -30,6 +32,16 @@ impl FsData {
             files: vec![],
             path: path.to_string(),
             fsnodes: FsNodes::Dir(HashMap::new()),
+            trans: None,
+        }
+    }
+
+    pub fn new_trans(path: &str, trans: Sender<ParseEvent>) -> Self {
+        FsData {
+            files: vec![],
+            path: path.to_string(),
+            fsnodes: FsNodes::Dir(HashMap::new()),
+            trans: Some(trans),
         }
     }
 
