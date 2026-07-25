@@ -11,7 +11,7 @@ use ratatui::Terminal;
 use std::io;
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::engine::core::*;
 use crate::engine::lexer::vfs::*;
@@ -21,7 +21,9 @@ pub struct Tui {
     logs: Vec<ParseTask>,
     path: String,
     time: Option<String>,
+    time_rx: Option<Receiver<String>>,
     trans: Option<Receiver<ParseEvent>>,
+    last_update: Instant,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -43,7 +45,9 @@ impl Tui {
             logs: Vec::new(),
             path: String::new(),
             time: None,
+            time_rx: None,
             trans: None,
+            last_update: Instant::now(),
         }
     }
 
@@ -54,11 +58,14 @@ impl Tui {
     pub fn load(&mut self, path: &str) {
         self.path = path.to_string();
         let (tx, rx) = mpsc::channel::<ParseEvent>();
+        let (time_tx, time_rx) = mpsc::channel::<String>();
         self.trans = Some(rx);
+        self.time_rx = Some(time_rx);
         let mut prolyxena = FsData::new_trans(path, tx.clone());
 
         thread::spawn(move || {
             prolyxena.load();
+            let _ = time_tx.send(prolyxena.get_time());
         });
         let _ = self.start_tui();
     }
@@ -75,7 +82,7 @@ impl Tui {
             self.parse_events(&mut indent);
             terminal.draw(|f| self.draw_ui(f))?;
 
-            if event::poll(Duration::from_millis(50))? {
+            if event::poll(Duration::from_millis(5))? {
                 if let Event::Key(key) = event::read()? {
                     if let KeyCode::Char('q') = key.code {
                         break;
@@ -140,90 +147,96 @@ impl Tui {
     }
 
     pub fn parse_events(&mut self, indent: &mut usize) {
+        if let Some(time_rx) = &self.time_rx {
+            if let Ok(time_str) = time_rx.try_recv() {
+                self.time = Some(time_str);
+            }
+        }
+
         if let Some(rx) = &self.trans {
-            while let Ok(event) = rx.try_recv() {
-                if let ParseEvent::Finished(time_str) = &event {
-                    self.time = Some(time_str.clone());
-                    continue;
-                };
-                let (is_start, name) = match event {
-                    ParseEvent::Finished(_) => (false, "Finished"),
+            if self.last_update.elapsed() >= Duration::from_millis(5) {
+                if let Ok(event) = rx.try_recv() {
+                    self.last_update = Instant::now();
+                    if let ParseEvent::Finished(time_str) = &event {
+                        self.time = Some(time_str.clone());
+                        return;
+                    };
+                    let (is_start, name) = match event {
+                        ParseEvent::Finished(_) => (true, "Finished"),
 
-                    ParseEvent::StartAttrSet => (true, "Attribut Set"),
-                    ParseEvent::EndAttrSet => (false, "Attribut Set"),
+                        ParseEvent::StartAttrSet => (true, "Attribut Set"),
+                        ParseEvent::EndAttrSet => (false, "Attribut Set"),
 
-                    ParseEvent::StartList => (true, "Liste"),
-                    ParseEvent::EndList => (false, "Liste"),
+                        ParseEvent::StartList => (true, "Liste"),
+                        ParseEvent::EndList => (false, "Liste"),
 
-                    ParseEvent::StartLetIn => (true, "LetIn"),
-                    ParseEvent::EndLetIn => (false, "LetIn"),
+                        ParseEvent::StartLetIn => (true, "LetIn"),
+                        ParseEvent::EndLetIn => (false, "LetIn"),
 
-                    ParseEvent::StartLambda => (true, "Lambda"),
-                    ParseEvent::EndLambda => (false, "Lambda"),
+                        ParseEvent::StartLambda => (true, "Lambda"),
+                        ParseEvent::EndLambda => (false, "Lambda"),
 
-                    ParseEvent::StartWith => (true, "With"),
-                    ParseEvent::EndWith => (false, "With"),
+                        ParseEvent::StartWith => (true, "With"),
+                        ParseEvent::EndWith => (false, "With"),
 
-                    ParseEvent::StartString => (true, "String"),
-                    ParseEvent::EndString => (false, "String"),
+                        ParseEvent::StartString => (true, "String"),
+                        ParseEvent::EndString => (false, "String"),
 
-                    ParseEvent::StartPath => (true, "Path"),
-                    ParseEvent::EndPath => (false, "Path"),
+                        ParseEvent::StartPath => (true, "Path"),
+                        ParseEvent::EndPath => (false, "Path"),
 
-                    ParseEvent::StartNumber => (true, "Number"),
-                    ParseEvent::EndNumber => (false, "Number"),
+                        ParseEvent::StartNumber => (true, "Number"),
+                        ParseEvent::EndNumber => (false, "Number"),
 
-                    ParseEvent::StartExpression => (true, "Expression"),
-                    ParseEvent::EndExpression => (false, "Expression"),
+                        ParseEvent::StartExpression => (true, "Expression"),
+                        ParseEvent::EndExpression => (false, "Expression"),
 
-                    ParseEvent::StartOperator => (true, "Operator"),
-                    ParseEvent::EndOperator => (false, "Operator"),
+                        ParseEvent::StartOperator => (true, "Operator"),
+                        ParseEvent::EndOperator => (false, "Operator"),
 
-                    ParseEvent::StartIdentifier => (true, "Identifier"),
-                    ParseEvent::EndIdentifier => (false, "Identifier"),
+                        ParseEvent::StartIdentifier => (true, "Identifier"),
+                        ParseEvent::EndIdentifier => (false, "Identifier"),
 
-                    ParseEvent::StartWhitespace => (true, "Whitespace"),
-                    ParseEvent::EndWhitespace => (false, "Whitespace"),
+                        ParseEvent::StartWhitespace => (true, "Whitespace"),
+                        ParseEvent::EndWhitespace => (false, "Whitespace"),
 
-                    ParseEvent::StartValue => (true, "Value"),
-                    ParseEvent::EndValue => (false, "Value"),
+                        ParseEvent::StartValue => (true, "Value"),
+                        ParseEvent::EndValue => (false, "Value"),
 
-                    ParseEvent::StartGroup => (true, "Group"),
-                    ParseEvent::EndGroup => (false, "Group"),
+                        ParseEvent::StartGroup => (true, "Group"),
+                        ParseEvent::EndGroup => (false, "Group"),
 
-                    ParseEvent::StartAntiquotation => (true, "Antiquotation"),
-                    ParseEvent::EndAntiquotation => (false, "Antiquotation"),
+                        ParseEvent::StartAntiquotation => (true, "Antiquotation"),
+                        ParseEvent::EndAntiquotation => (false, "Antiquotation"),
 
-                    ParseEvent::StartIndentedString => (true, "Intented String"),
-                    ParseEvent::EndIndentedString => (false, "Intented String"),
-                };
+                        ParseEvent::StartIndentedString => (true, "Intented String"),
+                        ParseEvent::EndIndentedString => (false, "Intented String"),
+                    };
 
-                if !is_start && *indent > 0 {
-                    *indent -= 1;
-                }
-
-                if is_start {
-                    if name != "Finished" {
-                        self.logs.push(ParseTask {
-                            name: name.to_string(),
-                            indent: *indent,
-                            status: TaskStatus::Running,
-                        });
-                        *indent += 1;
-                    } else {
-                        self.logs.push(ParseTask {
-                            name: "Parse erfolgreich beendet".to_string(),
-                            indent: 0,
-                            status: TaskStatus::Finished,
-                        });
-                    }
-                } else {
-                    if *indent > 0 {
+                    if !is_start && *indent > 0 {
                         *indent -= 1;
                     }
 
-                    if let Some(task) = self.logs.iter_mut().rev().find(|t| t.status == TaskStatus::Running) {
-                        task.status == TaskStatus::Finished;
+                    if is_start {
+                        if name != "Finished" {
+                            self.logs.push(ParseTask {
+                                name: name.to_string(),
+                                indent: *indent,
+                                status: TaskStatus::Running,
+                            });
+                            *indent += 1;
+                        } else {
+                            self.logs.push(ParseTask {
+                                name: "Parse erfolgreich beendet".to_string(),
+                                indent: 0,
+                                status: TaskStatus::Finished,
+                            });
+                        }
+                    } else {
+
+                        if let Some(index) = self.logs.iter().rposition(|t| t.status == TaskStatus::Running) {
+                            self.logs.remove(index);
+                        }
                     }
                 }
             }
