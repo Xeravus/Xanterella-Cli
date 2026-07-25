@@ -12,6 +12,7 @@ use std::io;
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::{Duration, Instant};
+use std::borrow::Cow;
 
 use crate::engine::core::*;
 use crate::engine::lexer::vfs::*;
@@ -24,6 +25,7 @@ pub struct Tui {
     time_rx: Option<Receiver<String>>,
     trans: Option<Receiver<ParseEvent>>,
     last_update: Instant,
+    num_of_pars: u32,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -34,9 +36,16 @@ pub enum TaskStatus {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParseTask {
-    pub name: String,
+    pub name: Cow<'static, str>,
     pub indent: usize,
     pub status: TaskStatus,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TaskBool {
+    False,
+    True,
+    Keep,
 }
 
 impl Tui {
@@ -48,6 +57,7 @@ impl Tui {
             time_rx: None,
             trans: None,
             last_update: Instant::now(),
+            num_of_pars: 0,
         }
     }
 
@@ -82,7 +92,7 @@ impl Tui {
             self.parse_events(&mut indent);
             terminal.draw(|f| self.draw_ui(f))?;
 
-            if event::poll(Duration::from_millis(5))? {
+            if event::poll(Duration::from_millis(2))? {
                 if let Event::Key(key) = event::read()? {
                     if let KeyCode::Char('q') = key.code {
                         break;
@@ -110,7 +120,7 @@ impl Tui {
             None => "running...",
         };
 
-        let sidebar_text = format!(" Pfad: {} \n Time: {} ", &self.path, time);
+        let sidebar_text = format!(" Path: {} \n Time: {} \n Number of Actions: {}", &self.path, time, &self.num_of_pars);
 
         let sidebar_block = Block::default()
             .title(" Prolyxena Output ")
@@ -130,8 +140,8 @@ impl Tui {
             .map(|task| {
                 let indent_str =  "  ".repeat(task.indent);
                 let text = match task.status {
-                    TaskStatus::Running => format!("{} [ ] Starte {}", indent_str, task.name),
-                    TaskStatus::Finished => format!("{} [x] Schließe {}", indent_str, task.name),
+                    TaskStatus::Running => format!("{} [ ] Start {}", indent_str, task.name),
+                    TaskStatus::Finished => format!("{} [x] Finished {}", indent_str, task.name),
                 };
                 ListItem::new(text)
             })
@@ -154,89 +164,112 @@ impl Tui {
         }
 
         if let Some(rx) = &self.trans {
-            if self.last_update.elapsed() >= Duration::from_millis(5) {
+            if self.last_update.elapsed() >= Duration::from_millis(2) {
                 if let Ok(event) = rx.try_recv() {
                     self.last_update = Instant::now();
                     if let ParseEvent::Finished(time_str) = &event {
                         self.time = Some(time_str.clone());
                         return;
                     };
-                    let (is_start, name) = match event {
-                        ParseEvent::Finished(_) => (true, "Finished"),
+                    let (taskbool, name): (TaskBool, Cow<'static, str>) = match event {
+                        ParseEvent::Finished(_) => (TaskBool::Keep, "Finished".into()),
 
-                        ParseEvent::StartAttrSet => (true, "Attribut Set"),
-                        ParseEvent::EndAttrSet => (false, "Attribut Set"),
+                        ParseEvent::StartGen => (TaskBool::True, "Generating Tree".into()),
+                        ParseEvent::EndGen => (TaskBool::False, "Generating Tree".into()),
 
-                        ParseEvent::StartList => (true, "Liste"),
-                        ParseEvent::EndList => (false, "Liste"),
+                        ParseEvent::StartGettingFiles => (TaskBool::True, "Getting Files".into()),
+                        ParseEvent::EndGettingFiles => (TaskBool::False, "Getting Files".into()),
 
-                        ParseEvent::StartLetIn => (true, "LetIn"),
-                        ParseEvent::EndLetIn => (false, "LetIn"),
+                        ParseEvent::StartParsingFile(file) => (TaskBool::True, format!("Generating AST: {}", file).into()),
+                        ParseEvent::EndParsingFile(file) => (TaskBool::Keep, format!("Generating AST: {}", file).into()),
 
-                        ParseEvent::StartLambda => (true, "Lambda"),
-                        ParseEvent::EndLambda => (false, "Lambda"),
+                        ParseEvent::StartAttrSet => (TaskBool::True, "Parsing Attribut Set".into()),
+                        ParseEvent::EndAttrSet => (TaskBool::False, "Parsing Attribut Set".into()),
 
-                        ParseEvent::StartWith => (true, "With"),
-                        ParseEvent::EndWith => (false, "With"),
+                        ParseEvent::StartList => (TaskBool::True, "Parsing List".into()),
+                        ParseEvent::EndList => (TaskBool::False, "Parsing List".into()),
 
-                        ParseEvent::StartString => (true, "String"),
-                        ParseEvent::EndString => (false, "String"),
+                        ParseEvent::StartLetIn => (TaskBool::True, "Parsing Let-In".into()),
+                        ParseEvent::EndLetIn => (TaskBool::False, "Parsing Let-In".into()),
 
-                        ParseEvent::StartPath => (true, "Path"),
-                        ParseEvent::EndPath => (false, "Path"),
+                        ParseEvent::StartLambda => (TaskBool::True, "Parsing Lambda".into()),
+                        ParseEvent::EndLambda => (TaskBool::False, "Parsing Lambda".into()),
 
-                        ParseEvent::StartNumber => (true, "Number"),
-                        ParseEvent::EndNumber => (false, "Number"),
+                        ParseEvent::StartWith => (TaskBool::True, "Parsing With".into()),
+                        ParseEvent::EndWith => (TaskBool::False, "Parsing With".into()),
 
-                        ParseEvent::StartExpression => (true, "Expression"),
-                        ParseEvent::EndExpression => (false, "Expression"),
+                        ParseEvent::StartString => (TaskBool::True, "Parsing String".into()),
+                        ParseEvent::EndString => (TaskBool::False, "Parsing String".into()),
 
-                        ParseEvent::StartOperator => (true, "Operator"),
-                        ParseEvent::EndOperator => (false, "Operator"),
+                        ParseEvent::StartPath => (TaskBool::True, "Parsing Path".into()),
+                        ParseEvent::EndPath => (TaskBool::False, "Parsing Path".into()),
 
-                        ParseEvent::StartIdentifier => (true, "Identifier"),
-                        ParseEvent::EndIdentifier => (false, "Identifier"),
+                        ParseEvent::StartNumber => (TaskBool::True, "Parsing Number".into()),
+                        ParseEvent::EndNumber => (TaskBool::False, "Parsing Number".into()),
 
-                        ParseEvent::StartWhitespace => (true, "Whitespace"),
-                        ParseEvent::EndWhitespace => (false, "Whitespace"),
+                        ParseEvent::StartExpression => (TaskBool::True, "Parsing Expression".into()),
+                        ParseEvent::EndExpression => (TaskBool::False, "Parsing Expression".into()),
 
-                        ParseEvent::StartValue => (true, "Value"),
-                        ParseEvent::EndValue => (false, "Value"),
+                        ParseEvent::StartOperator => (TaskBool::True, "Parsing Operator".into()),
+                        ParseEvent::EndOperator => (TaskBool::False, "Parsing Operator".into()),
 
-                        ParseEvent::StartGroup => (true, "Group"),
-                        ParseEvent::EndGroup => (false, "Group"),
+                        ParseEvent::StartIdentifier => (TaskBool::True, "Parsing Identifier".into()),
+                        ParseEvent::EndIdentifier => (TaskBool::False, "Parsing Identifier".into()),
 
-                        ParseEvent::StartAntiquotation => (true, "Antiquotation"),
-                        ParseEvent::EndAntiquotation => (false, "Antiquotation"),
+                        ParseEvent::StartWhitespace => (TaskBool::True, "Skipping Whitespace".into()),
+                        ParseEvent::EndWhitespace => (TaskBool::False, "Skipping Whitespace".into()),
 
-                        ParseEvent::StartIndentedString => (true, "Intented String"),
-                        ParseEvent::EndIndentedString => (false, "Intented String"),
+                        ParseEvent::StartValue => (TaskBool::True, "Parsing Value".into()),
+                        ParseEvent::EndValue => (TaskBool::False, "Parsing Value".into()),
+
+                        ParseEvent::StartGroup => (TaskBool::True, "Parsing Group".into()),
+                        ParseEvent::EndGroup => (TaskBool::False, "Parsing Group".into()),
+
+                        ParseEvent::StartAntiquotation => (TaskBool::True, "Parsing Antiquotation".into()),
+                        ParseEvent::EndAntiquotation => (TaskBool::False, "Parsing Antiquotation".into()),
+
+                        ParseEvent::StartIndentedString => (TaskBool::True, "Parsing Intented String".into()),
+                        ParseEvent::EndIndentedString => (TaskBool::False, "Parsing Intented String".into()),
                     };
 
-                    if !is_start && *indent > 0 {
+                    if matches!(taskbool, TaskBool::False) && *indent > 0 {
                         *indent -= 1;
                     }
 
-                    if is_start {
-                        if name != "Finished" {
+                    match taskbool {
+                        TaskBool::True => {
+                            if name != "Finished" {
+                                self.logs.push(ParseTask {
+                                    name,
+                                    indent: *indent,
+                                    status: TaskStatus::Running,
+                                });
+                                self.num_of_pars += 1;
+                                *indent += 1;
+                            } else {
+                                self.logs.push(ParseTask {
+                                    name: "Parse erfolgreich beendet".into(),
+                                    indent: 0,
+                                    status: TaskStatus::Finished,
+                                });
+                            }
+                        },
+                        TaskBool::False => {
+                            if let Some(index) = self.logs.iter().rposition(|t| t.status == TaskStatus::Running) {
+                                self.logs.remove(index);
+                            }
+                        },
+                        TaskBool::Keep => {
+                            if let Some(index) = self.logs.iter().rposition(|t| t.name == name) {
+                                self.logs.remove(index);
+                            }
+                            *indent -= 1;
                             self.logs.push(ParseTask {
-                                name: name.to_string(),
+                                name,
                                 indent: *indent,
-                                status: TaskStatus::Running,
-                            });
-                            *indent += 1;
-                        } else {
-                            self.logs.push(ParseTask {
-                                name: "Parse erfolgreich beendet".to_string(),
-                                indent: 0,
                                 status: TaskStatus::Finished,
                             });
-                        }
-                    } else {
-
-                        if let Some(index) = self.logs.iter().rposition(|t| t.status == TaskStatus::Running) {
-                            self.logs.remove(index);
-                        }
+                        },
                     }
                 }
             }

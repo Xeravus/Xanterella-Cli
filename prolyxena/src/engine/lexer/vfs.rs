@@ -60,6 +60,9 @@ impl FsData {
     }
 
     pub fn get_files(&mut self) {
+        if let Some(tx) = &self.trans {
+            let _ = tx.send(ParseEvent::StartGettingFiles);
+        }
         let files: Vec<String> = if !self.path.ends_with(".nix") {
             WalkDir::new(&self.path)
                 .min_depth(1)
@@ -85,10 +88,16 @@ impl FsData {
                 process::exit(1);
                 vec![]
             };
+        if let Some(tx) = &self.trans {
+            let _ = tx.send(ParseEvent::EndGettingFiles);
+        }
         self.files = files;
     }
 
     pub fn gen_tree(&mut self) {
+        if let Some(tx) = &self.trans {
+            let _ = tx.send(ParseEvent::StartGen);
+        }
         let files = self.files.clone();
         for i in files {
             let rel_path = i.strip_prefix(&self.path).unwrap_or(&i);
@@ -113,6 +122,9 @@ impl FsData {
             let file_name = parts.last().unwrap();
             if let FsNodes::Dir(map) = pointer {
                 let content = fs::read_to_string(&i).unwrap();
+                if let Some(tx) = &self.trans {
+                    let _ = tx.send(ParseEvent::StartParsingFile(clean_path.to_string()));
+                }
                 let mut file_data = match &self.trans {
                     Some(tx) => Lexer::new_trans(&content, i.clone(), tx.clone()),
                     None => Lexer::new(&content, i.clone()),
@@ -124,11 +136,17 @@ impl FsData {
                         process::exit(1);
                     },
                 };
+                if let Some(tx) = &self.trans {
+                    let _ = tx.send(ParseEvent::EndParsingFile(clean_path.to_string()));
+                }
                 map.insert(file_name.to_string(), FsNodes::File {
                     name: file_name.to_string(), 
                     ast
                 });
             }
+        }
+        if let Some(tx) = &self.trans { 
+            let _ = tx.send(ParseEvent::EndGen);
         }
     }
 

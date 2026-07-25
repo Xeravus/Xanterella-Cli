@@ -169,9 +169,11 @@ impl<'a> ParsePrimitves for Lexer<'a> {
 
         match word.as_str() {
             "let" => {
+                self.log_event(ParseEvent::EndIdentifier);
                 self.parse_let_in()
             },
             "with" => {
+                self.log_event(ParseEvent::EndIdentifier);
                 self.parse_with()
             },
             "true" => {

@@ -43,33 +43,6 @@ mod tests {
         data2.parse_events(&mut indent2);
         data3.parse_events(&mut indent3);
 
-        let expected1 = vec![
-            ParseTask {
-                name: "Attribut Set".to_string(),
-                indent: 0,
-                status: TaskStatus::Running,
-            }
-        ];
-        let expected2 = vec![
-            ParseTask {
-                name: "Attribut Set".to_string(),
-                indent: 0,
-                status: TaskStatus::Running,
-            },
-        ];
-        let expected3 = vec![
-            ParseTask {
-                name: "Attribut Set".to_string(),
-                indent: 0,
-                status: TaskStatus::Running,
-            },
-            ParseTask {
-                name: "Value".to_string(),
-                indent: 1,
-                status: TaskStatus::Running,
-            },
-        ];
-
         assert_eq!(data1.logs, expected1);
         assert_eq!(data2.logs, expected2);
         assert_eq!(data3.logs, expected3);

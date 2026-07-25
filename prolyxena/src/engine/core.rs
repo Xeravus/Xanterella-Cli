@@ -50,6 +50,12 @@ pub enum StringFragment {
 pub enum ParseEvent {
     // Special
     Finished(String),
+    StartGen,
+    EndGen,
+    StartGettingFiles,
+    EndGettingFiles,
+    StartParsingFile(String),
+    EndParsingFile(String),
     // Error(Err),
     // Start
     StartAttrSet,

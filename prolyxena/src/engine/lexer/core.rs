@@ -18,7 +18,7 @@ pub trait ParseCore {
 
 impl<'a> ParseCore for Lexer<'a> {
     fn skip_whitespace(&mut self) {
-        self.log_event(ParseEvent::StartWhitespace);
+        // self.log_event(ParseEvent::StartWhitespace);
         loop {
             match self.chars.peek() {
                 Some(&c) if c.is_whitespace() => {
@@ -40,7 +40,7 @@ impl<'a> ParseCore for Lexer<'a> {
                 }
             }
         }
-        self.log_event(ParseEvent::EndWhitespace);
+        // self.log_event(ParseEvent::EndWhitespace);
     }
 
     fn parse_value(&mut self) -> Result<NixValue, String> {
