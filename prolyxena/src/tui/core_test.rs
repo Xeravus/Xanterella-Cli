@@ -44,17 +44,30 @@ mod tests {
         data3.parse_events(&mut indent3);
 
         let expected1 = vec![
-            " Starte Attribut Set",
+            ParseTask {
+                name: "Attribut Set".to_string(),
+                indent: 0,
+                status: TaskStatus::Running,
+            }
         ];
         let expected2 = vec![
-            " Starte Attribut Set",
-            " Schließe Attribut Set"
+            ParseTask {
+                name: "Attribut Set".to_string(),
+                indent: 0,
+                status: TaskStatus::Running,
+            },
         ];
         let expected3 = vec![
-            " Starte Attribut Set",
-            "   Starte Value",
-            "   Schließe Value",
-            " Schließe Attribut Set",
+            ParseTask {
+                name: "Attribut Set".to_string(),
+                indent: 0,
+                status: TaskStatus::Running,
+            },
+            ParseTask {
+                name: "Value".to_string(),
+                indent: 1,
+                status: TaskStatus::Running,
+            },
         ];
 
         assert_eq!(data1.logs, expected1);
