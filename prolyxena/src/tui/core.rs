@@ -18,10 +18,23 @@ use crate::engine::lexer::vfs::*;
 
 #[derive(Debug)]
 pub struct Tui {
-    logs: Vec<String>,
+    logs: Vec<ParseTask>,
     path: String,
     time: Option<String>,
     trans: Option<Receiver<ParseEvent>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TaskStatus {
+    Running,
+    Finished,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ParseTask {
+    pub name: String,
+    pub indent: usize,
+    pub status: TaskStatus,
 }
 
 impl Tui {
@@ -91,7 +104,6 @@ impl Tui {
         };
 
         let sidebar_text = format!(" Pfad: {} \n Time: {} ", &self.path, time);
-        let log_text = (&self.logs.join("\n")).to_string();
 
         let sidebar_block = Block::default()
             .title(" Prolyxena Output ")
@@ -108,7 +120,14 @@ impl Tui {
         
         let items: Vec<ListItem> = self.logs
             .iter()
-            .map(|log| ListItem::new(log.as_str()))
+            .map(|task| {
+                let indent_str =  "  ".repeat(task.indent);
+                let text = match task.status {
+                    TaskStatus::Running => format!("{} [ ] Starte {}", indent_str, task.name),
+                    TaskStatus::Finished => format!("{} [x] Schließe {}", indent_str, task.name),
+                };
+                ListItem::new(text)
+            })
             .collect();
         let list = List::new(items) .block(main_block);
         let mut list_state = ListState::default();
@@ -183,17 +202,29 @@ impl Tui {
                     *indent -= 1;
                 }
 
-                let indent_string = "  ".repeat(*indent);
-
                 if is_start {
                     if name != "Finished" {
-                        self.logs.push(format!("{} Starte {}", indent_string, name));
+                        self.logs.push(ParseTask {
+                            name: name.to_string(),
+                            indent: *indent,
+                            status: TaskStatus::Running,
+                        });
                         *indent += 1;
                     } else {
-                        self.logs.push(format!("Parse erfolgreich"));
+                        self.logs.push(ParseTask {
+                            name: "Parse erfolgreich beendet".to_string(),
+                            indent: 0,
+                            status: TaskStatus::Finished,
+                        });
                     }
                 } else {
-                    self.logs.push(format!("{} Schließe {}", indent_string, name));
+                    if *indent > 0 {
+                        *indent -= 1;
+                    }
+
+                    if let Some(task) = self.logs.iter_mut().rev().find(|t| t.status == TaskStatus::Running) {
+                        task.status == TaskStatus::Finished;
+                    }
                 }
             }
         }
