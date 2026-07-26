@@ -3,6 +3,7 @@ use crate::tui::core::*;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::mpsc;
     #[test]
     fn test_tui_core_new() {
         let mut data = Tui::new();
@@ -10,41 +11,43 @@ mod tests {
         assert!(data.logs.is_empty());
         assert!(data.path.is_empty());
         assert!(data.time.is_none());
+        assert!(data.time_rx.is_none());
         assert!(data.trans.is_none());
+        assert_eq!(data.num_of_pars, 0);
     }
 
     #[test]
-    fn test_tui_core_parse_events() {
-        let mut data1 = Tui::new();
-        let mut data2 = Tui::new();
-        let mut data3 = Tui::new();
+    fn test_tui_core_channels_time() {
+        let mut tui = Tui::new();
+        let (tx, rx) = mpsc::channel();
+        tui.time_rx = Some(rx);
+        
+        tx.send("0.052s".to_string()).unwrap();
 
-        let mut indent1: usize = 0;
-        let mut indent2: usize = 0;
-        let mut indent3: usize = 0;
+        let mut indent = 0;
+        tui.parse_events(&mut indent);
+        
+        assert_eq!(tui.time, Some("0.052s".to_string()));
+    }
 
-        let (tx1, rx1) = mpsc::channel::<ParseEvent>();
-        let (tx2, rx2) = mpsc::channel::<ParseEvent>();
-        let (tx3, rx3) = mpsc::channel::<ParseEvent>();
+    #[test]
+    fn test_tui_core_parse_events_clock() {
+        let mut tui = Tui::new();
+        let (tx, rx) = mpsc::channel();
+        tui.trans = Some(rx);
 
-        data1.inject_trans(rx1);
-        data2.inject_trans(rx2);
-        data3.inject_trans(rx3);
+        tx.send(ParseEvent::StartAttrSet).unwrap();
 
-        tx1.send(ParseEvent::StartAttrSet).ok();
-        tx2.send(ParseEvent::StartAttrSet).ok();
-        tx2.send(ParseEvent::EndAttrSet).ok();
-        tx3.send(ParseEvent::StartAttrSet).ok();
-        tx3.send(ParseEvent::StartValue).ok();
-        tx3.send(ParseEvent::EndValue).ok();
-        tx3.send(ParseEvent::EndAttrSet).ok();
+        tui.last_update = Instant::now() - Duration::from_millis(10);
 
-        data1.parse_events(&mut indent1);
-        data2.parse_events(&mut indent2);
-        data3.parse_events(&mut indent3);
+        let mut indent = 0;
+        tui.parse_events(&mut indent);
 
-        assert_eq!(data1.logs, expected1);
-        assert_eq!(data2.logs, expected2);
-        assert_eq!(data3.logs, expected3);
+        assert_eq!(tui.logs.len(), 1);
+        assert_eq!(tui.logs[0].name, "Parsing Attribut Set");
+        assert_eq!(tui.logs[0].status, TaskStatus::Running);
+        assert_eq!(tui.logs[0].indent, 0);
+
+        assert_eq!(indent, 1);
     }
 }
