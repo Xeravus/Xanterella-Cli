@@ -19,12 +19,12 @@ mod tests {
     #[test]
     fn test_tui_core_channels_time() {
         let mut tui = Tui::new();
+        let mut indent = 0;
         let (tx, rx) = mpsc::channel();
         tui.time_rx = Some(rx);
         
         tx.send("0.052s".to_string()).unwrap();
 
-        let mut indent = 0;
         tui.parse_events(&mut indent);
         
         assert_eq!(tui.time, Some("0.052s".to_string()));
@@ -33,6 +33,7 @@ mod tests {
     #[test]
     fn test_tui_core_parse_events_clock() {
         let mut tui = Tui::new();
+        let mut indent = 0;
         let (tx, rx) = mpsc::channel();
         tui.trans = Some(rx);
 
@@ -40,7 +41,6 @@ mod tests {
 
         tui.last_update = Instant::now() - Duration::from_millis(10);
 
-        let mut indent = 0;
         tui.parse_events(&mut indent);
 
         assert_eq!(tui.logs.len(), 1);
@@ -49,5 +49,49 @@ mod tests {
         assert_eq!(tui.logs[0].indent, 0);
 
         assert_eq!(indent, 1);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_remove() {
+        let mut tui = Tui::new();
+        let mut indent = 0;
+        let (tx, rx) = mpsc::channel();
+        tui.trans = Some(rx);
+        
+        tx.send(ParseEvent::StartList).unwrap();
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+        tui.parse_events(&mut indent);
+        
+        assert_eq!(tui.logs.len(), 1); 
+        assert_eq!(indent, 1);
+
+        tx.send(ParseEvent::EndList).unwrap();
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+        tui.parse_events(&mut indent);
+        
+        assert_eq!(tui.logs.len(), 0); 
+        assert_eq!(indent, 0); 
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_keeps_finished_tasks() {
+        let mut tui = Tui::new();
+        let mut indent = 0;
+        let file_name = "configuration.nix".to_string();
+        let (tx, rx) = mpsc::channel();
+        tui.trans = Some(rx);
+        
+        
+        tx.send(ParseEvent::StartParsingFile(file_name.clone())).unwrap();
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+        tui.parse_events(&mut indent);
+        
+        tx.send(ParseEvent::EndParsingFile(file_name)).unwrap();
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+        tui.parse_events(&mut indent);
+        
+        assert_eq!(tui.logs.len(), 1);
+        assert_eq!(tui.logs[0].status, TaskStatus::Finished);
+        assert_eq!(tui.logs[0].name, "Generating AST: configuration.nix");
     }
 }
