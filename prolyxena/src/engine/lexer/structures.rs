@@ -14,7 +14,7 @@ pub trait ParseStructures {
 
 impl<'a> ParseStructures for Lexer<'a> {
     fn parse_attr_set(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartAttrSet);
+        self.log_event(ParseEvent::StartAttrSet);
         self.chars.next();
         let mut map = HashMap::new();
         loop {
@@ -85,12 +85,12 @@ impl<'a> ParseStructures for Lexer<'a> {
             }
             map.insert(key, value);
         }
-        self.event.push(ParseEvent::EndAttrSet);
+        self.log_event(ParseEvent::EndAttrSet);
         Ok(NixValue::AttrSet(map))
     }
 
     fn parse_list(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartList);
+        self.log_event(ParseEvent::StartList);
         self.chars.next();
         let mut output_vec: Vec<NixValue> = vec![];
         loop {
@@ -103,7 +103,7 @@ impl<'a> ParseStructures for Lexer<'a> {
             let value = self.parse_value()?;
             output_vec.push(value);
         }
-        self.event.push(ParseEvent::EndList);
+        self.log_event(ParseEvent::EndList);
         Ok(NixValue::List(output_vec))
     }
 }

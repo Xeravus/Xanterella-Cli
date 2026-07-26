@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 use std::iter::Peekable;
 use std::str::Chars;
+use std::sync::mpsc::Sender;
+use std::time::Duration;
+
+use humantime::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum NixValue {
@@ -44,6 +48,15 @@ pub enum StringFragment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParseEvent {
+    // Special
+    Finished(String),
+    StartGen,
+    EndGen,
+    StartGettingFiles,
+    EndGettingFiles,
+    StartParsingFile(String),
+    EndParsingFile(String),
+    // Error(Err),
     // Start
     StartAttrSet,
     StartList,
@@ -82,16 +95,29 @@ pub enum ParseEvent {
 
 pub struct Lexer<'a> {
     pub chars: Peekable<Chars<'a>>,
-    pub event: Vec<ParseEvent>,
     pub path: String,
+    pub trans: Option<Sender<ParseEvent>>,
 }
 
 impl<'a> Lexer<'a> {
     pub fn new(content: &'a str, path: String) -> Self {
         Lexer {
             chars: content.chars().peekable(),
-            event: vec![],
             path,
+            trans: None,
+        }
+    }
+    pub fn new_trans(content: &'a str, path: String, sender: Sender<ParseEvent>) -> Self {
+        Lexer {
+            chars: content.chars().peekable(),
+            path,
+            trans: Some(sender),
+        }
+    }
+
+    pub fn log_event(&self, event: ParseEvent) {
+        if let Some(tx) = &self.trans {
+            tx.send(event);
         }
     }
 }

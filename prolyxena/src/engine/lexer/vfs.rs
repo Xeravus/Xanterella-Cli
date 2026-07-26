@@ -7,12 +7,16 @@ use std::collections::HashMap;
 use std::fs;
 use std::process;
 use std::path::PathBuf;
+use std::sync::mpsc::Sender;
+use std::time::Instant;
 
 #[derive(Debug, Clone)]
 pub struct FsData {
     pub files: Vec<String>,
     pub path: String,
     pub fsnodes: FsNodes,
+    pub trans: Option<Sender<ParseEvent>>,
+    pub time: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -30,15 +34,35 @@ impl FsData {
             files: vec![],
             path: path.to_string(),
             fsnodes: FsNodes::Dir(HashMap::new()),
+            trans: None,
+            time: 0.0,
+        }
+    }
+
+    pub fn new_trans(path: &str, trans: Sender<ParseEvent>) -> Self {
+        FsData {
+            files: vec![],
+            path: path.to_string(),
+            fsnodes: FsNodes::Dir(HashMap::new()),
+            trans: Some(trans),
+            time: 0.0,
         }
     }
 
     pub fn load(&mut self) {
+        let start = Instant::now();
         self.get_files();
         self.gen_tree();
+        self.time = start.elapsed().as_secs_f64();
+        if let Some(tx) = &self.trans {
+            tx.send(ParseEvent::Finished(self.get_time())).ok();
+        }
     }
 
     pub fn get_files(&mut self) {
+        if let Some(tx) = &self.trans {
+            let _ = tx.send(ParseEvent::StartGettingFiles);
+        }
         let files: Vec<String> = if !self.path.ends_with(".nix") {
             WalkDir::new(&self.path)
                 .min_depth(1)
@@ -64,10 +88,16 @@ impl FsData {
                 process::exit(1);
                 vec![]
             };
+        if let Some(tx) = &self.trans {
+            let _ = tx.send(ParseEvent::EndGettingFiles);
+        }
         self.files = files;
     }
 
     pub fn gen_tree(&mut self) {
+        if let Some(tx) = &self.trans {
+            let _ = tx.send(ParseEvent::StartGen);
+        }
         let files = self.files.clone();
         for i in files {
             let rel_path = i.strip_prefix(&self.path).unwrap_or(&i);
@@ -92,7 +122,13 @@ impl FsData {
             let file_name = parts.last().unwrap();
             if let FsNodes::Dir(map) = pointer {
                 let content = fs::read_to_string(&i).unwrap();
-                let mut file_data = Lexer::new(&content, i.clone());
+                if let Some(tx) = &self.trans {
+                    let _ = tx.send(ParseEvent::StartParsingFile(clean_path.to_string()));
+                }
+                let mut file_data = match &self.trans {
+                    Some(tx) => Lexer::new_trans(&content, i.clone(), tx.clone()),
+                    None => Lexer::new(&content, i.clone()),
+                };
                 let ast = match file_data.parse_value() {
                     Ok(parsed_ast) => parsed_ast,
                     Err(e) => {
@@ -100,12 +136,22 @@ impl FsData {
                         process::exit(1);
                     },
                 };
+                if let Some(tx) = &self.trans {
+                    let _ = tx.send(ParseEvent::EndParsingFile(clean_path.to_string()));
+                }
                 map.insert(file_name.to_string(), FsNodes::File {
                     name: file_name.to_string(), 
                     ast
                 });
             }
         }
+        if let Some(tx) = &self.trans { 
+            let _ = tx.send(ParseEvent::EndGen);
+        }
+    }
+
+    pub fn get_time(&self) -> String {
+        format!("{:.3}s", &self.time)
     }
 }
 
