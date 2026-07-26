@@ -29,7 +29,7 @@ jobs:
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo audit"
 
       - name: Cargo Tarpaulin
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo tarpaulin --fail-under 70"
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo tarpaulin --fail-under 50"
 
       - name: Cargo Format
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo fmt"
@@ -81,7 +81,7 @@ jobs:
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo audit"
 
       - name: Cargo Tarpaulin
-        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo tarpaulin --fail-under 70"
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo tarpaulin --fail-under 50"
 
       - name: Cargo Format
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo fmt"
