@@ -2,30 +2,52 @@ name: Xanterella-Cli CI Stable
 
 on:
   pull_request:
-    branches: [ "final/stable", "stable" ]
+    branches: [ "final/cleanup", "stable" ]
 
 jobs:
   xanterella:
     name: Xanterella (Stable)
     runs-on: [self-hosted, xanterella]
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with: 
           clean: false
+          ref: ${{ github.head_ref }}
+
+      - name: Nix Flake Check
+        run: nix flake check
+
+      - name: Cargo Machete
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo machete"
+
+      - name: Cargo Audit
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo audit"
+
+      - name: Cargo Tarpaulin
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo tarpaulin --fail-under 70"
+
+      - name: Cargo Format
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo fmt --check"
 
       - name: Cargo Check
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check --release"
 
-      - name: Cargo Tests
+      - name: Cargo Clippy
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo clippy -- -D warnings"
+
+      - name: Cargo Test
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test"
+
+      - name: Cargo Doc (Documentation Check)
+        run: nix develop .#xanterella --command bash -c "cd xanterella && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --document-private-items"
 
       - name: Cargo Build
         run: nix build .#xanterella
-
-      - name: Cargo Clippy
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo clippy"
 
       - name: Cleanup
         uses: Swatinem/rust-cache@v2
@@ -34,23 +56,45 @@ jobs:
     name: Prolyxena (Stable)
     runs-on: [self-hosted, xanterella]
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with: 
           clean: false
+          ref: ${{ github.head_ref }}
+
+      - name: Nix Flake Check
+        run: nix flake check
+
+      - name: Cargo Machete
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo machete"
+
+      - name: Cargo Audit
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo audit"
+
+      - name: Cargo Tarpaulin
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo tarpaulin --fail-under 70"
+
+      - name: Cargo Format
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo fmt --check"
 
       - name: Cargo Check
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo check --release"
 
-      - name: Cargo Tests
+      - name: Cargo Clippy
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo clippy -- -D warnings"
+
+      - name: Cargo Test
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo test"
+
+      - name: Cargo Doc (Documentation Check)
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --document-private-items"
 
       - name: Cargo Build
         run: nix build .#prolyxena
-
-      - name: Cargo Clippy
-        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo clippy"
 
       - name: Cleanup
         uses: Swatinem/rust-cache@v2

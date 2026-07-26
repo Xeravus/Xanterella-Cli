@@ -24,6 +24,9 @@
           rust-analyzer
           tokei
           alejandra
+          cargo-tarpaulin
+          cargo-audit
+          cargo-machete
         ];
         nativeBuildInputs = [
           pkgs.pkg-config
@@ -38,6 +41,9 @@
           clippy
           rust-analyzer
           tokei
+          cargo-tarpaulin
+          cargo-audit
+          cargo-machete
         ];
         nativeBuildInputs = [
           pkgs.pkg-config
