@@ -201,7 +201,7 @@ impl Get for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::GetHardware(&self.ip.clone()));
+            return Err(EventsFailed::GetHardware);
         }
 
         self.log_event(Events::OkGetHardware(self.ip.clone()));
