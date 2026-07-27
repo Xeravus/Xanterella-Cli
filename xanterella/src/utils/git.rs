@@ -68,7 +68,7 @@ impl Git for Xanterella {
                 return Err(EventsFailed::GitCheckout);
             };
 
-            self.log_event(Events::OkgGitCheckoutCreate(branch));
+            self.log_event(Events::OkGitCheckoutCreate(branch));
         };
 
         self.log_event(Events::RunGitCheckout(branch));
