@@ -45,6 +45,8 @@ pub trait Get {
     fn get_drives(&self) -> Result<Drives, EventsFailed>;
     fn sort_drives(drives: Drives) -> Drives;
     fn get_drive_size(size: &str) -> u64;
+    fn get_taildevices() -> Result<Taildevices, EventsFailed>;
+    fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String>;
 }
 
 impl Get for Xanterella {
@@ -158,5 +160,31 @@ impl Get for Xanterella {
         let val: f64 = num_str.parse().unwrap_or(0.0);
 
         (val * multiplier) as u64
+    }
+
+    fn get_taildevices() -> Result<Taildevices, EventsFailed> {
+        let cmd = Command::new("tailscale")
+            .args(["status", "--json"])
+            .output()
+            .map_err(|err| EventsFailed::FailedCmd(err))?;
+
+        if !cmd.status.success() {
+            return Err(EventsFailed::Tailscale);
+        }
+        serde_json::from_slice::<Taildevices>(&tail_status.stdout)
+            .map_err(|err| EventsFailed::Tailscale(err))
+    }
+
+    fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {
+        let mut ips: Vec<String> = vec![];
+        for (_nodekey, device) in devices.devices {
+            if device.name == name && device.os == "linux" {
+                let ip = device.ip[0].clone();
+                if !active_installs.contains(&ip) {
+                    let _ = &mut ips.push(ip.to_owned());
+                }
+            }
+        }
+        ips
     }
 }

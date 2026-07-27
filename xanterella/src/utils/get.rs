@@ -184,6 +184,7 @@ pub fn get_sort_drives(drives: Drives) -> Drives {
 }
 */
 
+/*
 pub fn get_taildevices() -> Taildevices {
     //info!("[ RUN ] - Parse Tailscale Geräte");
 
@@ -205,7 +206,9 @@ pub fn get_taildevices() -> Taildevices {
         process::exit(1);
     })
 }
+*/
 
+/*
 pub fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {
     let mut ips: Vec<String> = vec![];
     for (_nodekey, device) in devices.devices {
@@ -218,6 +221,7 @@ pub fn get_taildevices_specific(devices: Taildevices, name: &str, active_install
     }
     ips
 }
+*/
 
 /*
 pub fn get_sshstring(ip: &str, user: User) -> Vec<String> {
