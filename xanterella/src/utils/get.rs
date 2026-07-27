@@ -204,7 +204,7 @@ impl Get for Xanterella {
             return Err(EventsFailed::GetHardware(&self.ip.clone()));
         }
 
-        self.log_event(Events::OkGetHardware(&self.ip.clone()));
+        self.log_event(Events::OkGetHardware(self.ip.clone()));
         Ok(String::from_utf8_lossy(&cmd.stdout).to_string())
     }
 }
