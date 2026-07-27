@@ -30,7 +30,7 @@ impl Xanterella {
     }
 
     pub fn set_home(&mut self, value: &str) {
-        self.home = value.to_string(),
+        self.home = value.to_string();
     }
 
     pub fn set_fast(&mut self, value: bool) {
@@ -46,7 +46,7 @@ impl Xanterella {
     }
 
     pub fn set_drive(&mut self, value: &str) {
-        self.drive = Some(value);
+        self.drive = Some(value.to_string());
     }
 
     pub fn log_event(&mut self, event: Events, value: Option<Cow<'static, str>>) {
@@ -59,7 +59,7 @@ impl Xanterella {
             Events::RunPing => (true, "Starte Ping"),
             Events::OkPing => (false, "Ping erfolgreich"),
 
-        }
+        };
         
         let prefix = match run {
             true => "[ RUN ] ",
