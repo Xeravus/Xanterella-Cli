@@ -25,7 +25,7 @@ pub trait Git {
 
 impl Git for Xanterella {
     fn git_commit(&mut self, msg: &str) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitCommit(msg.clone()));
+        self.log_event(Events::RunGitCommit(msg.to_string()));
 
         let cmd = Command::new("git")
             .args(["commit", "-am", &msg])
@@ -37,7 +37,7 @@ impl Git for Xanterella {
             return Err(EventsFailed::GitCommit);
         };
 
-        self.log_event(Events::OkGitCommit(msg.clone()));
+        self.log_event(Events::OkGitCommit(msg.to_string()));
         Ok(())
     }
 
