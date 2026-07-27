@@ -92,4 +92,10 @@ pub enum Events {
 
     RunInjectWifi,
     OkInjectWifi,
+    //
+    RunGetDrives(String),
+    OkGetDrives(String),
+
+
+
 }
