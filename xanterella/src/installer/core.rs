@@ -14,7 +14,7 @@ impl RemoteInstall for Xanterella {
         self.ping()?;
         self.pingssh()?;
         self.git_merge()?;
-        crylia_edit_start(self.get_hardware()?);
+        // crylia_edit_start(self.get_hardware()?);
         self.git_commit()?;
         if !&self.fast {
             self.check_nix_flake()?;
@@ -61,7 +61,7 @@ impl RemoteInstall for Xanterella {
     fn remote_install_cleanup(&self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunRemoteInstallCleanup);
 
-        crylia_edit_finish();
+        // crylia_edit_finish();
         self.git_commit()?;
 
         self.log_event(Events::OkRemoteInstallCleanup);
