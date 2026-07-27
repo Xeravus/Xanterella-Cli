@@ -37,6 +37,7 @@ pub fn config_create_subdir() {
 }
 */
 
+/*
 pub fn config_gen_basic() {
     info!("[ RUN ] - Erstelle config.json");
 
@@ -49,10 +50,13 @@ pub fn config_gen_basic() {
     fs::write(&json_path, &json_string).expect("Konnte Datei nicht schreiben");
     info!("[ OK ] - config.json erstellt");
 }
+*/
 
+/*
 pub fn config_parse() -> Data {
     let json_path = PathBuf::from(get_path(Paths::Config)).join("config.json").display().to_string();
     let file_content = fs::read_to_string(&json_path).expect("Datei konnte nicht gelesen werden");
     let loaded_config: Data = serde_json::from_str(&file_content).unwrap();
     loaded_config
 }
+*/
