@@ -24,7 +24,7 @@ impl Ping for Xanterella {
     }
 
     fn ping_ssh(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunPingSsh, &sekf.ip.clone());
+        self.log_event(Events::RunPingSsh, &self.ip.clone());
 
         let cmd = Command::new("ssh")
             .args(self.get_sshstring(User::Root))
