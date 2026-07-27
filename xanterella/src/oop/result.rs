@@ -1,4 +1,3 @@
-use crate::xanterella::utils::git::*;
 use crate::prelude::*;
 
 pub enum EventsFailed {
