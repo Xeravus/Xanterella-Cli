@@ -56,7 +56,7 @@ impl Git for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            self.log_event(Events::RungGitCheckoutCreate(branch));
+            self.log_event(Events::RunGitCheckoutCreate(branch));
 
             let create = Command::new("git")
                 .args(["checkout", "-b", br_name])
