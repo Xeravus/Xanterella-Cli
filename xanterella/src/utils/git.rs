@@ -24,7 +24,7 @@ pub trait Git {
 }
 
 impl Git for Xanterella {
-    fn git_commit(&self, msg: &str) -> Result<(), EventsFailed> {
+    fn git_commit(&mut self, msg: &str) -> Result<(), EventsFailed> {
         self.log_event(Events::RunGitCommit(msg.clone()));
 
         let cmd = Command::new("git")
@@ -41,7 +41,7 @@ impl Git for Xanterella {
         Ok(())
     }
 
-    fn git_checkout(&self, branch: Branches) -> Result<(), EventsFailed> {
+    fn git_checkout(&mut self, branch: Branches) -> Result<(), EventsFailed> {
         self.log_event(Events::RunGitCheckout(branch.clone()));
 
         let br_name = match branch {
@@ -75,7 +75,7 @@ impl Git for Xanterella {
         Ok(())
     }
 
-    fn git_merge(&self) -> Result<(), EventsFailed> {
+    fn git_merge(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunGitMerge);
 
         self.git_checkout(Branches::Xanterella)?;
