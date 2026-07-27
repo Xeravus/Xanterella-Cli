@@ -41,19 +41,19 @@ pub struct DeviceInfo {
 }
 
 pub trait Get {
-    fn get_sshstring(&self, user: User) -> Vec<String>;
-    fn get_path(&self, path: Paths) -> String;
-    fn get_part_name(&self, part: i8) -> String;
-    fn get_drives(&self) -> Result<Drives, EventsFailed>;
+    fn get_sshstring(&mut self, user: User) -> Vec<String>;
+    fn get_path(&mut self, path: Paths) -> String;
+    fn get_part_name(&mut self, part: i8) -> String;
+    fn get_drives(&mut self) -> Result<Drives, EventsFailed>;
     fn sort_drives(drives: Drives) -> Drives;
     fn get_drive_size(size: &str) -> u64;
     fn get_taildevices() -> Result<Taildevices, EventsFailed>;
     fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String>;
-    fn get_hardware(&self) -> Result<String, EventsFailed>;
+    fn get_hardware(&mut self) -> Result<String, EventsFailed>;
 }
 
 impl Get for Xanterella {
-    fn get_sshstring(&self, user: User) -> Vec<String> {
+    fn get_sshstring(&mut self, user: User) -> Vec<String> {
         let target = match user {
             User::Root => format!("root@{}", &self.ip),
             User::Cato => format!("cato@{}", &self.ip),
@@ -67,7 +67,7 @@ impl Get for Xanterella {
         ]
     }
 
-    fn get_path(&self, path: Paths) -> String {
+    fn get_path(&mut self, path: Paths) -> String {
         let config = PathBuf::from(&self.home).join(".config").join("xanterella");
         let result: PathBuf = match path {
             Paths::Nixconf => &self.path.into(),
@@ -76,7 +76,7 @@ impl Get for Xanterella {
         result.to_atr().expect("[ FAILED ] - Get Path is fehlgeschlagen").to_string()
     }
 
-    fn get_part_name(&self, part: i8) -> String {
+    fn get_part_name(&mut self, part: i8) -> String {
         let drive = format!("/dev/{}", &self.drive);
         let p_suffix = if &self.drive.contains("nvme") || &self.drive.contains("mmclblk") { 
             "p"
@@ -86,7 +86,7 @@ impl Get for Xanterella {
         format!("{}{}{}", &self.drive, p_suffix, part)
     }
 
-    fn get_drives(&self) -> Result<Drives, EventsFailed> {
+    fn get_drives(&mut self) -> Result<Drives, EventsFailed> {
         self.log_event(Events::RunGetDrives(&self.ip.clone()));
 
         let parsed_drives = if !&self.ip.contains("127.0.0.1") {
@@ -131,7 +131,7 @@ impl Get for Xanterella {
         Ok(parsed_drives)
     }
 
-    fn sort_drives(&self, drives: Drives) -> Drives {
+    fn sort_drives(&mut self, drives: Drives) -> Drives {
         let mut drives = drives;
         drives.blockdevices.sort_by(|a, b| {
             let size_a = self.get_drive_size(&a.size);
@@ -191,8 +191,8 @@ impl Get for Xanterella {
         ips
     }
 
-    fn get_hardware(&self) -> Result<String, EventsFailed> {
-        self.log_event(Events::RunGetHardware(&self.ip.clone()));
+    fn get_hardware(&mut self) -> Result<String, EventsFailed> {
+        self.log_event(Events::RunGetHardware(self.ip.clone()));
 
         let cmd = Command::new("ssh")
             .args(self.get_sshstring(User::Root))
