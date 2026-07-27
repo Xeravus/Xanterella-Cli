@@ -91,6 +91,7 @@ impl Git for Xanterella {
         }
 
         self.log_event(Events::OkGitMerge);
+        Ok(())
     }
 
     fn git_pr(&mut self, pr: PrType) -> Result<(), EventsFailed> {
