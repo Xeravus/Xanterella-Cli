@@ -60,6 +60,7 @@ impl Xanterella {
         let (run, name): (bool, Cow<'static, str>) = match event {
             Events::RunPing => (true, "Starte Ping".into()),
             Events::OkPing => (false, "Ping erfolgreich".into()),
+            _ => todo!(),
 
         };
         
