@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 pub enum User {
     Root,
     Cato,
@@ -8,12 +10,12 @@ pub enum Paths {
     Config,
 }
 
-#[derive(Deserialize, Debug, Clone, PartialEq)]
+#[derive(serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct Drives {
     pub blockdevices: Vec<BlockDevice>,
 }
 
-#[derive(Deserialize, Debug, Clone, PartialEq)]
+#[derive(serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct BlockDevice {
     pub name: String,
     pub size: String,
@@ -90,14 +92,14 @@ impl Get for Xanterella {
         let parsed_drives = if !&self.ip.contains("127.0.0.1") {
             let cmd = Command::new("ssh")
                 .args(self.get_sshstring(User::Root))
-                .args(["lslbk", "--json")
+                .args(["lslbk", "--json"])
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err))?;
 
             if !cmd.status.success() {
                 let cmd_again = Command::new("ssh")
                     .args(self.get_sshstring(User::Cato))
-                    .args(["lslbk", "--json")
+                    .args(["lslbk", "--json"])
                     .output()
                     .map_err(|err| EventsFailed::FailedCmd(err))?;
 
@@ -131,7 +133,7 @@ impl Get for Xanterella {
 
     fn sort_drives(drives: Drives) -> Drives {
         let mut drives = drives;
-        drives.blockdevice.sort_by(|a, b| {
+        drives.blockdevices.sort_by(|a, b| {
             let size_a = self.get_drive_size(&a.size);
             let size_b = self.get_drive_size(&b.size);
             size_b.cmp(&size_a)
@@ -203,6 +205,6 @@ impl Get for Xanterella {
         }
 
         self.log_event(Events::OkGetHardware(&self.ip.clone()));
-        Ok(String::from_utf8_lossy(&cmd.stdout))
+        Ok(String::from_utf8_lossy(&cmd.stdout).to_string())
     }
 }

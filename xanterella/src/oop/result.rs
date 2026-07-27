@@ -1,4 +1,7 @@
-pub enum EventsFaild {
+use crate::xanterella::utils::git::*;
+use crate::prelude::*;
+
+pub enum EventsFailed {
     Failed(String),
     FailedCmd(String),
 
@@ -22,6 +25,8 @@ pub enum EventsFaild {
     CreateBootDir,
     MountBoot,
     MountRoot,
+
+    Lsblk,
 }
 
 pub enum Events {

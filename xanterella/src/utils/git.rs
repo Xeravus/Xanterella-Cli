@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 pub enum Branches {
     Main,
     Xanterella,
@@ -32,7 +34,7 @@ impl Git for Xanterella {
         };
 
         self.log_event(Events::OkGitCommit(msg.clone()));
-        Ok()
+        Ok(())
     }
 
     fn git_checkout(&self, branch: Branches) -> Result<(), EventsFailed> {
@@ -46,6 +48,7 @@ impl Git for Xanterella {
         let cmd = Command::new("git")
             .args(["checkout", br_name])
             .current_dir(self.get_path(Paths::Nixconf))
+            .output()
             .map_err(|err| EventsFailed::FailedCmd(err))?;
 
         if !cmd.status.success() {
@@ -54,6 +57,7 @@ impl Git for Xanterella {
             let create = Command::new("git")
                 .args(["checkout", "-b", br_name])
                 .current_dir(self.get_path(Paths::Nixconf))
+                .output()
                 .map_err(|err| EventsFailed::FailedCmd(err))?;
 
             if !create.status.success() {
@@ -64,7 +68,7 @@ impl Git for Xanterella {
         };
 
         self.log_event(Events::RunGitCheckout(branch));
-        Ok()
+        Ok(())
     }
 
     fn git_merge(&self) -> Result<(), EventsFailed> {
@@ -78,7 +82,7 @@ impl Git for Xanterella {
         self.git_checkout(Branches::Xanterella)?;
 
         let cmd = Command::new("git")
-            .args("merge", "--ff-only", "-n", "main"])
+            .args(["merge", "--ff-only", "-n", "main"])
             .current_dir(self.get_path(Paths::Nixconf))
             .output()
             .map_err(|err| EventsFailed::FailedCmd(err))?;
@@ -108,8 +112,8 @@ impl Git for Xanterella {
         let cmd = Command::new("gh")
             .args(["pr", "create", "--no-maintainer-edit"])
             .args(["-B", "main"])
-            .args(["-t", title])
-            .args(["-b", body])
+            .args(["-t", &title])
+            .args(["-b", &body])
             .current_dir(self.get_path(Paths::Nixconf))
             .output()
             .map_err(|err| EventsFailed::FailedCmd(err))?;
@@ -119,6 +123,6 @@ impl Git for Xanterella {
         };
 
         self.log_event(Events::OkGitPr(pr));
-        Ok()
+        Ok(())
     }
 }

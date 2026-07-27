@@ -1,4 +1,6 @@
-#[derive(Serialize, Deserialize, Debug)]
+use crate::prelude::*;
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Data {
     pub tailkey: String,
     pub wifi: String,
@@ -18,7 +20,7 @@ impl Config for Xanterella {
             .map_err(|err| EventsFailed::CreateDir(err))?;
 
         self.log_event(Events::OkConfigCreateDir);
-        Ok()
+        Ok(())
     }
 
     fn config_gen_basic(&self) -> Result<(), EventsFailed> {
@@ -34,7 +36,7 @@ impl Config for Xanterella {
             .map_err(|err| EventsFailed::Fs(err))?;
 
         self.log_event(Events::OkConfigGenBasic);
-        Ok()
+        Ok(())
     }
 
     fn config_parse(&self) -> Result<Data, EventsFailed> {

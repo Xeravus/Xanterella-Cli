@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 pub struct Xanterella {
     ip: String,
     path: String,
@@ -66,6 +68,6 @@ impl Xanterella {
             false => "[ OK ] ",
         };
 
-        info!(format!("{}{}", prefix, name));
+        println!("{}", (format!("{}{}", prefix, name)));
     }
 }

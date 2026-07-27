@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 pub trait Ping {
     fn ping(&self) -> Result<(), EventsFailed>;
     fn ping_ssh(&self) -> Result<(), EventsFailed>;
@@ -18,7 +20,7 @@ impl Ping for Xanterella {
         };
         
         self.log_event(Events::OkPing, &self.ip.clone());
-        Ok()
+        Ok(())
     }
 
     fn ping_ssh(&self) -> Result<(), EventsFailed> {
@@ -34,6 +36,6 @@ impl Ping for Xanterella {
         };
 
         self.log_event(Events::OkPingSsh, &self.ip.clone());
-        Ok()
+        Ok(())
     }
 }

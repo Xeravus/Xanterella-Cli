@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 pub trait RemoteInstall {
     fn remote_integration(&self) -> Result<(), EventsFailed>;
     fn remote_prep_fs(&self) -> Result<(), EventsFailed>;
@@ -11,7 +13,7 @@ impl RemoteInstall for Xanterella {
 
         self.ping()?;
         self.pingssh()?;
-        self.git_merge()?:
+        self.git_merge()?;
         crylia_edit_start(self.get_hardware()?);
         self.git_commit()?;
         if !&self.fast {
@@ -19,7 +21,7 @@ impl RemoteInstall for Xanterella {
         }
 
         self.log_event(Events::OkRemoteIntegration(&self.ip.clone()));
-        Ok()
+        Ok(())
     }
 
     fn remote_prep_fs(&self) -> Result<(), EventsFailed> {
@@ -36,7 +38,7 @@ impl RemoteInstall for Xanterella {
         self.mount_boot()?;
 
         self.log_event(Events::OkRemotePrepFs(&self.ip.clone()));
-        Ok()
+        Ok(())
     }
 
     fn remote_install(&self) -> Result<(), EventsFailed> {
@@ -53,7 +55,7 @@ impl RemoteInstall for Xanterella {
         self.reboot_sys()?;
 
         self.log_event(Events::OkRemoteInstall(&self.ip.clone()));
-        Ok()
+        Ok(())
     }
 
     fn remote_install_cleanup(&self) -> Result<(), EventsFailed> {
@@ -63,6 +65,6 @@ impl RemoteInstall for Xanterella {
         self.git_commit()?;
 
         self.log_event(Events::OkRemoteInstallCleanup);
-        Ok()
+        Ok(())
     }
 }

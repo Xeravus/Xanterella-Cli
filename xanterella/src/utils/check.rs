@@ -1,10 +1,12 @@
-    pub trait Check {
-        fn check_nix_flake(&self) -> Result<(), EventsFailed>;
-    }
+use crate::prelude::*;
 
-    impl Check for Xanterella {
-        fn check_nix_flake(&self) -> Result<(), EventsFailed> {
-            self.log_event(Events::RunCheckNix, None);
+pub trait Check {
+    fn check_nix_flake(&self) -> Result<(), EventsFailed>;
+}
+
+impl Check for Xanterella {
+    fn check_nix_flake(&self) -> Result<(), EventsFailed> {
+        self.log_event(Events::RunCheckNix, None);
 
         let cmd = Command::new("nixos-rebuild")
             .args(["dry-build", "--flake", ".#crylia"])
@@ -17,6 +19,6 @@
         };
 
         self.log_event(Events::OkCheckNix);
-        Ok();
+        Ok(())
     }
 }

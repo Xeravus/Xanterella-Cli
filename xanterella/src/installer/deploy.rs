@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 pub trait Deploy {
     fn nix_build(&self) -> Result<(), EventsFailed>;
     fn nix_copy(&self) -> Result<(), EventsFailed>;
@@ -23,7 +25,7 @@ impl Deploy for Xanterella {
         };
 
         self.log_event(Events::OkNixBuild);
-        Ok()
+        Ok(())
     }
 
     fn nix_copy(&self) -> Result<(), EventsFailed> {
@@ -43,7 +45,7 @@ impl Deploy for Xanterella {
         };
 
         self.log_event(Events::OkNixCopy);
-        Ok()
+        Ok(())
     }
 
     fn create_profile(&self) -> Result<(), EventsFailed> {
@@ -67,7 +69,7 @@ impl Deploy for Xanterella {
         };
 
         self.log_event(Events::OkCreateProfile);
-        Ok()
+        Ok(())
     }
 
     fn prep_sys(&self) -> Result<(), EventsFailed> {
@@ -86,7 +88,7 @@ impl Deploy for Xanterella {
         };
 
         self.log_event(Events::OkPrepSys);
-        Ok()
+        Ok(())
     }
 
     fn activate_sys(&self) -> Result<(), EventsFailed> {
@@ -105,7 +107,7 @@ impl Deploy for Xanterella {
         };
 
         self.log_event(Events::OkActivateSys);
-        Ok()
+        Ok(())
     }
 
     fn activate_bootloader(&self) -> Result<(), EventsFailed> {
@@ -124,7 +126,7 @@ impl Deploy for Xanterella {
         };
 
         self.log_event(Events::OkActivateBootloader);
-        Ok()
+        Ok(())
     }
 
     fn reboot(&self) -> Result<(), EventsFailed> {
@@ -134,7 +136,7 @@ impl Deploy for Xanterella {
 
         let cmd = Command::new("ssh")
             .args(self.get_sshstring(User::Root))
-            .arg()
+            .arg(reboot_cmd)
             .output()
             .map_err(|err| EventsFailed::FailedCmd(err))?;
 
@@ -143,6 +145,6 @@ impl Deploy for Xanterella {
         };
 
         self.log_event(Events::OkReboot);
-        Ok()
+        Ok(())
     }
 }

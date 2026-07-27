@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 pub trait Drives {
     fn part_efi(&self) -> Result<(), EventsFailed>;
     fn part_root(&self) -> Result<(), EventsFailed>;
@@ -26,7 +28,7 @@ impl Drives for Xanterella {
         };
 
         self.log_event(Events::OkPartEfi(&self.drive.clone()));
-        Ok()
+        Ok(())
     }
 
     fn part_root(&self) -> Result<(), EventsFailed> {
@@ -44,7 +46,7 @@ impl Drives for Xanterella {
         };
 
         self.log_event(Events::OkPartRoot(&self.drive.clone()));
-        Ok()
+        Ok(())
     }
 
     fn format_efi(&self) -> Result<(), EventsFailed> {
@@ -62,7 +64,7 @@ impl Drives for Xanterella {
         };
 
         self.log_event(Events::OkFormatEfi(&self.drive.clone()));
-        Ok()
+        Ok(())
     }
 
     fn format_root(&self) -> Result<(), EventsFailed> {
@@ -80,7 +82,7 @@ impl Drives for Xanterella {
         };
 
         self.log_event(Events::OkFormatRoot(&self.drive.clone()));
-        Ok()
+        Ok(())
     }
 
     fn create_boot_dir(&self) -> Result<(), EventsFailed> {
@@ -97,7 +99,7 @@ impl Drives for Xanterella {
         };
 
         self.log_event(Events::OkCreateBootDir);
-        Ok()
+        Ok(())
     }
 
     fn mount_boot(&self) -> Result<(), EventsFailed> {
@@ -114,7 +116,7 @@ impl Drives for Xanterella {
         };
 
         self.log_event(Events::OkMountBoot);
-        Ok()
+        Ok(())
     }
 
     fn mount_root(&self) -> Result<(), EventsFailed> {
@@ -131,6 +133,6 @@ impl Drives for Xanterella {
         };
 
         self.log_event(Events::OkMountRoot);
-        Ok()
+        Ok(())
     }
 }
