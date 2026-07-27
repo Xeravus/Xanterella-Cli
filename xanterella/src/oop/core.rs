@@ -57,6 +57,7 @@ impl Xanterella {
             None => "".into(),
         };
 
+        /*
         let (run, name): (bool, Cow<'static, str>) = match event {
             Events::RunPing => (true, "Starte Ping".into()),
             Events::OkPing => (false, "Ping erfolgreich".into()),
@@ -70,5 +71,6 @@ impl Xanterella {
         };
 
         println!("{}", (format!("{}{}", prefix, name)));
+        */
     }
 }
