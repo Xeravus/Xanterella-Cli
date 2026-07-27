@@ -1,14 +1,12 @@
-use log::{debug, error, info};
-use serde::Deserialize;
+pub enum User {
+    Root,
+    Cato,
+}
 
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::env;
-use std::fs;
-use std::path::*;
-use std::process::{self, Command};
-
-use crate::usb::flash::*;
+pub enum Paths {
+    Nixconf,
+    Config,
+}
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct Drives {
@@ -40,285 +38,153 @@ pub struct DeviceInfo {
     pub os: String,
 }
 
-pub enum Paths {
-    Home,
-    Nixconf,
-    Hosts,
-    Modules,
-    Profiles,
-    Config,
-    Colmena,
-    Templates,
+pub trait Get {
+    fn get_sshstring(&self, user: User) -> Vec<String>;
+    fn get_path(&self, path: Paths) -> String;
+    fn get_part_name(&self, part: i8) -> String;
+    fn get_drives(&self) -> Result<Drives, EventsFailed>;
+    fn sort_drives(drives: Drives) -> Drives;
+    fn get_drive_size(size: &str) -> u64;
+    fn get_taildevices() -> Result<Taildevices, EventsFailed>;
+    fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String>;
 }
 
-pub enum User {
-    Root,
-    Cato,
-}
-
-/*
-pub fn get_path(option: Paths) -> String {
-    let home = env::var("HOME").expect("[ FAILED ] - Konnte die Home Variable nicht extrahieren");
-    let nixconfig = PathBuf::from(&home).join("xanterella").join("config");
-    let nixcolmena = PathBuf::from(&nixconfig).join("colmena-hosts.nix");
-    let nixhosts = PathBuf::from(&nixconfig).join("hosts");
-    let nixmodules = PathBuf::from(&nixconfig).join("modules");
-    let nixprofiles = PathBuf::from(&nixconfig).join("profiles");
-    let config = PathBuf::from(&home).join(".config").join("xanterella");
-    let templates = PathBuf::from(&config).join("templates");
-    let result: PathBuf = match option {
-        Paths::Home => home.into(),
-        Paths::Nixconf => nixconfig,
-        Paths::Colmena => nixcolmena,
-        Paths::Hosts => nixhosts,
-        Paths::Modules => nixmodules,
-        Paths::Profiles => nixprofiles,
-        Paths::Config => config,
-        Paths::Templates => templates,
-    };
-    result.to_str().expect("[ FAILED ] - Gen Path ist fehlgeschlagen").to_string()
-}
-*/
-
-/*
-pub fn get_hardware(ip: &str) -> String {
-    info!("[ RUN ] - Generiere Hardware");
-
-    let ssh = Command::new("ssh")
-        .args(get_sshstring(ip, User::Root))
-        .arg("nixos-generate-config --no-filesystems --show-hardware-config")
-        .output()
-        .unwrap_or_else(|err| {
-            error!("[ FAILED ] - Konnte SSH nicht starten: {}", err);
-            process::exit(1);
-        });
-    if !ssh.status.success() {
-        error!("[ FAILED ] - Fehler beim erstellen der Hardware Config: {}", String::from_utf8_lossy(&ssh.stderr));
-        process::exit(1);
+impl Get for Xanterella {
+    fn get_sshstring(&self, user: User) -> Vec<String> {
+        let target = match user {
+            User::Root => format!("root@{}", &self.ip),
+            User::Cato => format!("cato@{}", &self.ip),
+        };
+        vec![
+            "-o".to_string(),
+            "StrictHostKeyChecking=no".to_string(),
+            "-o".to_string(),
+            "UserKnownHostsFile=/dev/null".to_string(),
+            target,
+        ]
     }
 
-    let hardware_config = String::from_utf8_lossy(&ssh.stdout).to_string();
-    info!("[ OK ] - Hardware erfolgreich geneiert");
-    debug!("{}", hardware_config);
-    hardware_config
-}
-*/
+    fn get_path(&self, path: Paths) -> String {
+        let config = PathBuf::from(&self.home).join(".config").join("xanterella");
+        let result: PathBuf = match path {
+            Paths::Nixconf => &self.path.into(),
+            Paths::Config => config,
+        };
+        result.to_atr().expect("[ FAILED ] - Get Path is fehlgeschlagen").to_string()
+    }
 
-/*
-pub fn get_drives(ip: &str) -> Drives {
-    info!("[ RUN ] - Parse Drives");
+    fn get_part_name(&self, part: i8) -> String {
+        let drive = format!("/dev/{}", &self.drive);
+        let p_suffix = if &self.drive.contains("nvme") || &self.drive.contains("mmclblk") { 
+            "p"
+        } else {
+            ""
+        };
+        format!("{}{}{}", &self.drive, p_suffix, part)
+    }
 
-    let parsed_drives;
-    if ip != "127.0.0.1" {
-        let lsblk =
-            Command::new("ssh").args(get_sshstring(ip, User::Root)).arg("lsblk").arg("--json").output().unwrap_or_else(
-                |err| {
-                    error!("[ FAILED ] - Konnte lsblk nicht starten: {}", err);
-                    process::exit(1);
-                },
-            );
-        if !lsblk.status.success() {
-            error!(
-                "[ FAILED ] - Fehler beim Auslesen der als root Partitionen: {}",
-                String::from_utf8_lossy(&lsblk.stderr)
-            );
+    fn get_drives(&self) -> Result<Drives, EventsFailed> {
+        self.log_event(Events::RunGetDrives(&self.ip.clone()));
 
-            let lsblk1 = Command::new("ssh")
-                .args(get_sshstring(ip, User::Cato))
-                .arg("lsblk")
-                .arg("--json")
+        let parsed_drives = if !&self.ip.contains("127.0.0.1") {
+            let cmd = Command::new("ssh")
+                .args(self.get_sshstring(User::Root))
+                .args(["lslbk", "--json")
                 .output()
-                .unwrap_or_else(|err| {
-                    error!("[ FAILED ] - Konnte lsblk nicht starten: {}", err);
-                    process::exit(1);
-                });
-            if !lsblk1.status.success() {
-                error!(
-                    "[ FAILED ] - Fehler beim Auslesen der als cato Partitionen: {}",
-                    String::from_utf8_lossy(&lsblk.stderr)
-                );
-                process::exit(1);
+                .map_err(|err| EventsFailed::FailedCmd(err))?;
+
+            if !cmd.status.success() {
+                let cmd_again = Command::new("ssh")
+                    .args(self.get_sshstring(User::Cato))
+                    .args(["lslbk", "--json")
+                    .output()
+                    .map_err(|err| EventsFailed::FailedCmd(err))?;
+
+                if !cmd_again.status.success() {
+                    return Err(EventsFailed::GetDrives);
+                } else {
+                    serde_json::from_slice::<Drives>(&cmd_again.stdout)
+                        .map_err(|err| EventsFailed::SerdeJson(err))?
+                }
             } else {
-                info!("[ OK ] - Drives mit Cato geparsen");
-                parsed_drives = serde_json::from_slice::<Drives>(&lsblk1.stdout).unwrap_or_else(|err| {
-                    error!("[ FAILED ] - Konnte lsblk nicht parsen: {}", err);
-                    process::exit(1);
-                });
+                serde_json::from_slice::<Drives>(&cmd.stdout)
+                    .map_err(|err| EventsFailed::SerdeJson(err))?
             }
         } else {
-            info!("[ OK ] - Drives mit Root geparsen");
-            parsed_drives = serde_json::from_slice::<Drives>(&lsblk.stdout).unwrap_or_else(|err| {
-                error!("[ FAILED ] - Konnte lsblk nicht parsen: {}", err);
-                process::exit(1);
-            });
-        }
-    } else {
-        let lsblk = Command::new("lsblk").arg("--json").output().unwrap_or_else(|err| {
-            error!("[ FAILED ] - Konnte lsblk nicht starten: {}", err);
-            process::exit(1);
+            let cmd = Command::new("lsblk")
+                .arg("--json")
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err))?;
+
+            if !cmd.status.success() {
+                return Err(EventsFailed::Lsblk);
+            };
+
+            serde_json::from_slice::<Drives>(&cmd.stdout)
+                .map_err(|err| EventsFailed::SerdeJson(err))?
+        };
+
+        self.log_event(Events::OkGetDrives(&self.ip.clone()));
+        Ok(parsed_drives)
+    }
+
+    fn sort_drives(drives: Drives) -> Drives {
+        let mut drives = drives;
+        drives.blockdevice.sort_by(|a, b| {
+            let size_a = self.get_drive_size(&a.size);
+            let size_b = self.get_drive_size(&b.size);
+            size_b.cmp(&size_a)
         });
-        if !lsblk.status.success() {
-            error!("[ FAILED ] - Fehler beim Auslesen der Partitionen: {}", String::from_utf8_lossy(&lsblk.stderr));
+        drives
+    }
+
+    fn get_drive_size(size: &str) -> u64 {
+        let size = size.trim().to_uppercase();
+        let mut multiplier: f64 = 1.0;
+        let mut num_str = size.as_str();
+
+        if size.ends_with('T') {
+            multiplier = 1024.0 * 1024.0 * 1024.0 * 1024.0;
+            num_str = &size[..size.len() - 1];
+        } else if size.ends_with('G') {
+            multiplier = 1024.0 * 1024.0 * 1024.0;
+            num_str = &size[..size.len() - 1];
+        } else if size.ends_with('M') {
+            multiplier = 1024.0 * 1024.0;
+            num_str = &size[..size.len() - 1];
+        } else if size.ends_with('K') {
+            multiplier = 1024.0;
+            num_str = &size[..size.len() - 1];
+        };
+
+        let val: f64 = num_str.parse().unwrap_or(0.0);
+
+        (val * multiplier) as u64
+    }
+
+    fn get_taildevices() -> Result<Taildevices, EventsFailed> {
+        let cmd = Command::new("tailscale")
+            .args(["status", "--json"])
+            .output()
+            .map_err(|err| EventsFailed::FailedCmd(err))?;
+
+        if !cmd.status.success() {
+            return Err(EventsFailed::Tailscale);
         }
-        info!("[ OK ] - Drives lokal geparsen");
-
-        parsed_drives = serde_json::from_slice::<Drives>(&lsblk.stdout).unwrap_or_else(|err| {
-            error!("[ FAILED ] - Konnte lsblk nicht parsen: {}", err);
-            process::exit(1);
-        });
-    }
-    info!("[ OK ] - Drives erfasst");
-    parsed_drives
-}
-*/
-
-/*
-pub fn get_sort_drives(drives: Drives) -> Drives {
-    let mut drives = drives;
-    drives.blockdevices.sort_by(|a, b| {
-        let size_a = get_drives_size(&a.size);
-        let size_b = get_drives_size(&b.size);
-        size_b.cmp(&size_a)
-    });
-    drives
-}
-*/
-
-/*
-pub fn get_taildevices() -> Taildevices {
-    //info!("[ RUN ] - Parse Tailscale Geräte");
-
-    let tail_status = Command::new("tailscale").arg("status").arg("--json").output().unwrap_or_else(|err| {
-        error!("[ FAILED ] - Konnte 'tailscale status --json' nicht ausführen: {}", err);
-        process::exit(1);
-    });
-    if !tail_status.status.success() {
-        error!(
-            "[ FAILED ] - Tailscale Status ist Fehlgeschlagen, bist du eingelogt, wurde das JSON nicht richtig geparst: {}",
-            String::from_utf8_lossy(&tail_status.stderr)
-        );
-        process::exit(1);
+        serde_json::from_slice::<Taildevices>(&tail_status.stdout)
+            .map_err(|err| EventsFailed::Tailscale(err))
     }
 
-    //info!("[ OK ] - Parse Tailscale Geräte erfolgreich");
-    serde_json::from_slice::<Taildevices>(&tail_status.stdout).unwrap_or_else(|err| {
-        error!("[ FAILED ] - Konnte den Output von Tailscale nicht parsen: {}", err);
-        process::exit(1);
-    })
-}
-*/
-
-/*
-pub fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {
-    let mut ips: Vec<String> = vec![];
-    for (_nodekey, device) in devices.devices {
-        if device.name == name && device.os == "linux" {
-            let ip = device.ip[0].clone();
-            if !active_installs.contains(&ip) {
-                let _ = &mut ips.push(ip.to_owned());
-            }
-        }
-    }
-    ips
-}
-*/
-
-/*
-pub fn get_sshstring(ip: &str, user: User) -> Vec<String> {
-    let target = match user {
-        User::Root => format!("root@{}", ip),
-        User::Cato => format!("cato@{}", ip),
-    };
-    vec![
-        "-o".to_string(),
-        "StrictHostKeyChecking=no".to_string(),
-        "-o".to_string(),
-        "UserKnownHostsFile=/dev/null".to_string(),
-        target,
-    ]
-}
-*/
-
-/*
-pub fn get_drives_name(primdrive: &str, number: i8) -> String {
-    let drive = format!("/dev/{}", primdrive);
-    let p_suffix = if primdrive.contains("nvme") || primdrive.contains("mmclblk") { "p" } else { "" };
-    let partition = format!("{}{}{}", drive, p_suffix, number);
-    partition
-}
-*/
-
-pub fn get_iso(mode: FlashMode, ip: &str) -> String {
-    match mode {
-        FlashMode::Local => {
-            info!("[ RUN ] - Finde ISO lokal");
-
-            let iso_path = std::path::PathBuf::from(get_path(Paths::Nixconf)).join("result").join("iso");
-            let entries = fs::read_dir(&iso_path).unwrap_or_else(|err| {
-                error!("[ FAILED ] - Konnte den Result Ordner nicht auslesen: {}", err);
-                process::exit(1);
-            });
-
-            for i in entries {
-                if let Ok(file) = i {
-                    let path: std::path::PathBuf = file.path();
-                    if path.is_file() && path.extension().unwrap_or_default() == "iso" {
-                        let target_path = path.to_string_lossy().into_owned();
-                        info!("[ OK ] - ISO gefunden");
-                        return target_path;
-                    }
+    fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {
+        let mut ips: Vec<String> = vec![];
+        for (_nodekey, device) in devices.devices {
+            if device.name == name && device.os == "linux" {
+                let ip = device.ip[0].clone();
+                if !active_installs.contains(&ip) {
+                    let _ = &mut ips.push(ip.to_owned());
                 }
             }
-            error!("[ FAILED ] - Keine .iso Datei im result Ordner gefunden");
-            process::exit(1);
         }
-        FlashMode::Remote => {
-            info!("[ RUN ] - Finde ISO remote");
-
-            let iso_path = format!("realpath {}/result/iso/*.iso", get_path(Paths::Nixconf));
-            let realpath =
-                Command::new("ssh")
-                    .args(get_sshstring(ip, User::Root))
-                    .arg(iso_path)
-                    .output()
-                    .unwrap_or_else(|err| {
-                        error!("[ FAILED ] - Konnte den Result Ordner nicht auslesen: {}", err);
-                        process::exit(1);
-                    });
-            if !realpath.status.success() {
-                error!("[ FAILED ] - Kontte den Result Ordner nicht auslesen: {}", String::from_utf8_lossy(&realpath.stderr));
-                process::exit(1);
-            }
-            let output = String::from_utf8_lossy(&realpath.stdout).trim().to_string();
-            debug!("ISO Remote Path: {}", output);
-            output
-        }
+        ips
     }
 }
-
-/*
-pub fn get_drives_size(size_str: &str) -> u64 {
-    let size_str = size_str.trim().to_uppercase();
-    let mut multiplier: f64 = 1.0;
-    let mut num_str = size_str.as_str();
-
-    if size_str.ends_with('T') {
-        multiplier = 1024.0 * 1024.0 * 1024.0 * 1024.0;
-        num_str = &size_str[..size_str.len() - 1];
-    } else if size_str.ends_with('G') {
-        multiplier = 1024.0 * 1024.0 * 1024.0;
-        num_str = &size_str[..size_str.len() - 1];
-    } else if size_str.ends_with('M') {
-        multiplier = 1024.0 * 1024.0;
-        num_str = &size_str[..size_str.len() - 1];
-    }
-
-    let val: f64 = num_str.parse().unwrap_or(0.0);
-
-    (val * multiplier) as u64
-}
-*/
-
-#[cfg(test)]
-#[path = "get_test.rs"]
-mod tests;
