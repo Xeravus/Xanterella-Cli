@@ -1,17 +1,17 @@
 use crate::prelude::*;
 
 pub trait Drives {
-    fn part_efi(&self) -> Result<(), EventsFailed>;
-    fn part_root(&self) -> Result<(), EventsFailed>;
-    fn format_efi(&self) -> Result<(), EventsFailed>;
-    fn format_root(&self) -> Result<(), EventsFailed>;
-    fn create_boot_dir(&self) -> Result<(), EventsFailed>;
-    fn mount_boot(&self) -> Result<(), EventsFailed>;
-    fn mount_root(&self) -> Result<(), EventsFailed>;
+    fn part_efi(&mut self) -> Result<(), EventsFailed>;
+    fn part_root(&mut self) -> Result<(), EventsFailed>;
+    fn format_efi(&mut self) -> Result<(), EventsFailed>;
+    fn format_root(&mut self) -> Result<(), EventsFailed>;
+    fn create_boot_dir(&mut self) -> Result<(), EventsFailed>;
+    fn mount_boot(&mut self) -> Result<(), EventsFailed>;
+    fn mount_root(&mut self) -> Result<(), EventsFailed>;
 }
 
 impl Drives for Xanterella {
-    fn part_efi(&self) -> Result<(), EventsFailed> {
+    fn part_efi(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunPartEfi(&self.drive.clone()));
 
         let cmd = Command::new("ssh")
@@ -31,7 +31,7 @@ impl Drives for Xanterella {
         Ok(())
     }
 
-    fn part_root(&self) -> Result<(), EventsFailed> {
+    fn part_root(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunPartRoot(&self.drive.clone()));
 
         let cmd = Command::new("ssh")
@@ -49,7 +49,7 @@ impl Drives for Xanterella {
         Ok(())
     }
 
-    fn format_efi(&self) -> Result<(), EventsFailed> {
+    fn format_efi(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunFormatEfi(&self.drive.clone()));
 
         let cmd = Command::new("ssh")
@@ -67,7 +67,7 @@ impl Drives for Xanterella {
         Ok(())
     }
 
-    fn format_root(&self) -> Result<(), EventsFailed> {
+    fn format_root(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunFormatRoot(&self.drive.clone()));
 
         let cmd = Command::new("ssh")
@@ -85,7 +85,7 @@ impl Drives for Xanterella {
         Ok(())
     }
 
-    fn create_boot_dir(&self) -> Result<(), EventsFailed> {
+    fn create_boot_dir(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunCreateBootDir);
 
         let cmd = Command::new("ssh")
@@ -102,7 +102,7 @@ impl Drives for Xanterella {
         Ok(())
     }
 
-    fn mount_boot(&self) -> Result<(), EventsFailed> {
+    fn mount_boot(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunMountBoot);
 
         let cmd = Command::new("ssh")
@@ -119,7 +119,7 @@ impl Drives for Xanterella {
         Ok(())
     }
 
-    fn mount_root(&self) -> Result<(), EventsFailed> {
+    fn mount_root(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunMountRoot);
 
         let cmd = Command::new("ssh")
