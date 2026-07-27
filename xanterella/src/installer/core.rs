@@ -2,6 +2,7 @@ pub trait RemoteInstall {
     fn remote_integration(&self) -> Result<(), EventsFailed>;
     fn remote_prep_fs(&self) -> Result<(), EventsFailed>;
     fn remote_install(&self) -> Result<(), EventsFailed>;
+    fn remote_install_cleanup(&self) -> Result<(), EventsFailed>;
 }
 
 impl RemoteInstall for Xanterella {
@@ -52,6 +53,16 @@ impl RemoteInstall for Xanterella {
         self.reboot_sys()?;
 
         self.log_event(Events::OkRemoteInstall(&self.ip.clone()));
+        Ok()
+    }
+
+    fn remote_install_cleanup(&self) -> Result<(), EventsFailed> {
+        self.log_event(Events::RunRemoteInstallCleanup);
+
+        crylia_edit_finish();
+        self.git_commit()?;
+
+        self.log_event(Events::OkRemoteInstallCleanup);
         Ok()
     }
 }
