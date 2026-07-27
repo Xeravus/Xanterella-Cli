@@ -15,10 +15,10 @@ pub enum PrType {
 }
 
 pub trait Git {
-    fn git_commit(&self, msg: &str) -> Result<(), EventsFailed>;
-    fn git_checkout(&self, branch: Branches) -> Result<(), EventsFailed>;
-    fn git_merge(&self, branch: Branches) -> Result<(), EventsFailed>;
-    fn git_pr(&self, pr: PrType) -> Result<(), EventsFailed>;
+    fn git_commit(&mut self, msg: &str) -> Result<(), EventsFailed>;
+    fn git_checkout(&mut self, branch: Branches) -> Result<(), EventsFailed>;
+    fn git_merge(&mut self, branch: Branches) -> Result<(), EventsFailed>;
+    fn git_pr(&mut self, pr: PrType) -> Result<(), EventsFailed>;
 }
 
 impl Git for Xanterella {
@@ -91,7 +91,7 @@ impl Git for Xanterella {
         self.log_event(Events::OkGitMerge);
     }
 
-    fn git_pr(&self, pr: PrType) -> Result<(), EventsFailed> {
+    fn git_pr(&mut self, pr: PrType) -> Result<(), EventsFailed> {
         self.log_event(Events::RunGitPr(pr));
 
         let extra_part = "This is an automatic generated Pull Request";
