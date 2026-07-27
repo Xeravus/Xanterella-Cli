@@ -134,8 +134,8 @@ impl Get for Xanterella {
     fn sort_drives(&mut self, drives: Drives) -> Drives {
         let mut drives = drives;
         drives.blockdevices.sort_by(|a, b| {
-            let size_a = self.get_drive_size(&a.size);
-            let size_b = self.get_drive_size(&b.size);
+            let size_a = Self::get_drive_size(&a.size);
+            let size_b = Self::get_drive_size(&b.size);
             size_b.cmp(&size_a)
         });
         drives
