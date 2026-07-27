@@ -9,6 +9,7 @@ pub enum Branches {
     Main,
 }
 
+/*
 pub fn git_full(cm_msg: String) {
     info!("[ RUN ] - Starte Git Prozedur");
 
@@ -53,7 +54,9 @@ pub fn git_full(cm_msg: String) {
 
     info!("[ OK ] - Änderungen Commited");
 }
+*/
 
+/*
 pub fn git_checkout(branch: Branches) {
     match branch {
         Branches::Xanterella => {
@@ -124,7 +127,9 @@ pub fn git_checkout(branch: Branches) {
         }
     }
 }
+*/
 
+/*
 pub fn git_auto_pr(added_host: String) {
     let title_message = format!("Xanterella: Added Host: {}", added_host);
     let body_message = format!(
@@ -157,3 +162,4 @@ pub fn git_auto_pr(added_host: String) {
 
     git_checkout(Branches::Main);
 }
+*/

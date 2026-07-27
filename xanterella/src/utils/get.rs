@@ -10,12 +10,12 @@ use std::process::{self, Command};
 
 use crate::usb::flash::*;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct Drives {
     pub blockdevices: Vec<BlockDevice>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct BlockDevice {
     pub name: String,
     pub size: String,
@@ -24,13 +24,13 @@ pub struct BlockDevice {
     pub device_type: String,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct Taildevices {
     #[serde(rename = "Peer")]
     pub devices: HashMap<String, DeviceInfo>,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct DeviceInfo {
     #[serde(rename = "HostName")]
     pub name: String,
@@ -56,6 +56,7 @@ pub enum User {
     Cato,
 }
 
+/*
 pub fn get_path(option: Paths) -> String {
     let home = env::var("HOME").expect("[ FAILED ] - Konnte die Home Variable nicht extrahieren");
     let nixconfig = PathBuf::from(&home).join("xanterella").join("config");
@@ -77,7 +78,9 @@ pub fn get_path(option: Paths) -> String {
     };
     result.to_str().expect("[ FAILED ] - Gen Path ist fehlgeschlagen").to_string()
 }
+*/
 
+/*
 pub fn get_hardware(ip: &str) -> String {
     info!("[ RUN ] - Generiere Hardware");
 
@@ -99,7 +102,9 @@ pub fn get_hardware(ip: &str) -> String {
     debug!("{}", hardware_config);
     hardware_config
 }
+*/
 
+/*
 pub fn get_drives(ip: &str) -> Drives {
     info!("[ RUN ] - Parse Drives");
 
@@ -165,7 +170,9 @@ pub fn get_drives(ip: &str) -> Drives {
     info!("[ OK ] - Drives erfasst");
     parsed_drives
 }
+*/
 
+/*
 pub fn get_sort_drives(drives: Drives) -> Drives {
     let mut drives = drives;
     drives.blockdevices.sort_by(|a, b| {
@@ -175,6 +182,7 @@ pub fn get_sort_drives(drives: Drives) -> Drives {
     });
     drives
 }
+*/
 
 pub fn get_taildevices() -> Taildevices {
     //info!("[ RUN ] - Parse Tailscale Geräte");
@@ -211,6 +219,7 @@ pub fn get_taildevices_specific(devices: Taildevices, name: &str, active_install
     ips
 }
 
+/*
 pub fn get_sshstring(ip: &str, user: User) -> Vec<String> {
     let target = match user {
         User::Root => format!("root@{}", ip),
@@ -224,13 +233,16 @@ pub fn get_sshstring(ip: &str, user: User) -> Vec<String> {
         target,
     ]
 }
+*/
 
+/*
 pub fn get_drives_name(primdrive: &str, number: i8) -> String {
     let drive = format!("/dev/{}", primdrive);
     let p_suffix = if primdrive.contains("nvme") || primdrive.contains("mmclblk") { "p" } else { "" };
     let partition = format!("{}{}{}", drive, p_suffix, number);
     partition
 }
+*/
 
 pub fn get_iso(mode: FlashMode, ip: &str) -> String {
     match mode {
@@ -280,6 +292,7 @@ pub fn get_iso(mode: FlashMode, ip: &str) -> String {
     }
 }
 
+/*
 pub fn get_drives_size(size_str: &str) -> u64 {
     let size_str = size_str.trim().to_uppercase();
     let mut multiplier: f64 = 1.0;
@@ -300,6 +313,7 @@ pub fn get_drives_size(size_str: &str) -> u64 {
 
     (val * multiplier) as u64
 }
+*/
 
 #[cfg(test)]
 #[path = "get_test.rs"]
