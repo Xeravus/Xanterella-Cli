@@ -16,3 +16,5 @@ pub use crate::xanterella::oop::result::Events;
 pub use crate::xanterella::oop::result::EventsFailed;
 pub use crate::xanterella::utils::get::User;
 pub use crate::xanterella::utils::get::Paths;
+pub use crate::xanterella::utils::git::PrType;
+pub use crate::xanterella::utils::git::Branches;
