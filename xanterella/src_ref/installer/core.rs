@@ -10,6 +10,7 @@ use crate::utils::get::*;
 use crate::utils::git::git_full;
 use crate::utils::select::*;
 
+/*
 pub fn remote_install(automate: &bool, fast: &bool, debug: &bool) {
     let target_ip = select_host(get_taildevices());
     ping_full(&target_ip);
@@ -28,6 +29,7 @@ pub fn remote_install(automate: &bool, fast: &bool, debug: &bool) {
     // -----------------------------------------------------
     clean();
 }
+*/
 
 pub fn daemon_install(automate: bool, fast: bool, ip: String, debug: bool) {
     let target_ip: &str = &ip;
@@ -48,6 +50,7 @@ pub fn daemon_install(automate: bool, fast: bool, ip: String, debug: bool) {
     clean();
 }
 
+/*
 pub fn clean() {
     info!("[ RUN ] - Starte Cleanup");
 
@@ -55,6 +58,7 @@ pub fn clean() {
     git_full(String::from("Xanterella Remote-Install cleanup"));
     info!("[ OK ] - Cleanup erfolgreich");
 }
+*/
 
 pub fn crylia_edit_start(config: String) {
     info!("[ RUN ] - Starte Crylia Überarbeitung");
@@ -74,6 +78,7 @@ pub fn crylia_edit_finish() {
     info!("[ OK ] - Crylia Überarbeitung erfolgreich");
 }
 
+/*
 pub fn drives_part(primdrive: &str, debug: &bool, ip: &str) {
     info!("[ RUN ] - Starte Parittionierung");
 
@@ -82,7 +87,9 @@ pub fn drives_part(primdrive: &str, debug: &bool, ip: &str) {
     part_root(&drive, debug, ip);
     info!("[ OK ] - Parittionierung erfolgreich");
 }
+*/
 
+/*
 pub fn drives_format(primdrive: &str, debug: &bool, ip: &str) {
     info!("[ RUN ] - Starte Formatierung");
 
@@ -90,7 +97,9 @@ pub fn drives_format(primdrive: &str, debug: &bool, ip: &str) {
     format_root(primdrive, debug, ip);
     info!("[ Ok ] - Formatierung erfolgreich");
 }
+*/
 
+/*
 pub fn drives_mount(primdrive: &str, ip: &str) {
     info!("[ RUN ] - Starte Mounting");
 
@@ -99,7 +108,9 @@ pub fn drives_mount(primdrive: &str, ip: &str) {
     mount_boot(primdrive, ip);
     info!("[ OK ] - Mounting erfolgreich");
 }
+*/
 
+/*
 pub fn deploy(ip: &str, fast: &bool, debug: &bool) {
     info!("[ RUN ] - Starte Deployment");
 
@@ -113,3 +124,4 @@ pub fn deploy(ip: &str, fast: &bool, debug: &bool) {
     }
     info!("[ OK ] - Deployment erfolgreich");
 }
+*/
