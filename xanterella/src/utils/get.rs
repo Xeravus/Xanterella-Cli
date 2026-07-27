@@ -175,7 +175,7 @@ impl Get for Xanterella {
             return Err(EventsFailed::Tailscale);
         }
         serde_json::from_slice::<Taildevices>(&cmd.stdout)
-            .map_err(|err| EventsFailed::Tailscale(err.to_string()))
+            .map_err(|err| EventsFailed::Tailscale)
     }
 
     fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {

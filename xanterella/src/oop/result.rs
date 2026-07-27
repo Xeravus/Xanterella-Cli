@@ -26,6 +26,7 @@ pub enum EventsFailed {
     MountRoot,
 
     Lsblk,
+    Tailscale,
 }
 
 pub enum Events {
