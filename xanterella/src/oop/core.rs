@@ -51,7 +51,7 @@ impl Xanterella {
         self.drive = Some(value.to_string());
     }
 
-    pub fn log_event(&mut self, event: Events, value: Option<Cow<'static, str>>) {
+    pub fn log_event(&mut self, event: Events) {
         let extra: Cow<'static, str> = match value {
             Some(val) => val.into(),
             None => "".into(),
