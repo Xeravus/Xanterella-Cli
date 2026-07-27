@@ -174,7 +174,7 @@ impl Get for Xanterella {
         if !cmd.status.success() {
             return Err(EventsFailed::Tailscale);
         }
-        serde_json::from_slice::<Taildevices>(&tail_status.stdout)
+        serde_json::from_slice::<Taildevices>(&cmd.stdout)
             .map_err(|err| EventsFailed::Tailscale(err))
     }
 
