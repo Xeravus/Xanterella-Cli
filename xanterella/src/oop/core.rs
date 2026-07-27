@@ -1,13 +1,13 @@
 use crate::prelude::*;
 
 pub struct Xanterella {
-    ip: String,
-    path: String,
-    home: String,
-    fast: bool,
-    debug: bool,
-    automate: bool,
-    drive: Option<String>,
+    pub ip: String,
+    pub path: String,
+    pub home: String,
+    pub fast: bool,
+    pub debug: bool,
+    pub automate: bool,
+    pub drive: Option<String>,
 }
 
 impl Xanterella {
