@@ -21,7 +21,7 @@ impl Drives for Xanterella {
             .args(["mkpart", "disk-main-boot", "fat32", "1Mib", "512MiB"])
             .args(["set", "1", "esp", "on"])
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::PartEfi);
@@ -39,7 +39,7 @@ impl Drives for Xanterella {
             .args(["parted", "-s", &self.drive])
             .args(["mkpart", "disk-main-root", "ext4", "512MiB", "100%"])
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::PartRoot);
@@ -57,7 +57,7 @@ impl Drives for Xanterella {
             .arg("mkfs.fat")
             .args([self.get_part_name(1), "-F", "32", "-n", "boot"])
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::FormatEfi);
@@ -75,7 +75,7 @@ impl Drives for Xanterella {
             .arg("mkfs.ext4")
             .args([self.get_part_name(2), "-L", "nixos"])
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::FormatRoot);
@@ -92,7 +92,7 @@ impl Drives for Xanterella {
             .args(self.get_sshstring(User::Root))
             .args(["mkdir", "-p", "/mnt/boot"])
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::CreateBootDir);
@@ -109,7 +109,7 @@ impl Drives for Xanterella {
             .args(self.get_sshstring(User::Root))
             .args(["mount", self.get_part_name(1), "/mnt/boot"])
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::MountBoot);
@@ -126,7 +126,7 @@ impl Drives for Xanterella {
             .args(self.get_sshstring(User::Root))
             .args(["mount", self.get_part_name(2), "/mnt"])
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::MountRoot);

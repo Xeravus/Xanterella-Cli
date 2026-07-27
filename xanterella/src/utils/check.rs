@@ -12,7 +12,7 @@ impl Check for Xanterella {
             .args(["dry-build", "--flake", ".#crylia"])
             .current_dir(self.get_path(Paths::Nixconf))
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::CheckNix);

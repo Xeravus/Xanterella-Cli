@@ -13,7 +13,7 @@ impl Ping for Xanterella {
             .args(["-W", "1"])
             .arg(&self.ip)
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::Ping(&self.ip.clone()));
@@ -29,7 +29,7 @@ impl Ping for Xanterella {
         let cmd = Command::new("ssh")
             .args(self.get_sshstring(User::Root))
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::PingSsh(&self.ip.clone()));

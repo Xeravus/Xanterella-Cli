@@ -17,7 +17,7 @@ impl Config for Xanterella {
         self.log_event(Events::RunConfigCreateDir);
 
         fs::create_dir_all(self.get_path(Paths::Config))
-            .map_err(|err| EventsFailed::CreateDir(err))?;
+            .map_err(|err| EventsFailed::CreateDir(err.to_string()))?;
 
         self.log_event(Events::OkConfigCreateDir);
         Ok(())
@@ -33,7 +33,7 @@ impl Config for Xanterella {
         let json_string = serde_json::to_string_pretty(&basic).unwrap();
         let json_path = PathBuf::from(self.get_path(Paths::Config)).join("config.json").display().to_string();
         fs::write(&json_path, &json_string)
-            .map_err(|err| EventsFailed::Fs(err))?;
+            .map_err(|err| EventsFailed::Fs(err.to_string()))?;
 
         self.log_event(Events::OkConfigGenBasic);
         Ok(())
@@ -41,8 +41,8 @@ impl Config for Xanterella {
 
     fn config_parse(&self) -> Result<Data, EventsFailed> {
         let json_path = PathBuf::from(self.get_path(Paths::Config)).join("config.json").display().to_string();
-        let file_content = fs::read_to_string(&json_path).map_err(|err| EventsFailed::Fs(err))?;
+        let file_content = fs::read_to_string(&json_path).map_err(|err| EventsFailed::Fs(err.to_string()))?;
         serde_json::from_str(&file_content)
-            .map_err(|err| EventsFailed::SerdeJson(err))?
+            .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
     }
 }

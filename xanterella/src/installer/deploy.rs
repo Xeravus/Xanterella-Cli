@@ -18,7 +18,7 @@ impl Deploy for Xanterella {
             .args(["build", ".#nixosConfigurations.crylia.config.system.build.toplevel"])
             .current_dir(self.get_path(Paths::Nixconf))
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::NixBuild);
@@ -38,7 +38,7 @@ impl Deploy for Xanterella {
             .arg(fast_cmd)
             .current_dir(self.get_path(Paths::Nixconf))
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::NixCopy);
@@ -62,7 +62,7 @@ impl Deploy for Xanterella {
             .args(self.get_sshstring(User::Root))
             .arg(profile_cmd)
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::CreateProfile);
@@ -81,7 +81,7 @@ impl Deploy for Xanterella {
             .args(self.get_sshstring(User::Root))
             .arg(prep_cmd)
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::PrepSys);
@@ -100,7 +100,7 @@ impl Deploy for Xanterella {
             .args(self.get_sshstring(User::Root))
             .arg(activate_cmd)
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::ActivateSys);
@@ -119,7 +119,7 @@ impl Deploy for Xanterella {
             .args(self.get_sshstring(User::Root))
             .arg(bootloader_cmd)
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::ActivateBootloader);
@@ -138,7 +138,7 @@ impl Deploy for Xanterella {
             .args(self.get_sshstring(User::Root))
             .arg(reboot_cmd)
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::Reboot);

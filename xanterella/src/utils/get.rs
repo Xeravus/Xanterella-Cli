@@ -94,37 +94,37 @@ impl Get for Xanterella {
                 .args(self.get_sshstring(User::Root))
                 .args(["lslbk", "--json"])
                 .output()
-                .map_err(|err| EventsFailed::FailedCmd(err))?;
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
                 let cmd_again = Command::new("ssh")
                     .args(self.get_sshstring(User::Cato))
                     .args(["lslbk", "--json"])
                     .output()
-                    .map_err(|err| EventsFailed::FailedCmd(err))?;
+                    .map_err(|err| EventsFailed::FailedCmd(err.to_string))?;
 
                 if !cmd_again.status.success() {
                     return Err(EventsFailed::GetDrives);
                 } else {
                     serde_json::from_slice::<Drives>(&cmd_again.stdout)
-                        .map_err(|err| EventsFailed::SerdeJson(err))?
+                        .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
                 }
             } else {
                 serde_json::from_slice::<Drives>(&cmd.stdout)
-                    .map_err(|err| EventsFailed::SerdeJson(err))?
+                    .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
             }
         } else {
             let cmd = Command::new("lsblk")
                 .arg("--json")
                 .output()
-                .map_err(|err| EventsFailed::FailedCmd(err))?;
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
                 return Err(EventsFailed::Lsblk);
             };
 
             serde_json::from_slice::<Drives>(&cmd.stdout)
-                .map_err(|err| EventsFailed::SerdeJson(err))?
+                .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
         };
 
         self.log_event(Events::OkGetDrives(&self.ip.clone()));
@@ -169,13 +169,13 @@ impl Get for Xanterella {
         let cmd = Command::new("tailscale")
             .args(["status", "--json"])
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::Tailscale);
         }
         serde_json::from_slice::<Taildevices>(&cmd.stdout)
-            .map_err(|err| EventsFailed::Tailscale(err))
+            .map_err(|err| EventsFailed::Tailscale(err.to_string()))
     }
 
     fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {
@@ -198,7 +198,7 @@ impl Get for Xanterella {
             .args(self.get_sshstring(User::Root))
             .args(["nixos-generate-config", "--no-filesystem", "--show-hardware-config"])
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::GetHardware(&self.ip.clone()));

@@ -29,7 +29,7 @@ impl Git for Xanterella {
             .args(["commit", "-am", &msg])
             .current_dir(self.get_path(Paths::Nixconf))
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::GitCommit);
@@ -51,7 +51,7 @@ impl Git for Xanterella {
             .args(["checkout", br_name])
             .current_dir(self.get_path(Paths::Nixconf))
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             self.log_event(Events::RungGitCheckoutCreate(branch));
@@ -60,7 +60,7 @@ impl Git for Xanterella {
                 .args(["checkout", "-b", br_name])
                 .current_dir(self.get_path(Paths::Nixconf))
                 .output()
-                .map_err(|err| EventsFailed::FailedCmd(err))?;
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !create.status.success() {
                 return Err(EventsFailed::GitCheckout);
@@ -82,7 +82,7 @@ impl Git for Xanterella {
             .args(["merge", "--ff-only", "-n", "main"])
             .current_dir(self.get_path(Paths::Nixconf))
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::GitMerge);
@@ -113,7 +113,7 @@ impl Git for Xanterella {
             .args(["-b", &body])
             .current_dir(self.get_path(Paths::Nixconf))
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::GitPr);

@@ -15,7 +15,7 @@ impl Inject for Xanterella {
             .args(self.get_sshstring(User::Root))
             .arg(inject_cmd)
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::InjectTailscale);
@@ -34,7 +34,7 @@ impl Inject for Xanterella {
             .args(self.get_sshstring(User::Root))
             .arg(inject_cmd)
             .output()
-            .map_err(|err| EventsFailed::FailedCmd(err))?;
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
             return Err(EventsFailed::InjectWifi);
