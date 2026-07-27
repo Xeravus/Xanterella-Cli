@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+use crate::utils::get::*;
+
 pub enum Branches {
     Main,
     Xanterella,
@@ -74,11 +76,6 @@ impl Git for Xanterella {
     fn git_merge(&self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunGitMerge);
 
-        let br_name = match branch {
-            Branches::Main => "main",
-            Branches::Xanterella => "xanterella",
-        };
-
         self.git_checkout(Branches::Xanterella)?;
 
         let cmd = Command::new("git")
@@ -91,7 +88,7 @@ impl Git for Xanterella {
             return Err(EventsFailed::GitMerge);
         }
 
-        self.log_event(Events::OkGitMerge(branch));
+        self.log_event(Events::OkGitMerge);
     }
 
     fn git_pr(&self, pr: PrType) -> Result<(), EventsFailed> {
@@ -105,8 +102,8 @@ impl Git for Xanterella {
         };
         let body = match pr {
             PrType::AddHost(host) => format!("Xanterella added a Host \nAdded Host: {} \n{}", host, extra_part),
-            PrType::RemoveHost(host) => format!("Xanterella removed a Host \nRemoved Host: {} \n{}", host, extra_path),
-            PrType::Changes(changes) => format!("Xanterella changed the Configs \nChanges: {} \n{}", changes, extra_path),
+            PrType::RemoveHost(host) => format!("Xanterella removed a Host \nRemoved Host: {} \n{}", host, extra_part),
+            PrType::Changes(changes) => format!("Xanterella changed the Configs \nChanges: {} \n{}", changes, extra_part),
         };
 
         let cmd = Command::new("gh")
