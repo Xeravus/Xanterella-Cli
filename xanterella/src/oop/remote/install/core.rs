@@ -47,6 +47,8 @@ impl RemoteInstall for Xanterella {
         self.prep_sys()?;
         self.activate_sys()?;
         self.activate_bootloader()?;
+        self.inject_tailscale()?;
+        self.inject_wifi()?;
         self.reboot_sys()?;
 
         self.log_event(Events::OkRemoteInstall(&self.ip.clone()));
