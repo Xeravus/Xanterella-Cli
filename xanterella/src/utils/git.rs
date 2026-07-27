@@ -96,14 +96,14 @@ impl Git for Xanterella {
 
         let extra_part = "This is an automatic generated Pull Request";
         let title = match pr {
-            PrType::AddHost(host) => format!("Xanterella: Add Host: {}", host),
-            PrType::RemoveHost(host) => format!("Xanterella: Remove Host: {}", host),
-            PrType::Changes(changes) => format!("Xanterella: Change Configs: {}", changes),
+            PrType::AddHost(ref host) => format!("Xanterella: Add Host: {}", host),
+            PrType::RemoveHost(ref host) => format!("Xanterella: Remove Host: {}", host),
+            PrType::Changes(ref changes) => format!("Xanterella: Change Configs: {}", changes),
         };
         let body = match pr {
-            PrType::AddHost(host) => format!("Xanterella added a Host \nAdded Host: {} \n{}", host, extra_part),
-            PrType::RemoveHost(host) => format!("Xanterella removed a Host \nRemoved Host: {} \n{}", host, extra_part),
-            PrType::Changes(changes) => format!("Xanterella changed the Configs \nChanges: {} \n{}", changes, extra_part),
+            PrType::AddHost(ref host) => format!("Xanterella added a Host \nAdded Host: {} \n{}", host, extra_part),
+            PrType::RemoveHost(ref host) => format!("Xanterella removed a Host \nRemoved Host: {} \n{}", host, extra_part),
+            PrType::Changes(ref changes) => format!("Xanterella changed the Configs \nChanges: {} \n{}", changes, extra_part),
         };
 
         let cmd = Command::new("gh")
