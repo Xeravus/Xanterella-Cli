@@ -13,6 +13,7 @@ pub struct Data {
     pub wifi: String,
 }
 
+/*
 pub fn config_create_dir() {
     info!("[ RUN ] - Erstelle Config Dir");
 
@@ -22,7 +23,9 @@ pub fn config_create_dir() {
     });
     info!("[ OK ] - Config Dir erstellt");
 }
+*/
 
+/*
 pub fn config_create_subdir() {
     info!("[ RUN ] - Erstelle Config SubDir");
 
@@ -32,6 +35,7 @@ pub fn config_create_subdir() {
     });
     info!("[ OK ] - Config SubDir erstellt");
 }
+*/
 
 pub fn config_gen_basic() {
     info!("[ RUN ] - Erstelle config.json");
