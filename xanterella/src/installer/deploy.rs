@@ -129,7 +129,7 @@ impl Deploy for Xanterella {
         Ok(())
     }
 
-    fn reboot(&self) -> Result<(), EventsFailed> {
+    fn reboot_sys(&self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunReboot);
 
         let reboot_cmd = "nohup sh -c 'sleep 3 && tailscale logout && reboot' > /dev/null 2>&1 &";
