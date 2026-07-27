@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 pub trait Inject {
     fn inject_tailscale(&self) -> Result<(), EventsFailed>;
     fn inject_wifi(&self) -> Result<(), EventsFailed>;
@@ -11,7 +13,7 @@ impl Inject for Xanterella {
 
         let cmd = Command::new("ssh")
             .args(self.get_sshstring(User::Root))
-            .arg(cmd)
+            .arg(inject_cmd)
             .output()
             .map_err(|err| EventsFailed::FailedCmd(err))?;
 
@@ -30,7 +32,7 @@ impl Inject for Xanterella {
 
         let cmd = Command::new("ssh")
             .args(self.get_sshstring(User::Root))
-            .arg(cmd)
+            .arg(inject_cmd)
             .output()
             .map_err(|err| EventsFailed::FailedCmd(err))?;
 
