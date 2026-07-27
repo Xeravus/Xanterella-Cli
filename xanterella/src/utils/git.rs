@@ -42,7 +42,7 @@ impl Git for Xanterella {
     }
 
     fn git_checkout(&self, branch: Branches) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitCheckout(branch));
+        self.log_event(Events::RunGitCheckout(branch.clone()));
 
         let br_name = match branch {
             Branches::Main => "main",
@@ -56,7 +56,7 @@ impl Git for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            self.log_event(Events::RunGitCheckoutCreate(branch));
+            self.log_event(Events::RunGitCheckoutCreate(branch.clone()));
 
             let create = Command::new("git")
                 .args(["checkout", "-b", br_name])
@@ -68,7 +68,7 @@ impl Git for Xanterella {
                 return Err(EventsFailed::GitCheckout);
             };
 
-            self.log_event(Events::OkGitCheckoutCreate(branch));
+            self.log_event(Events::OkGitCheckoutCreate(branch.clone()));
         };
 
         self.log_event(Events::RunGitCheckout(branch));
