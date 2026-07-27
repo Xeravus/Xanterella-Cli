@@ -31,6 +31,7 @@ pub fn remote_install(automate: &bool, fast: &bool, debug: &bool) {
 }
 */
 
+/*
 pub fn daemon_install(automate: bool, fast: bool, ip: String, debug: bool) {
     let target_ip: &str = &ip;
     ping_full(target_ip);
@@ -49,6 +50,7 @@ pub fn daemon_install(automate: bool, fast: bool, ip: String, debug: bool) {
     // -----------------------------------------------------
     clean();
 }
+*/
 
 /*
 pub fn clean() {
