@@ -87,5 +87,9 @@ pub enum Events {
     RunMountRoot,
     OkMountRoot,
     //
+    RunInjectTailscale,
+    OkInjectTailscale,
 
+    RunInjectWifi,
+    OkInjectWifi,
 }
