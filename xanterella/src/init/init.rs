@@ -4,6 +4,7 @@ use std::process::{self, Command};
 
 use crate::utils::get::*;
 
+/*
 pub fn init_git_email(ip: &str) {
     info!("[ RUN ] - Git email wird eingestellt");
 
@@ -30,7 +31,9 @@ pub fn init_git_email(ip: &str) {
     }
     info!("[ OK ] - Git email eingestellt");
 }
+*/
 
+/*
 pub fn init_git_name(ip: &str) {
     info!("[ RUN ] - Git name wird eingestellt");
 
@@ -56,3 +59,4 @@ pub fn init_git_name(ip: &str) {
     }
     info!("[ OK ] - Git name eingestellt");
 }
+*/
