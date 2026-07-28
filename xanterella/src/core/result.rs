@@ -26,41 +26,35 @@ pub enum EventsFailed {
     ConfigGenBasic(String),
 
     /// Installer
-    /// installer/Core.rs
-    RemoteIntegration,
-    RemotePrepFs,
-    RemoteInstall,
-    RemoteCleanup,
-
     /// installer/Ping.rs
-    Ping,
-    PingSsh,
+    Ping(String),
+    PingSsh(String),
 
     /// installer/Deploy.rs
-    NixBuild,
-    NixCopy,
-    CreateProfile,
-    PrepSys,
-    ActivateSys,
-    ActivateBootloader,
-    RebootSys,
+    NixBuild(String),
+    NixCopy(String),
+    CreateProfile(String),
+    PrepSys(String),
+    ActivateSys(String),
+    ActivateBootloader(String),
+    RebootSys(String),
 
     /// installer/Drives.rs
-    PartEfi,
-    PartRoot,
-    FormatEfi,
-    FormatRoot,
-    CreateBootDir,
-    MountBoot,
-    MountRoot,
+    PartEfi(String),
+    PartRoot(String),
+    FormatEfi(String),
+    FormatRoot(String),
+    CreateBootDir(String),
+    MountBoot(String),
+    MountRoot(String),
 
     /// installer/Helper.rs
-    GetHardware,
-    GetDrives,
+    GetHardware(String),
+    GetDrives(String),
 
     /// installer/Inject.rs
-    InjectTailscale,
-    InjectWifi,
+    InjectTailscale(String),
+    InjectWifi(String),
 }
 
 pub enum Events {

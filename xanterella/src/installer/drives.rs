@@ -26,7 +26,7 @@ impl<'a> Drives for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::PartEfi);
+            return Err(EventsFailed::PartEfi(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkPartEfi);
@@ -44,7 +44,7 @@ impl<'a> Drives for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::PartRoot);
+            return Err(EventsFailed::PartRoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkPartRoot);
@@ -62,7 +62,7 @@ impl<'a> Drives for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::FormatEfi);
+            return Err(EventsFailed::FormatEfi(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkFormatEfi);
@@ -80,7 +80,7 @@ impl<'a> Drives for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::FormatRoot);
+            return Err(EventsFailed::FormatRoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkFormatRoot);
@@ -97,7 +97,7 @@ impl<'a> Drives for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::CreateBootDir);
+            return Err(EventsFailed::CreateBootDir(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkCreateBootDir);
@@ -114,7 +114,7 @@ impl<'a> Drives for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::MountBoot);
+            return Err(EventsFailed::MountBoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkMountBoot);
@@ -131,7 +131,7 @@ impl<'a> Drives for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::MountRoot);
+            return Err(EventsFailed::MountRoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkMountRoot);

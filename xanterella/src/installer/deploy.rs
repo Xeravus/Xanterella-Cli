@@ -23,7 +23,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::NixBuild);
+            return Err(EventsFailed::NixBuild(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkNixBuild);
@@ -43,7 +43,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::NixCopy);
+            return Err(EventsFailed::NixCopy(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkNixCopy);
@@ -67,7 +67,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::CreateProfile);
+            return Err(EventsFailed::CreateProfile(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkCreateProfile);
@@ -86,7 +86,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::PrepSys);
+            return Err(EventsFailed::PrepSys(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkPrepSys);
@@ -105,7 +105,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::ActivateSys);
+            return Err(EventsFailed::ActivateSys(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkActivateSys);
@@ -124,7 +124,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::ActivateBootloader);
+            return Err(EventsFailed::ActivateBootloader(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkActivateBootloader);
@@ -143,7 +143,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::RebootSys);
+            return Err(EventsFailed::RebootSys(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.xanterella.log_event(Events::OkRebootSys);

@@ -35,7 +35,7 @@ impl<'a> Helper for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::GetHardware);
+            return Err(EventsFailed::GetHardware(String::from_utf8_lossy(&cmd.stderr).to_string()));
         }
 
         self.xanterella.log_event(Events::OkGetHardware);
@@ -94,7 +94,7 @@ impl<'a> Helper for XanterellaInstall<'a> {
                     .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
                 if !cmd_again.status.success() {
-                    return Err(EventsFailed::GetDrives);
+                    return Err(EventsFailed::GetDrives(String::from_utf8_lossy(&cmd.stderr).to_string()));
                 } else {
                     serde_json::from_slice::<Drives>(&cmd_again.stdout)
                         .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
