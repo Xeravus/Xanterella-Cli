@@ -1,23 +1,51 @@
 use crate::prelude::*;
 
 pub enum EventsFailed {
+    /// Generall Errors
     Failed(String),
     FailedCmd(String),
+    Tailscale,
+    SerdeJson,
+    Fs,
+    Lsblk,
+    ReadSymLink,
 
+    /// Utils
+    /// utils/Git.rs
+    GitCommit,
+    GitCheckout,
+    GitCheckoutCreate,
+    GitMerge,
+    GitPr,
+
+    /// utils/Check.rs
+    CheckNix,
+
+    /// utils/Config.rs
+    ConfigCreateDir,
+    ConfigGenBasic,
+
+    /// Installer
+    /// installer/Core.rs
+    RemoteIntegration,
+    RemotePrepFs,
+    RemoteInstall,
+    RemoteCleanup,
+
+    /// installer/Ping.rs
     Ping,
     PingSsh,
 
-    CheckNix,
-    
-    GetHardware,
-    GetDrives,
+    /// installer/Deploy.rs
+    NixBuild,
+    NixCopy,
+    CreateProfile,
+    PrepSys,
+    ActivateSys,
+    ActivateBootloader,
+    RebootSys,
 
-    GitCommit,
-    GitCheckout,
-    GitMerge,
-    GitPr,
-    GitDiff,
-
+    /// installer/Drives.rs
     PartEfi,
     PartRoot,
     FormatEfi,
@@ -26,124 +54,106 @@ pub enum EventsFailed {
     MountBoot,
     MountRoot,
 
-    InjectWifi,
+    /// installer/Helper.rs
+    GetHardware,
+    GetDrives,
+
+    /// installer/Inject.rs
     InjectTailscale,
-
-    CreateDir,
-
-    NixBuild,
-    NixCopy,
-    
-    Fs,
-    Lsblk,
-    Tailscale,
-    SerdeJson,
-    Reboot,
-    ActivateBootloader,
-    ActivateSys,
-    PrepSys,
-    CreateProfile,
-    ReadSymLink,
-    RemotePrepFs,
+    InjectWifi,
 }
 
 pub enum Events {
-    RunPing,
-    OkPing,
-
-    RunPingSsh,
-    OkPingSsh,
-
-    RunCheckNix,
-    OkCheckNix, 
-
-    RunGetHardware,
-    OkGetHardware,
-    //
+    /// Utils
+    /// utils/Git.rs
     RunGitCommit,
-    OkGitCommit,
-
     RunGitCheckout,
-    OkGitCheckout,
-
-    RunGitMerge,
-    OkGitMerge,
-
     RunGitCheckoutCreate,
-    OkGitCheckoutCreate,
-
+    RunGitMerge,
     RunGitPr,
+
+    OkGitCommit,
+    OkGitCheckout,
+    OkGitCheckoutCreate,
+    OkGitMerge,
     OkGitPr,
 
-    RunGitDiff,
-    OkGitDiff,
-    //
-    RunRemoteIntegration,
-    OkRemoteIntegration,
+    /// utils/Check.rs
+    RunCheckNix,
 
-    RunRemoteInstall,
-    OkRemoteInstall,
-    //
-    RunPartEfi,
-    OkPartEfi,
+    OkCheckNix,
 
-    RunPartRoot,
-    OkPartRoot,
-
-    RunFormatEfi,
-    OkFormatEfi,
-
-    RunFormatRoot,
-    OkFormatRoot,
-
-    RunCreateBootDir,
-    OkCreateBootDir,
-
-    RunMountBoot,
-    OkMountBoot,
-
-    RunMountRoot,
-    OkMountRoot,
-    //
-    RunInjectTailscale,
-    OkInjectTailscale,
-
-    RunInjectWifi,
-    OkInjectWifi,
-    //
-    RunGetDrives,
-    OkGetDrives,
-    //
+    /// utils/Config.rs
+    RunConfigCreateDir,
     RunConfigGenBasic,
+
+    OkConfigCreateDir,
     OkConfigGenBasic,
 
-    RunConfigCreateDir,
-    OkConfigCreateDir,
-
-    RunReboot,
-    OkReboot,
-
-    RunActivateBootloader,
-    OkActivateBootloader,
-
-    RunActivateSys,
-    OkActivateSys,
-
-    RunPrepSys,
-    OkPrepSys,
-
-    RunCreateProfile,
-    OkCreateProfile,
-
-    RunNixCopy,
-    OkNixCopy,
-
-    RunNixBuild,
-    OkNixBuild,
-
+    /// Installer
+    /// installer/Core.rs
+    RunRemoteIntegration,
+    RunRemotePrepFs,
+    RunRemoteInstall,
     RunRemoteInstallCleanup,
+
+    OkRemoteIntegration,
+    OkRemotePrepFs,
+    OkRemoteInstall,
     OkRemoteInstallCleanup,
 
-    RunRemotePrepFs,
-    OkRemotePrepFs,
+    /// installer/Ping.rs
+    RunPing,
+    RunPingSsh,
+
+    OkPing,
+    OkPingSsh,
+
+    /// installer/Deploy.rs
+    RunNixBuild,
+    RunNixCopy,
+    RunCreateProfile,
+    RunPrepSys,
+    RunActivateSys,
+    RunActivateBootloader,
+    RunRebootSys,
+
+    OkNixBuild,
+    OkNixCopy,
+    OkCreateProfile,
+    OkPrepSys,
+    OkActivateSys,
+    OkActivateBootloader,
+    OkRebootSys,
+
+    /// installer/Drives.rs
+    RunPartEfi,
+    RunPartRoot,
+    RunFormatEfi,
+    RunFormatRoot,
+    RunCreateBootDir,
+    RunMountBoot,
+    RunMountRoot,
+
+    OkPartEfi,
+    OkPartRoot,
+    OkFormatEfi,
+    OkFormatRoot,
+    OkCreateBootDir,
+    OkMountBoot,
+    OkMountRoot,
+
+    /// installer/Helper.rs
+    RunGetHardware,
+    RunGetDrives,
+
+    OkGetHardware,
+    OkGetDrives,
+
+    /// installer/Inject.rs
+    RunInjectTailscale,
+    RunInjectWifi,
+
+    OkInjectTailscale,
+    OkInjectWifi,
 }

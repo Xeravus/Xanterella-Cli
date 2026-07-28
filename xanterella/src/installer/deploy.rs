@@ -132,7 +132,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
     }
 
     fn reboot_sys(&mut self) -> Result<(), EventsFailed> {
-        self.xanterella.log_event(Events::RunReboot);
+        self.xanterella.log_event(Events::RunRebootSys);
 
         let reboot_cmd = "nohup sh -c 'sleep 3 && tailscale logout && reboot' > /dev/null 2>&1 &";
 
@@ -143,10 +143,10 @@ impl<'a> Deploy for XanterellaInstall<'a> {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::Reboot);
+            return Err(EventsFailed::RebootSys);
         };
 
-        self.xanterella.log_event(Events::OkReboot);
+        self.xanterella.log_event(Events::OkRebootSys);
         Ok(())
     }
 }
