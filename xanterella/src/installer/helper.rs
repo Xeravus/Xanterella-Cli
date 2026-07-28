@@ -110,7 +110,7 @@ impl<'a> Helper for XanterellaInstall<'a> {
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
-                return Err(EventsFailed::Lsblk);
+                return Err(EventsFailed::Lsblk(String::from_utf8_lossy(&cmd.stderr).to_string()));
             };
 
             serde_json::from_slice::<Drives>(&cmd.stdout)

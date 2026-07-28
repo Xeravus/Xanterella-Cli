@@ -7,7 +7,7 @@ pub enum EventsFailed {
     Tailscale(String),
     SerdeJson(String),
     Fs(String),
-    Lsblk,
+    Lsblk(String),
     ReadSymLink,
 
     /// Utils
