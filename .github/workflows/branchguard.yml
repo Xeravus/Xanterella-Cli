@@ -2,9 +2,10 @@ name: Branch Guard
 
 on: 
   workflow_call:
-    proceed:
-      description: "Gibt an, ob von der aktuellen in die Zeil Branch gemergt werden darf"
-      value: ${{ jobs.guard-job.outputs.proceed }}
+    outputs:
+      proceed:
+        description: "Gibt an, ob von der aktuellen in die Zeil Branch gemergt werden darf"
+        value: ${{ jobs.guard.outputs.proceed }}
 
 jobs:
   guard:

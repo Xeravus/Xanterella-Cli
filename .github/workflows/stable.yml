@@ -2,7 +2,7 @@ name: Xanterella-Cli CI Stable
 
 on:
   pull_request:
-    branches: [ "final/cleanup", "stable" ]
+    branches: [ "final/stable", "stable" ]
 
 jobs:
   check-guard:
