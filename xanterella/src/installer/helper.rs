@@ -36,7 +36,7 @@ impl<'a> Helper for XanterellaInstall<'a> {
 
         if !cmd.status.success() {
             return Err(EventsFailed::GetHardware(String::from_utf8_lossy(&cmd.stderr).to_string()));
-        }
+        };
 
         self.xanterella.log_event(Events::OkGetHardware);
         Ok(String::from_utf8_lossy(&cmd.stdout).to_string())

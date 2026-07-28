@@ -16,17 +16,19 @@ impl<'a> Drives for XanterellaInstall<'a> {
     fn part_efi(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPartEfi);
 
-        let cmd = Command::new("ssh")
-            .args(self.get_sshstring(User::Root))
-            .args(["parted", "-s", &self.drive])
-            .args(["mklabel", "gpt"])
-            .args(["mkpart", "disk-main-boot", "fat32", "1Mib", "512MiB"])
-            .args(["set", "1", "esp", "on"])
-            .output()
-            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+        if !self.xanterella.debug {
+            let cmd = Command::new("ssh")
+                .args(self.get_sshstring(User::Root))
+                .args(["parted", "-s", &self.drive])
+                .args(["mklabel", "gpt"])
+                .args(["mkpart", "disk-main-boot", "fat32", "1Mib", "512MiB"])
+                .args(["set", "1", "esp", "on"])
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-        if !cmd.status.success() {
-            return Err(EventsFailed::PartEfi(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            if !cmd.status.success() {
+                return Err(EventsFailed::PartEfi(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
         };
 
         self.xanterella.log_event(Events::OkPartEfi);
@@ -36,15 +38,17 @@ impl<'a> Drives for XanterellaInstall<'a> {
     fn part_root(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPartRoot);
 
-        let cmd = Command::new("ssh")
-            .args(self.get_sshstring(User::Root))
-            .args(["parted", "-s", &self.drive])
-            .args(["mkpart", "disk-main-root", "ext4", "512MiB", "100%"])
-            .output()
-            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+        if !self.xanterella.debug {
+            let cmd = Command::new("ssh")
+                .args(self.get_sshstring(User::Root))
+                .args(["parted", "-s", &self.drive])
+                .args(["mkpart", "disk-main-root", "ext4", "512MiB", "100%"])
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-        if !cmd.status.success() {
-            return Err(EventsFailed::PartRoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            if !cmd.status.success() {
+                return Err(EventsFailed::PartRoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
         };
 
         self.xanterella.log_event(Events::OkPartRoot);
@@ -54,15 +58,17 @@ impl<'a> Drives for XanterellaInstall<'a> {
     fn format_efi(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunFormatEfi);
 
-        let cmd = Command::new("ssh")
-            .args(self.get_sshstring(User::Root))
-            .arg("mkfs.fat")
-            .args([self.get_part_name(1), "-F".to_string(), "32".to_string(), "-n".to_string(), "boot".to_string()])
-            .output()
-            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+        if !self.xanterella.debug {
+            let cmd = Command::new("ssh")
+                .args(self.get_sshstring(User::Root))
+                .arg("mkfs.fat")
+                .args([self.get_part_name(1), "-F".to_string(), "32".to_string(), "-n".to_string(), "boot".to_string()])
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-        if !cmd.status.success() {
-            return Err(EventsFailed::FormatEfi(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            if !cmd.status.success() {
+                return Err(EventsFailed::FormatEfi(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
         };
 
         self.xanterella.log_event(Events::OkFormatEfi);
@@ -72,15 +78,17 @@ impl<'a> Drives for XanterellaInstall<'a> {
     fn format_root(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunFormatRoot);
 
-        let cmd = Command::new("ssh")
-            .args(self.get_sshstring(User::Root))
-            .arg("mkfs.ext4")
-            .args([self.get_part_name(2), "-L".to_string(), "nixos".to_string()])
-            .output()
-            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+        if !self.xanterella.debug {
+            let cmd = Command::new("ssh")
+                .args(self.get_sshstring(User::Root))
+                .arg("mkfs.ext4")
+                .args([self.get_part_name(2), "-L".to_string(), "nixos".to_string()])
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-        if !cmd.status.success() {
-            return Err(EventsFailed::FormatRoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            if !cmd.status.success() {
+                return Err(EventsFailed::FormatRoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
         };
 
         self.xanterella.log_event(Events::OkFormatRoot);
@@ -90,14 +98,16 @@ impl<'a> Drives for XanterellaInstall<'a> {
     fn create_boot_dir(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunCreateBootDir);
 
-        let cmd = Command::new("ssh")
-            .args(self.get_sshstring(User::Root))
-            .args(["mkdir", "-p", "/mnt/boot"])
-            .output()
-            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+        if !self.xanterella.debug {
+            let cmd = Command::new("ssh")
+                .args(self.get_sshstring(User::Root))
+                .args(["mkdir", "-p", "/mnt/boot"])
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-        if !cmd.status.success() {
-            return Err(EventsFailed::CreateBootDir(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            if !cmd.status.success() {
+                return Err(EventsFailed::CreateBootDir(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
         };
 
         self.xanterella.log_event(Events::OkCreateBootDir);
@@ -107,14 +117,16 @@ impl<'a> Drives for XanterellaInstall<'a> {
     fn mount_boot(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunMountBoot);
 
-        let cmd = Command::new("ssh")
-            .args(self.get_sshstring(User::Root))
-            .args(["mount", &self.get_part_name(1), "/mnt/boot"])
-            .output()
-            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+        if !self.xanterella.debug {
+            let cmd = Command::new("ssh")
+                .args(self.get_sshstring(User::Root))
+                .args(["mount", &self.get_part_name(1), "/mnt/boot"])
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-        if !cmd.status.success() {
-            return Err(EventsFailed::MountBoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            if !cmd.status.success() {
+                return Err(EventsFailed::MountBoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
         };
 
         self.xanterella.log_event(Events::OkMountBoot);
@@ -124,14 +136,16 @@ impl<'a> Drives for XanterellaInstall<'a> {
     fn mount_root(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunMountRoot);
 
-        let cmd = Command::new("ssh")
-            .args(self.get_sshstring(User::Root))
-            .args(["mount", &self.get_part_name(2), "/mnt"])
-            .output()
-            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+        if !self.xanterella.debug {
+            let cmd = Command::new("ssh")
+                .args(self.get_sshstring(User::Root))
+                .args(["mount", &self.get_part_name(2), "/mnt"])
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-        if !cmd.status.success() {
-            return Err(EventsFailed::MountRoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            if !cmd.status.success() {
+                return Err(EventsFailed::MountRoot(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
         };
 
         self.xanterella.log_event(Events::OkMountRoot);

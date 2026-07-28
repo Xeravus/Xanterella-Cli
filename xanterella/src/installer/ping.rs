@@ -11,14 +11,16 @@ impl<'a> Ping for XanterellaInstall<'a> {
     fn ping(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPing); 
 
-        let cmd = Command::new("ping")
-            .args(["-W", "1"])
-            .arg(&self.ip)
-            .output()
-            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+        if !self.xanterella.debug {
+            let cmd = Command::new("ping")
+                .args(["-W", "1"])
+                .arg(&self.ip)
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-        if !cmd.status.success() {
-            return Err(EventsFailed::Ping(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            if !cmd.status.success() {
+                return Err(EventsFailed::Ping(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
         };
         
         self.xanterella.log_event(Events::OkPing);
@@ -28,13 +30,15 @@ impl<'a> Ping for XanterellaInstall<'a> {
     fn ping_ssh(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPingSsh);
 
-        let cmd = Command::new("ssh")
-            .args(self.get_sshstring(User::Root))
-            .output()
-            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+        if !self.xanterella.debug {
+            let cmd = Command::new("ssh")
+                .args(self.get_sshstring(User::Root))
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-        if !cmd.status.success() {
-            return Err(EventsFailed::PingSsh(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            if !cmd.status.success() {
+                return Err(EventsFailed::PingSsh(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
         };
 
         self.xanterella.log_event(Events::OkPingSsh);
