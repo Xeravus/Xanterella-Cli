@@ -1,30 +1,22 @@
 use crate::prelude::*;
 
 pub struct Xanterella {
-    pub ip: String,
     pub path: String,
     pub home: String,
     pub fast: bool,
     pub debug: bool,
     pub automate: bool,
-    pub drive: Option<String>,
 }
 
 impl Xanterella {
     pub fn new() -> Self {
         Xanterella {
-            ip: String::new(),
             path: String::new(),
             home: String::new(),
             fast: false,
             debug: false,
             automate: false,
-            drive: None
         }
-    }
-
-    pub fn set_ip(&mut self, value: &str) {
-        self.ip = value.to_string();
     }
 
     pub fn set_path(&mut self, value: &str) {
@@ -47,18 +39,8 @@ impl Xanterella {
         self.automate = value;
     }
 
-    pub fn set_drive(&mut self, value: &str) {
-        self.drive = Some(value.to_string());
-    }
-
     pub fn log_event(&mut self, event: Events) {
-        let extra: Cow<'static, str> = match value {
-            Some(val) => val.into(),
-            None => "".into(),
-        };
-
-        /*
-        let (run, name): (bool, Cow<'static, str>) = match event {
+        let (run, name): (bool, String) = match event {
             Events::RunPing => (true, "Starte Ping".into()),
             Events::OkPing => (false, "Ping erfolgreich".into()),
             _ => todo!(),
@@ -71,6 +53,5 @@ impl Xanterella {
         };
 
         println!("{}", (format!("{}{}", prefix, name)));
-        */
     }
 }

@@ -19,13 +19,13 @@ pub enum PrType {
 pub trait Git {
     fn git_commit(&mut self, msg: &str) -> Result<(), EventsFailed>;
     fn git_checkout(&mut self, branch: Branches) -> Result<(), EventsFailed>;
-    fn git_merge(&mut self, branch: Branches) -> Result<(), EventsFailed>;
+    fn git_merge(&mut self) -> Result<(), EventsFailed>;
     fn git_pr(&mut self, pr: PrType) -> Result<(), EventsFailed>;
 }
 
 impl Git for Xanterella {
     fn git_commit(&mut self, msg: &str) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitCommit(msg.to_string()));
+        self.log_event(Events::RunGitCommit);
 
         let cmd = Command::new("git")
             .args(["commit", "-am", &msg])
@@ -37,12 +37,12 @@ impl Git for Xanterella {
             return Err(EventsFailed::GitCommit);
         };
 
-        self.log_event(Events::OkGitCommit(msg.to_string()));
+        self.log_event(Events::OkGitCommit);
         Ok(())
     }
 
     fn git_checkout(&mut self, branch: Branches) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitCheckout(branch.clone()));
+        self.log_event(Events::RunGitCheckout);
 
         let br_name = match branch {
             Branches::Main => "main",
@@ -56,7 +56,7 @@ impl Git for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            self.log_event(Events::RunGitCheckoutCreate(branch.clone()));
+            self.log_event(Events::RunGitCheckoutCreate);
 
             let create = Command::new("git")
                 .args(["checkout", "-b", br_name])
@@ -68,10 +68,10 @@ impl Git for Xanterella {
                 return Err(EventsFailed::GitCheckout);
             };
 
-            self.log_event(Events::OkGitCheckoutCreate(branch.clone()));
+            self.log_event(Events::OkGitCheckoutCreate);
         };
 
-        self.log_event(Events::RunGitCheckout(branch));
+        self.log_event(Events::RunGitCheckout);
         Ok(())
     }
 
@@ -95,7 +95,7 @@ impl Git for Xanterella {
     }
 
     fn git_pr(&mut self, pr: PrType) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitPr(pr.clone()));
+        self.log_event(Events::RunGitPr);
 
         let extra_part = "This is an automatic generated Pull Request";
         let title = match pr {
@@ -122,7 +122,7 @@ impl Git for Xanterella {
             return Err(EventsFailed::GitPr);
         };
 
-        self.log_event(Events::OkGitPr(pr.clone()));
+        self.log_event(Events::OkGitPr);
         Ok(())
     }
 }

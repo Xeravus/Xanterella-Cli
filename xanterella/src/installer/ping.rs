@@ -1,13 +1,15 @@
 use crate::prelude::*;
+use crate::installer::core::XanterellaInstall;
+use crate::installer::helper::*;
 
 pub trait Ping {
-    fn ping(&self) -> Result<(), EventsFailed>;
-    fn ping_ssh(&self) -> Result<(), EventsFailed>;
+    fn ping(&mut self) -> Result<(), EventsFailed>;
+    fn ping_ssh(&mut self) -> Result<(), EventsFailed>;
 }
 
-impl Ping for Xanterella {
-    fn ping(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunPing, &self.ip.clone()); 
+impl<'a> Ping for XanterellaInstall<'a> {
+    fn ping(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunPing); 
 
         let cmd = Command::new("ping")
             .args(["-W", "1"])
@@ -16,15 +18,15 @@ impl Ping for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::Ping(&self.ip.clone()));
+            return Err(EventsFailed::Ping);
         };
         
-        self.log_event(Events::OkPing, &self.ip.clone());
+        self.xanterella.log_event(Events::OkPing);
         Ok(())
     }
 
-    fn ping_ssh(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunPingSsh, &self.ip.clone());
+    fn ping_ssh(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunPingSsh);
 
         let cmd = Command::new("ssh")
             .args(self.get_sshstring(User::Root))
@@ -32,10 +34,10 @@ impl Ping for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::PingSsh(&self.ip.clone()));
+            return Err(EventsFailed::PingSsh);
         };
 
-        self.log_event(Events::OkPingSsh, &self.ip.clone());
+        self.xanterella.log_event(Events::OkPingSsh);
         Ok(())
     }
 }

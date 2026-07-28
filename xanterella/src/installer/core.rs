@@ -1,31 +1,39 @@
 use crate::prelude::*;
 
-pub trait RemoteInstall {
-    fn remote_integration(&self) -> Result<(), EventsFailed>;
-    fn remote_prep_fs(&self) -> Result<(), EventsFailed>;
-    fn remote_install(&self) -> Result<(), EventsFailed>;
-    fn remote_install_cleanup(&self) -> Result<(), EventsFailed>;
+use crate::installer::deploy::*;
+use crate::installer::drives::*;
+use crate::installer::inject::*;
+use crate::installer::ping::*;
+use crate::installer::helper::*;
+
+use crate::utils::git::*;
+use crate::utils::check::*;
+
+pub struct XanterellaInstall<'a> {
+    pub xanterella: &'a mut Xanterella,
+    pub ip: String,
+    pub drive: String
 }
 
-impl RemoteInstall for Xanterella {
-    fn remote_integration(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunRemoteIntegration(&self.ip.clone()));
+impl<'a> XanterellaInstall<'a> {
+    fn remote_integration(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunRemoteIntegration);
 
         self.ping()?;
-        self.pingssh()?;
-        self.git_merge()?;
+        self.ping_ssh()?;
+        self.xanterella.git_merge()?;
         // crylia_edit_start(self.get_hardware()?);
-        self.git_commit()?;
-        if !&self.fast {
-            self.check_nix_flake()?;
+        self.xanterella.git_commit("Xanterella: Remote-Install")?;
+        if !&self.xanterella.fast {
+            self.xanterella.check_nix_flake()?;
         }
 
-        self.log_event(Events::OkRemoteIntegration(&self.ip.clone()));
+        self.xanterella.log_event(Events::OkRemoteIntegration);
         Ok(())
     }
 
-    fn remote_prep_fs(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunRemotePrepFs(&self.ip.clone()));
+    fn remote_prep_fs(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunRemotePrepFs);
 
         self.part_efi()?;
         self.part_root()?;
@@ -37,16 +45,16 @@ impl RemoteInstall for Xanterella {
         self.create_boot_dir()?;
         self.mount_boot()?;
 
-        self.log_event(Events::OkRemotePrepFs(&self.ip.clone()));
+        self.xanterella.log_event(Events::OkRemotePrepFs);
         Ok(())
     }
 
-    fn remote_install(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunRemoteInstall(&self.ip.clone()));
+    fn remote_install(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunRemoteInstall);
 
         self.nix_build()?;
         self.nix_copy()?;
-        self.create_profiles()?;
+        self.create_profile()?;
         self.prep_sys()?;
         self.activate_sys()?;
         self.activate_bootloader()?;
@@ -54,17 +62,17 @@ impl RemoteInstall for Xanterella {
         self.inject_wifi()?;
         self.reboot_sys()?;
 
-        self.log_event(Events::OkRemoteInstall(&self.ip.clone()));
+        self.xanterella.log_event(Events::OkRemoteInstall);
         Ok(())
     }
 
-    fn remote_install_cleanup(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunRemoteInstallCleanup);
+    fn remote_install_cleanup(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunRemoteInstallCleanup);
 
         // crylia_edit_finish();
-        self.git_commit()?;
+        self.xanterella.git_commit("Xanterella: Cleanup")?;
 
-        self.log_event(Events::OkRemoteInstallCleanup);
+        self.xanterella.log_event(Events::OkRemoteInstallCleanup);
         Ok(())
     }
 }

@@ -1,22 +1,24 @@
 use crate::prelude::*;
+use crate::installer::helper::*;
+use crate::installer::core::XanterellaInstall;
 
 pub trait Deploy {
-    fn nix_build(&self) -> Result<(), EventsFailed>;
-    fn nix_copy(&self) -> Result<(), EventsFailed>;
-    fn create_profile(&self) -> Result<(), EventsFailed>;
-    fn prep_sys(&self) -> Result<(), EventsFailed>;
-    fn activate_sys(&self) -> Result<(), EventsFailed>;
-    fn activate_bootloader(&self) -> Result<(), EventsFailed>;
-    fn reboot_sys(&self) -> Result<(), EventsFailed>;
+    fn nix_build(&mut self) -> Result<(), EventsFailed>;
+    fn nix_copy(&mut self) -> Result<(), EventsFailed>;
+    fn create_profile(&mut self) -> Result<(), EventsFailed>;
+    fn prep_sys(&mut self) -> Result<(), EventsFailed>;
+    fn activate_sys(&mut self) -> Result<(), EventsFailed>;
+    fn activate_bootloader(&mut self) -> Result<(), EventsFailed>;
+    fn reboot_sys(&mut self) -> Result<(), EventsFailed>;
 }
 
-impl Deploy for Xanterella {
-    fn nix_build(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunNixBuild);
+impl<'a> Deploy for XanterellaInstall<'a> {
+    fn nix_build(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunNixBuild);
 
         let cmd = Command::new("nix")
             .args(["build", ".#nixosConfigurations.crylia.config.system.build.toplevel"])
-            .current_dir(self.get_path(Paths::Nixconf))
+            .current_dir(self.xanterella.get_path(Paths::Nixconf))
             .output()
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
@@ -24,19 +26,19 @@ impl Deploy for Xanterella {
             return Err(EventsFailed::NixBuild);
         };
 
-        self.log_event(Events::OkNixBuild);
+        self.xanterella.log_event(Events::OkNixBuild);
         Ok(())
     }
 
-    fn nix_copy(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunNixCopy);
+    fn nix_copy(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunNixCopy);
 
         let fast_cmd = format!("nix-store --export $(nix.store -qR ./result) | zstd -T0 -3 | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -C root@{} 'zstdcat | nix-store --store /mnt --import'", &self.ip);        
 
         let cmd = Command::new("sh")
             .arg("-c")
             .arg(fast_cmd)
-            .current_dir(self.get_path(Paths::Nixconf))
+            .current_dir(self.xanterella.get_path(Paths::Nixconf))
             .output()
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
@@ -44,15 +46,15 @@ impl Deploy for Xanterella {
             return Err(EventsFailed::NixCopy);
         };
 
-        self.log_event(Events::OkNixCopy);
+        self.xanterella.log_event(Events::OkNixCopy);
         Ok(())
     }
 
-    fn create_profile(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunCreateProfile);
+    fn create_profile(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunCreateProfile);
 
-        let sys_path = fs::read_link(format!("{}/result", self.get_path(Paths::Nixconf)))
-            .map_err(|err| EventsFailed::ReadSymLink)
+        let sys_path = fs::read_link(format!("{}/result", self.xanterella.get_path(Paths::Nixconf)))
+            .map_err(|err| EventsFailed::ReadSymLink)?
             .to_string_lossy()
             .into_owned();
 
@@ -68,12 +70,12 @@ impl Deploy for Xanterella {
             return Err(EventsFailed::CreateProfile);
         };
 
-        self.log_event(Events::OkCreateProfile);
+        self.xanterella.log_event(Events::OkCreateProfile);
         Ok(())
     }
 
-    fn prep_sys(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunPrepSys);
+    fn prep_sys(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunPrepSys);
 
         let prep_cmd = "mkdir -m 0755 -p /mnt/etc && touch /mnt/etc/NIXOS";
 
@@ -87,12 +89,12 @@ impl Deploy for Xanterella {
             return Err(EventsFailed::PrepSys);
         };
 
-        self.log_event(Events::OkPrepSys);
+        self.xanterella.log_event(Events::OkPrepSys);
         Ok(())
     }
 
-    fn activate_sys(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunActivateSys);
+    fn activate_sys(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunActivateSys);
 
         let activate_cmd = "NIXOS_INSTALL_BOOTLOADER=1 nixos-enter --root /mnt --command '/nix/var/nix/profiles/system/activate'";
 
@@ -106,12 +108,12 @@ impl Deploy for Xanterella {
             return Err(EventsFailed::ActivateSys);
         };
 
-        self.log_event(Events::OkActivateSys);
+        self.xanterella.log_event(Events::OkActivateSys);
         Ok(())
     }
 
-    fn activate_bootloader(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunActivateBootloader);
+    fn activate_bootloader(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunActivateBootloader);
 
         let bootloader_cmd = "nixos-enter --root /mnt --command 'NIXOS_INSTALL_BOOTLOADER=1 /nix/var/nix/profiles/system/bin/switch-to-configuration boot'";
 
@@ -125,12 +127,12 @@ impl Deploy for Xanterella {
             return Err(EventsFailed::ActivateBootloader);
         };
 
-        self.log_event(Events::OkActivateBootloader);
+        self.xanterella.log_event(Events::OkActivateBootloader);
         Ok(())
     }
 
-    fn reboot_sys(&self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunReboot);
+    fn reboot_sys(&mut self) -> Result<(), EventsFailed> {
+        self.xanterella.log_event(Events::RunReboot);
 
         let reboot_cmd = "nohup sh -c 'sleep 3 && tailscale logout && reboot' > /dev/null 2>&1 &";
 
@@ -144,7 +146,7 @@ impl Deploy for Xanterella {
             return Err(EventsFailed::Reboot);
         };
 
-        self.log_event(Events::OkReboot);
+        self.xanterella.log_event(Events::OkReboot);
         Ok(())
     }
 }
