@@ -14,7 +14,23 @@ pub struct XanterellaInstall<'a> {
 }
 
 impl<'a> XanterellaInstall<'a> {
-    fn remote_integration(&mut self) -> Result<(), EventsFailed> {
+    pub fn new(xanterella: &'a mut Xanterella) -> Self {
+        XanterellaInstall {
+            xanterella,
+            ip: String::new(),
+            drive: String::new(),
+        }
+    }
+
+    pub fn set_ip(&mut self, ip: &str) {
+        self.ip = ip.to_string();
+    }
+
+    pub fn set_drive(&mut self, drive: &str) {
+        self.drive = drive.to_string();
+    }
+
+    pub fn remote_integration(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunRemoteIntegration);
 
         self.ping()?;
@@ -30,7 +46,7 @@ impl<'a> XanterellaInstall<'a> {
         Ok(())
     }
 
-    fn remote_prep_fs(&mut self) -> Result<(), EventsFailed> {
+    pub fn remote_prep_fs(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunRemotePrepFs);
 
         self.part_efi()?;
@@ -47,7 +63,7 @@ impl<'a> XanterellaInstall<'a> {
         Ok(())
     }
 
-    fn remote_install(&mut self) -> Result<(), EventsFailed> {
+    pub fn remote_install(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunRemoteInstall);
 
         self.nix_build()?;
@@ -64,7 +80,7 @@ impl<'a> XanterellaInstall<'a> {
         Ok(())
     }
 
-    fn remote_install_cleanup(&mut self) -> Result<(), EventsFailed> {
+    pub fn remote_install_cleanup(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunRemoteInstallCleanup);
 
         // crylia_edit_finish();
@@ -74,3 +90,7 @@ impl<'a> XanterellaInstall<'a> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "core_test.rs"]
+mod tests;
