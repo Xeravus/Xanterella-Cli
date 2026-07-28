@@ -97,11 +97,11 @@ impl<'a> Helper for XanterellaInstall<'a> {
                     return Err(EventsFailed::GetDrives);
                 } else {
                     serde_json::from_slice::<Drives>(&cmd_again.stdout)
-                        .map_err(|err| EventsFailed::SerdeJson)?
+                        .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
                 }
             } else {
                 serde_json::from_slice::<Drives>(&cmd.stdout)
-                    .map_err(|err| EventsFailed::SerdeJson)?
+                    .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
             }
         } else {
             let cmd = Command::new("lsblk")
@@ -114,7 +114,7 @@ impl<'a> Helper for XanterellaInstall<'a> {
             };
 
             serde_json::from_slice::<Drives>(&cmd.stdout)
-                .map_err(|err| EventsFailed::SerdeJson)?
+                .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
         };
 
         self.xanterella.log_event(Events::OkGetDrives);

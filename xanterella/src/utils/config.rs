@@ -43,6 +43,6 @@ impl Config for Xanterella {
         let json_path = PathBuf::from(self.get_path(Paths::Config)).join("config.json").display().to_string();
         let file_content = fs::read_to_string(&json_path).map_err(|err| EventsFailed::Fs)?;
         Ok(serde_json::from_str::<Data>(&file_content)
-            .map_err(|err| EventsFailed::SerdeJson)?)
+            .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?)
     }
 }
