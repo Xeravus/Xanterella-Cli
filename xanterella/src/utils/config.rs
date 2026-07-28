@@ -17,7 +17,7 @@ impl Config for Xanterella {
         self.log_event(Events::RunConfigCreateDir);
 
         fs::create_dir_all(self.get_path(Paths::Config))
-            .map_err(|err| EventsFailed::ConfigCreateDir)?;
+            .map_err(|err| EventsFailed::ConfigCreateDir(err.to_string()))?;
 
         self.log_event(Events::OkConfigCreateDir);
         Ok(())

@@ -22,8 +22,8 @@ pub enum EventsFailed {
     CheckNix(String),
 
     /// utils/Config.rs
-    ConfigCreateDir,
-    ConfigGenBasic,
+    ConfigCreateDir(String),
+    ConfigGenBasic(String),
 
     /// Installer
     /// installer/Core.rs
