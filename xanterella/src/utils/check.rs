@@ -15,7 +15,7 @@ impl Check for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::CheckNix);
+            return Err(EventsFailed::CheckNix(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.log_event(Events::OkCheckNix);

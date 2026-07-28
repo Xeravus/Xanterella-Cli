@@ -34,7 +34,7 @@ impl Git for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::GitCommit);
+            return Err(EventsFailed::GitCommit(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.log_event(Events::OkGitCommit);
@@ -65,7 +65,7 @@ impl Git for Xanterella {
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !create.status.success() {
-                return Err(EventsFailed::GitCheckout);
+                return Err(EventsFailed::GitCheckout(String::from_utf8_lossy(&create.stderr).to_string()));
             };
 
             self.log_event(Events::OkGitCheckoutCreate);
@@ -87,7 +87,7 @@ impl Git for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::GitMerge);
+            return Err(EventsFailed::GitMerge(String::from_utf8_lossy(&cmd.stderr).to_string()));
         }
 
         self.log_event(Events::OkGitMerge);
@@ -119,7 +119,7 @@ impl Git for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::GitPr);
+            return Err(EventsFailed::GitPr(String::from_utf8_lossy(&cmd.stderr).to_string()));
         };
 
         self.log_event(Events::OkGitPr);

@@ -12,14 +12,14 @@ pub enum EventsFailed {
 
     /// Utils
     /// utils/Git.rs
-    GitCommit,
-    GitCheckout,
-    GitCheckoutCreate,
-    GitMerge,
-    GitPr,
+    GitCommit(String),
+    GitCheckout(String),
+    GitCheckoutCreate(String),
+    GitMerge(String),
+    GitPr(String),
 
     /// utils/Check.rs
-    CheckNix,
+    CheckNix(String),
 
     /// utils/Config.rs
     ConfigCreateDir,
