@@ -1,5 +1,4 @@
 use crate::prelude::*;
-
 use crate::utils::get::*;
 
 #[derive(Debug, Clone)]
@@ -7,7 +6,7 @@ pub enum Branches {
     Main,
     Xanterella,
 }
-    
+
 #[derive(Debug, Clone)]
 pub enum PrType {
     AddHost(String),
@@ -111,8 +110,12 @@ impl Git for Xanterella {
         };
         let body = match pr {
             PrType::AddHost(ref host) => format!("Xanterella added a Host \nAdded Host: {} \n{}", host, extra_part),
-            PrType::RemoveHost(ref host) => format!("Xanterella removed a Host \nRemoved Host: {} \n{}", host, extra_part),
-            PrType::Changes(ref changes) => format!("Xanterella changed the Configs \nChanges: {} \n{}", changes, extra_part),
+            PrType::RemoveHost(ref host) => {
+                format!("Xanterella removed a Host \nRemoved Host: {} \n{}", host, extra_part)
+            }
+            PrType::Changes(ref changes) => {
+                format!("Xanterella changed the Configs \nChanges: {} \n{}", changes, extra_part)
+            }
         };
 
         if !self.debug {

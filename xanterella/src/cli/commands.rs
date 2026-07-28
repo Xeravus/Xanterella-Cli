@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand, ValueEnum};
+
 use crate::prelude::*;
 
 #[derive(Parser)]
@@ -10,20 +11,20 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
-pub enum Commands {
-}
+pub enum Commands {}
 
 pub async fn cli_parse() {
     let cli = Cli::parse();
     match &cli.command {
         _ => todo!(),
-        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use clap::CommandFactory;
+
+    use super::*;
     #[test]
     fn verify_cli() {
         Cli::command().debug_assert();

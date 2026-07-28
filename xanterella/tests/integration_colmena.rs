@@ -1,6 +1,6 @@
-use tempfile::{NamedTempFile, Builder};
 use std::fs;
 
+use tempfile::{Builder, NamedTempFile};
 use xanterella::config::colmena::*;
 use xanterella::config::core::*;
 
@@ -20,10 +20,7 @@ fn test_integration_add_host_with_fixtures1() {
     let initial_content = include_str!("fixtures/colmena/initial.nix");
     let expected_content = include_str!("fixtures/colmena/added.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -42,10 +39,7 @@ fn test_integration_add_host_with_fixtures2() {
     let initial_content = include_str!("fixtures/colmena/removed.nix");
     let expected_content = include_str!("fixtures/colmena/initial.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -65,10 +59,7 @@ fn test_integration_remove_host_with_fixtures_with_name1() {
     let initial_content = include_str!("fixtures/colmena/initial.nix");
     let expected_content = include_str!("fixtures/colmena/removed.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -88,10 +79,7 @@ fn test_integration_remove_host_with_fixtures_with_name2() {
     let initial_content = include_str!("fixtures/colmena/added.nix");
     let expected_content = include_str!("fixtures/colmena/initial.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -111,10 +99,7 @@ fn test_integration_remove_host_with_fixtures_with_ip1() {
     let initial_content = include_str!("fixtures/colmena/initial.nix");
     let expected_content = include_str!("fixtures/colmena/removed.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -133,10 +118,7 @@ fn test_integration_remove_host_with_fixtures_with_ip2() {
     let initial_content = include_str!("fixtures/colmena/added.nix");
     let expected_content = include_str!("fixtures/colmena/initial.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -155,10 +137,7 @@ fn test_integration_remove_host_with_fixtures_with_name_and_ip1() {
     let initial_content = include_str!("fixtures/colmena/initial.nix");
     let expected_content = include_str!("fixtures/colmena/removed.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -177,10 +156,7 @@ fn test_integration_remove_host_with_fixtures_with_name_and_ip2() {
     let initial_content = include_str!("fixtures/colmena/added.nix");
     let expected_content = include_str!("fixtures/colmena/initial.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -199,10 +175,7 @@ fn test_integration_remove_host_with_fixtures_without_anything1() {
     let initial_content = include_str!("fixtures/colmena/initial.nix");
     let expected_content = include_str!("fixtures/colmena/initial.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -221,10 +194,7 @@ fn test_integration_remove_host_with_fixtures_without_anything2() {
     let initial_content = include_str!("fixtures/colmena/added.nix");
     let expected_content = include_str!("fixtures/colmena/added.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -243,10 +213,7 @@ fn test_integration_sort_hosts1() {
     let initial_content = include_str!("fixtures/colmena/unsorted.nix");
     let expected_content = include_str!("fixtures/colmena/initial.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 
@@ -264,10 +231,7 @@ fn test_integration_sort_hosts2() {
     let initial_content = include_str!("fixtures/colmena/unsorted.nix");
     let expected_content = include_str!("fixtures/colmena/sorted.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, initial_content).unwrap();
 

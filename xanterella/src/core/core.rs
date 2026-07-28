@@ -44,9 +44,8 @@ impl Xanterella {
             Events::RunPing => (true, "Starte Ping".into()),
             Events::OkPing => (false, "Ping erfolgreich".into()),
             _ => todo!(),
-
         };
-        
+
         let prefix = match run {
             true => "[ RUN ] ",
             false => "[ OK ] ",

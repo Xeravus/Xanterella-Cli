@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use crate::installer::core::XanterellaInstall;
+use crate::prelude::*;
 
 pub trait Helper {
     fn get_sshstring(&mut self, user: User) -> Vec<String>;
@@ -100,21 +100,17 @@ impl<'a> Helper for XanterellaInstall<'a> {
                         .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
                 }
             } else {
-                serde_json::from_slice::<Drives>(&cmd.stdout)
-                    .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
+                serde_json::from_slice::<Drives>(&cmd.stdout).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
             }
         } else {
-            let cmd = Command::new("lsblk")
-                .arg("--json")
-                .output()
-                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+            let cmd =
+                Command::new("lsblk").arg("--json").output().map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
                 return Err(EventsFailed::Lsblk(String::from_utf8_lossy(&cmd.stderr).to_string()));
             };
 
-            serde_json::from_slice::<Drives>(&cmd.stdout)
-                .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
+            serde_json::from_slice::<Drives>(&cmd.stdout).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
         };
 
         self.xanterella.log_event(Events::OkGetDrives);
@@ -123,11 +119,7 @@ impl<'a> Helper for XanterellaInstall<'a> {
 
     fn get_part_name(&mut self, part: i8) -> String {
         let drive = format!("/dev/{}", &self.drive.clone());
-        let p_suffix = if drive.contains("nvme") || drive.contains("mmclblk") { 
-            "p"
-        } else {
-            ""
-        };
+        let p_suffix = if drive.contains("nvme") || drive.contains("mmclblk") { "p" } else { "" };
         format!("{}{}{}", drive, p_suffix, part)
     }
 }

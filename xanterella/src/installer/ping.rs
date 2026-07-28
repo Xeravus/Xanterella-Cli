@@ -1,6 +1,6 @@
-use crate::prelude::*;
 use crate::installer::core::XanterellaInstall;
 use crate::installer::helper::*;
+use crate::prelude::*;
 
 pub trait Ping {
     fn ping(&mut self) -> Result<(), EventsFailed>;
@@ -9,7 +9,7 @@ pub trait Ping {
 
 impl<'a> Ping for XanterellaInstall<'a> {
     fn ping(&mut self) -> Result<(), EventsFailed> {
-        self.xanterella.log_event(Events::RunPing); 
+        self.xanterella.log_event(Events::RunPing);
 
         if !self.xanterella.debug {
             let cmd = Command::new("ping")
@@ -22,7 +22,7 @@ impl<'a> Ping for XanterellaInstall<'a> {
                 return Err(EventsFailed::Ping(String::from_utf8_lossy(&cmd.stderr).to_string()));
             };
         };
-        
+
         self.xanterella.log_event(Events::OkPing);
         Ok(())
     }

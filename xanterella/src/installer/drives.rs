@@ -1,6 +1,6 @@
-use crate::prelude::*;
 use crate::installer::core::*;
 use crate::installer::helper::*;
+use crate::prelude::*;
 
 pub trait Drives {
     fn part_efi(&mut self) -> Result<(), EventsFailed>;

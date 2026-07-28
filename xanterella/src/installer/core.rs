@@ -1,18 +1,16 @@
-use crate::prelude::*;
-
 use crate::installer::deploy::*;
 use crate::installer::drives::*;
+use crate::installer::helper::*;
 use crate::installer::inject::*;
 use crate::installer::ping::*;
-use crate::installer::helper::*;
-
-use crate::utils::git::*;
+use crate::prelude::*;
 use crate::utils::check::*;
+use crate::utils::git::*;
 
 pub struct XanterellaInstall<'a> {
     pub xanterella: &'a mut Xanterella,
     pub ip: String,
-    pub drive: String
+    pub drive: String,
 }
 
 impl<'a> XanterellaInstall<'a> {

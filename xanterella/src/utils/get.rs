@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use crate::installer::core::XanterellaInstall;
+use crate::prelude::*;
 
 pub enum User {
     Root,
@@ -66,8 +66,7 @@ impl Get for Xanterella {
         if !cmd.status.success() {
             return Err(EventsFailed::Tailscale(String::from_utf8_lossy(&cmd.stderr).to_string()));
         }
-        serde_json::from_slice::<Taildevices>(&cmd.stdout)
-            .map_err(|err| EventsFailed::SerdeJson(err.to_string()))
+        serde_json::from_slice::<Taildevices>(&cmd.stdout).map_err(|err| EventsFailed::SerdeJson(err.to_string()))
     }
 
     fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {

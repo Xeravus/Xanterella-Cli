@@ -1,6 +1,6 @@
-use crate::prelude::*;
-use crate::installer::helper::*;
 use crate::installer::core::XanterellaInstall;
+use crate::installer::helper::*;
+use crate::prelude::*;
 
 pub trait Deploy {
     fn nix_build(&mut self) -> Result<(), EventsFailed>;
@@ -15,7 +15,7 @@ pub trait Deploy {
 impl<'a> Deploy for XanterellaInstall<'a> {
     fn nix_build(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunNixBuild);
-        
+
         if !self.xanterella.debug {
             let cmd = Command::new("nix")
                 .args(["build", ".#nixosConfigurations.crylia.config.system.build.toplevel"])
@@ -35,7 +35,10 @@ impl<'a> Deploy for XanterellaInstall<'a> {
     fn nix_copy(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunNixCopy);
 
-        let fast_cmd = format!("nix-store --export $(nix.store -qR ./result) | zstd -T0 -3 | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -C root@{} 'zstdcat | nix-store --store /mnt --import'", &self.ip);        
+        let fast_cmd = format!(
+            "nix-store --export $(nix.store -qR ./result) | zstd -T0 -3 | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -C root@{} 'zstdcat | nix-store --store /mnt --import'",
+            &self.ip
+        );
 
         if !self.xanterella.debug {
             let cmd = Command::new("sh")
@@ -95,16 +98,17 @@ impl<'a> Deploy for XanterellaInstall<'a> {
             if !cmd.status.success() {
                 return Err(EventsFailed::PrepSys(String::from_utf8_lossy(&cmd.stderr).to_string()));
             };
-            };
+        };
 
-            self.xanterella.log_event(Events::OkPrepSys);
+        self.xanterella.log_event(Events::OkPrepSys);
         Ok(())
     }
 
     fn activate_sys(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunActivateSys);
 
-        let activate_cmd = "NIXOS_INSTALL_BOOTLOADER=1 nixos-enter --root /mnt --command '/nix/var/nix/profiles/system/activate'";
+        let activate_cmd =
+            "NIXOS_INSTALL_BOOTLOADER=1 nixos-enter --root /mnt --command '/nix/var/nix/profiles/system/activate'";
 
         if !self.xanterella.debug {
             let cmd = Command::new("ssh")
