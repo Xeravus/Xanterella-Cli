@@ -64,10 +64,10 @@ impl Get for Xanterella {
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
         if !cmd.status.success() {
-            return Err(EventsFailed::Tailscale);
+            return Err(EventsFailed::Tailscale(String::from_utf8_lossy(&cmd.stderr).to_string()));
         }
         serde_json::from_slice::<Taildevices>(&cmd.stdout)
-            .map_err(|err| EventsFailed::Tailscale)
+            .map_err(|err| EventsFailed::SerdeJson)
     }
 
     fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {

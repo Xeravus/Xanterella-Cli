@@ -4,7 +4,7 @@ pub enum EventsFailed {
     /// Generall Errors
     Failed(String),
     FailedCmd(String),
-    Tailscale,
+    Tailscale(String),
     SerdeJson,
     Fs,
     Lsblk,
