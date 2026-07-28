@@ -54,3 +54,7 @@ impl Xanterella {
         println!("{}", (format!("{}{}", prefix, name)));
     }
 }
+
+#[cfg(test)]
+#[path = "core_test.rs"]
+mod tests;
