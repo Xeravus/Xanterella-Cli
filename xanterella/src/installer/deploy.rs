@@ -54,7 +54,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
         self.xanterella.log_event(Events::RunCreateProfile);
 
         let sys_path = fs::read_link(format!("{}/result", self.xanterella.get_path(Paths::Nixconf)))
-            .map_err(|err| EventsFailed::ReadSymLink)?
+            .map_err(|err| EventsFailed::ReadSymLink(err.to_string()))?
             .to_string_lossy()
             .into_owned();
 

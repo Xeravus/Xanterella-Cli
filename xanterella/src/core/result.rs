@@ -8,7 +8,7 @@ pub enum EventsFailed {
     SerdeJson(String),
     Fs(String),
     Lsblk(String),
-    ReadSymLink,
+    ReadSymLink(String),
 
     /// Utils
     /// utils/Git.rs
