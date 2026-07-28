@@ -3,6 +3,7 @@ use log::info;
 use crate::init::init::*;
 use crate::init::inject::*;
 
+/*
 pub fn init_git(ip: &str) {
     info!("[ RUN ] - Starte Git Authentikation");
 
@@ -10,7 +11,9 @@ pub fn init_git(ip: &str) {
     init_git_name(ip);
     info!("[ OK ] - Git Authentikation erfolgreich");
 }
+*/
 
+/*
 pub fn inject(ip: &str) {
     info!("[ RUN ] - Starte Injezierung");
 
@@ -18,3 +21,4 @@ pub fn inject(ip: &str) {
     inject_wifi(ip);
     info!("[ OK ] - Injezierung erfolgreich");
 }
+*/

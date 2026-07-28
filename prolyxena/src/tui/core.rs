@@ -73,10 +73,12 @@ impl Tui {
         self.time_rx = Some(time_rx);
         let mut prolyxena = FsData::new_trans(path, tx.clone());
 
+        #[cfg(not(test))]
         thread::spawn(move || {
             prolyxena.load();
             let _ = time_tx.send(prolyxena.get_time());
         });
+        #[cfg(not(test))]
         let _ = self.start_tui();
     }
 

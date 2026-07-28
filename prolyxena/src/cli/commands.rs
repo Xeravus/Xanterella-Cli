@@ -2,8 +2,6 @@ use clap::{Parser as CalpParser, Subcommand};
 
 use std::fs;
 
-use crate::core::parsing::*;
-
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
 use crate::engine::lexer::vfs::*;
@@ -59,5 +57,15 @@ pub fn prolyxena_parse(file: String, animation: bool, output: bool, time: bool) 
         if time {
             println!("Time: {}", data.get_time());
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::CommandFactory;
+    #[test]
+    fn verify_cli() {
+        Cli::command().debug_assert();
     }
 }

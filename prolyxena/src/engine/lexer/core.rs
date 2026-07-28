@@ -77,3 +77,7 @@ impl<'a> ParseCore for Lexer<'a> {
         Ok(expr)
     }
 }
+
+#[cfg(test)]
+#[path = "core_test.rs"]
+mod tests;

@@ -264,3 +264,7 @@ pub fn create_host(injection_path: &str, name: &str) {
     info!("[ OK ] - Ordner für den Host: {} erfolgreich erstellt", name);
 }
 */
+
+#[cfg(test)]
+#[path = "host_test.rs"]
+mod tests;

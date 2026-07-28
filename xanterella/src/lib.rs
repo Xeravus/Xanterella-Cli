@@ -1,7 +1,5 @@
 pub mod cli;
-pub mod daemon;
-pub mod init;
+pub mod core;
 pub mod installer;
-pub mod usb;
+pub mod prelude;
 pub mod utils;
-pub mod config;

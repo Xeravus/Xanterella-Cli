@@ -6,6 +6,7 @@ use std::time::Instant;
 
 use crate::utils::get::*;
 
+/*
 pub fn build(debug: &bool) {
     info!("[ RUN ] - Starte lokalen Build");
 
@@ -25,7 +26,9 @@ pub fn build(debug: &bool) {
     }
     info!("[ OK ] - lokaler Build erfolgreich");
 }
+*/
 
+/*
 pub fn copy(ip: &str, fast: &bool) {
     info!("[ RUN ] - Starte Copy des Closure");
 
@@ -51,7 +54,7 @@ pub fn copy(ip: &str, fast: &bool) {
         let copy = Command::new("nix")
             .env("NIX_SSHOPTS", "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -C")
             .args([
-                "copy",
+               "copy",
                 "--no-check-sigs",
                 "--substitute-on-destination",
                 "--to",
@@ -73,7 +76,9 @@ pub fn copy(ip: &str, fast: &bool) {
     info!("[ OK ] - Copy des Closure erfolgreich");
     info!("[ TIME ] Copy des Closure: {:?}", start.elapsed());
 }
+*/
 
+/*
 pub fn profile(ip: &str) {
     info!("[ RUN ] - Starte Aktivierung des Profiles");
 
@@ -97,7 +102,9 @@ pub fn profile(ip: &str) {
     }
     info!("[ OK ] - Aktivierung des Profiles erfolgreich");
 }
+*/
 
+/*
 pub fn prep(ip: &str) {
     info!("[ RUN ] - Starte Vorbereitung des Dateisystem für nixos-enter vor");
 
@@ -113,7 +120,9 @@ pub fn prep(ip: &str) {
     }
     info!("[ OK ] - Vorbereitung erfolgreich");
 }
+*/
 
+/*
 pub fn activate(ip: &str) {
     info!("[ RUN ] - Aktiviere das System");
 
@@ -130,7 +139,9 @@ pub fn activate(ip: &str) {
     }
     info!("[ OK ] - Aktivierung des Systems erfolgreich");
 }
+*/
 
+/*
 pub fn bootloader(ip: &str) {
     info!("[ RUN ] - Starte Aktualisiere Bootloader");
 
@@ -146,7 +157,9 @@ pub fn bootloader(ip: &str) {
     }
     info!("[ OK ] - Aktualisierung des Bootloaders erfolgreich");
 }
+*/
 
+/*
 pub fn reboot(ip: &str, debug: &bool) {
     info!("[ RUN ] - Logge aus Tailscale aus und starte neu...");
 
@@ -167,3 +180,4 @@ pub fn reboot(ip: &str, debug: &bool) {
         }
     }
 }
+*/

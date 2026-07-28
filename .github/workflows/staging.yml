@@ -5,8 +5,14 @@ on:
     branches: [ "final/staging" ]
 
 jobs:
+  check-guard:
+    name: Check Guard
+    uses: ./.github/workflows/branchguard.yml
+
   xanterella:
     name: Xanterella (Staging)
+    needs: check-guard
+    if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
 
     steps:
@@ -14,6 +20,9 @@ jobs:
         uses: actions/checkout@v4
         with: 
           clean: false
+
+      - name: Nix Flake Check
+        run: nix flake check
 
       - name: Cargo Check
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check --release"
@@ -29,6 +38,8 @@ jobs:
 
   prolyxena:
     name: Prolyxena (Staging)
+    needs: check-guard
+    if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
 
     steps:

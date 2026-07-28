@@ -5,6 +5,7 @@ use std::process::{self, Command};
 use crate::utils::config::*;
 use crate::utils::get::*;
 
+/*
 pub fn inject_tailscale(ip: &str) {
     info!("[ RUN ] - Injeziere Tailscale Auth Key");
 
@@ -22,7 +23,9 @@ pub fn inject_tailscale(ip: &str) {
     }
     info!("[ OK ] - Tailscale Auth Key erfolgreich injeziert");
 }
+*/
 
+/*
 pub fn inject_wifi(ip: &str) {
     info!("[ RUN ] - Injeziere Wlan Passwort");
 
@@ -40,3 +43,4 @@ pub fn inject_wifi(ip: &str) {
     }
     info!("[ OK ] - Wlan Passwort erfolgreich injeziert");
 }
+*/
