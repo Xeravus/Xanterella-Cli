@@ -5,8 +5,14 @@ on:
     branches: [ "final/staging" ]
 
 jobs:
+  check-guard:
+    name: Check Guard
+    uses: ./.github/workflows/branchguard.yml
+
   xanterella:
     name: Xanterella (Staging)
+    needs: check-guard
+    if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
 
     steps:
@@ -32,6 +38,8 @@ jobs:
 
   prolyxena:
     name: Prolyxena (Staging)
+    needs: check-guard
+    if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
 
     steps:

@@ -5,8 +5,14 @@ on:
     branches: [ "final/cleanup", "stable" ]
 
 jobs:
+  check-guard:
+    name: Check Guard
+    uses: ./.github/workflows/branchguard.yml
+
   xanterella:
     name: Xanterella (Stable)
+    needs: check-guard
+    if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
 
     permissions:
@@ -54,6 +60,8 @@ jobs:
 
   prolyxena:
     name: Prolyxena (Stable)
+    needs: check-guard
+    if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
 
     permissions:

@@ -1,0 +1,48 @@
+name: Branch Guard
+
+on: 
+  workflow_call:
+    proceed:
+      description: "Gibt an, ob von der aktuellen in die Zeil Branch gemergt werden darf"
+      value: ${{ jobs.guard-job.outputs.proceed }}
+
+jobs:
+  guard:
+    runs-on: [self-hosted, xanterella]
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+    steps:
+      - name: Checking
+        id: check
+        run: |
+          TARGET="${{ github.base_ref }}"
+          SOURCE="${{ github.head_ref }}"
+          
+          echo "Ziel-Branch (Target): $TARGET"
+          echo "Quell-Branch (Source): $SOURCE"
+
+          # 1. Regel: In final/cleanup darf nur final/staging gemerged werden
+          if [ "$TARGET" = "final/cleanup" ]; then
+            if [ "$SOURCE" != "final/staging" ]; then
+              echo "::error::❌ ILLEGAL MERGE: final/cleanup darf nur von final/staging befüllt werden!"
+              exit 1
+            fi
+            
+          # 2. Regel: In final/stable darf nur final/cleanup gemerged werden
+          elif [ "$TARGET" = "final/stable" ]; then
+            if [ "$SOURCE" != "final/cleanup" ]; then
+              echo "::error::❌ ILLEGAL MERGE: final/stable darf nur von final/cleanup befüllt werden!"
+              exit 1
+            fi
+            
+          # 3. Regel: In stable darf nur final/stable gemerged werden
+          elif [ "$TARGET" = "stable" ]; then
+            if [ "$SOURCE" != "final/stable" ]; then
+              echo "::error::❌ ILLEGAL MERGE: stable darf nur von final/stable befüllt werden!"
+              exit 1
+            fi
+          fi
+
+          echo "✅ Merge-Pfad ist legitim!"
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+
