@@ -3,24 +3,38 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    rust-overlay.url = "github:oxalica/rust-overlay";
     naersk.url = "github:nix-community/naersk";
   };
 
   outputs = {
     self,
     nixpkgs,
+    rust-overlay,
     naersk,
+    ...
   }: let
-    pkgs = nixpkgs.legacyPackages."x86_64-linux";
-    naerskLib = pkgs.callPackage naersk {};
+    system = "x86_64-linux";
+    overlays = [(import rust-overlay)];
+    pkgs = import nixpkgs {
+      inherit system overlays;
+    };
+    rust-nightly = pkgs.rust-bin.nightly.latest.default.override {
+      extensions = [
+        "rustfmt"
+        "clippy"
+        "rust-src"
+      ];
+    };
+    naerskLib = pkgs.callPackage naersk {
+      cargo = rust-nightly;
+      rustc = rust-nightly;
+    };
   in {
     devShells."x86_64-linux" = {
       xanterella = pkgs.mkShell {
         buildInputs = with pkgs; [
-          cargo
-          rustc
-          rustfmt
-          clippy
+          rust-nightly
           rust-analyzer
           tokei
           alejandra
@@ -35,10 +49,7 @@
       };
       prolyxena = pkgs.mkShell {
         buildInputs = with pkgs; [
-          cargo
-          rustc
-          rustfmt
-          clippy
+          rust-nightly
           rust-analyzer
           tokei
           cargo-tarpaulin
