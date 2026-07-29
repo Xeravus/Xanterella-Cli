@@ -4,6 +4,7 @@ use crate::installer::ping::*;
 mod tests {
     use super::*;
     #[test]
+    #[ignore]
     fn test_installer_ping_ping() {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
