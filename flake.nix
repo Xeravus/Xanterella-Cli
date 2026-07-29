@@ -38,6 +38,7 @@
           rust-analyzer
           tokei
           alejandra
+          ssh
           cargo-tarpaulin
           cargo-audit
           cargo-machete

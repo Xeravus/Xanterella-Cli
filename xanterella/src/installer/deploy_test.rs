@@ -112,7 +112,7 @@ mod tests {
         let mut install2 = XanterellaInstall::new(&mut xanterella2);
 
         install1.xanterella.debug = true;
-        install1.ip = "127.127.127.127.127".to_string();
+        install2.ip = "127.127.127.127.127".to_string();
 
         let result1 = install1.activate_bootloader();
         let result2 = install2.activate_bootloader();
