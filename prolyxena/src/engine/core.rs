@@ -3,7 +3,6 @@ use std::iter::Peekable;
 use std::str::Chars;
 use std::sync::mpsc::Sender;
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum NixValue {
     AttrSet(HashMap<String, NixValue>),
