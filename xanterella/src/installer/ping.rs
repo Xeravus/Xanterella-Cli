@@ -13,7 +13,7 @@ impl<'a> Ping for XanterellaInstall<'a> {
 
         if !self.xanterella.debug {
             let cmd = Command::new("ping")
-                .args(["-W", "1"])
+                .args(["-c", "3", "-W", "1"])
                 .arg(&self.ip)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
@@ -45,3 +45,7 @@ impl<'a> Ping for XanterellaInstall<'a> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "ping_test.rs"]
+mod tests;
