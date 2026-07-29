@@ -90,7 +90,10 @@ impl Tui {
             self.parse_events(&mut indent);
             terminal.draw(|f| self.draw_ui(f))?;
 
-            if event::poll(Duration::from_millis(2))? && let Event::Key(key) = event::read()? && let KeyCode::Char('q') = key.code {
+            if event::poll(Duration::from_millis(2))?
+                && let Event::Key(key) = event::read()?
+                && let KeyCode::Char('q') = key.code
+            {
                 break;
             }
         }
@@ -111,8 +114,7 @@ impl Tui {
             None => "running...",
         };
 
-        let sidebar_text =
-            format!(" Path: {} \n Time: {} \n Number of Actions: {}", self.path, time, self.num_of_pars);
+        let sidebar_text = format!(" Path: {} \n Time: {} \n Number of Actions: {}", self.path, time, self.num_of_pars);
 
         let sidebar_block = Block::default().title(" Prolyxena Output ").borders(Borders::ALL);
         let main_block = Block::default().title(" Prolyxena Parsegraph ").borders(Borders::ALL);
@@ -142,11 +144,16 @@ impl Tui {
     }
 
     pub fn parse_events(&mut self, indent: &mut usize) {
-        if let Some(time_rx) = &self.time_rx && let Ok(time_str) = time_rx.try_recv() {
+        if let Some(time_rx) = &self.time_rx
+            && let Ok(time_str) = time_rx.try_recv()
+        {
             self.time = Some(time_str);
         }
 
-        if let Some(rx) = &self.trans && self.last_update.elapsed() >= Duration::from_millis(2) && let Ok(event) = rx.try_recv() {
+        if let Some(rx) = &self.trans
+            && self.last_update.elapsed() >= Duration::from_millis(2)
+            && let Ok(event) = rx.try_recv()
+        {
             self.last_update = Instant::now();
             if let ParseEvent::Finished(time_str) = &event {
                 self.time = Some(time_str.clone());
@@ -161,12 +168,8 @@ impl Tui {
                 ParseEvent::StartGettingFiles => (TaskBool::True, "Getting Files".into()),
                 ParseEvent::EndGettingFiles => (TaskBool::False, "Getting Files".into()),
 
-                ParseEvent::StartParsingFile(file) => {
-                    (TaskBool::True, format!("Generating AST: {}", file).into())
-                }
-                ParseEvent::EndParsingFile(file) => {
-                    (TaskBool::Keep, format!("Generating AST: {}", file).into())
-                }
+                ParseEvent::StartParsingFile(file) => (TaskBool::True, format!("Generating AST: {}", file).into()),
+                ParseEvent::EndParsingFile(file) => (TaskBool::Keep, format!("Generating AST: {}", file).into()),
 
                 ParseEvent::StartAttrSet => (TaskBool::True, "Parsing Attribut Set".into()),
                 ParseEvent::EndAttrSet => (TaskBool::False, "Parsing Attribut Set".into()),
