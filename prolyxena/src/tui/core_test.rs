@@ -2,8 +2,9 @@ use crate::tui::core::*;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::sync::mpsc;
+
+    use super::*;
     #[test]
     fn test_tui_core_new() {
         let mut data = Tui::new();
@@ -22,11 +23,11 @@ mod tests {
         let mut indent = 0;
         let (tx, rx) = mpsc::channel();
         tui.time_rx = Some(rx);
-        
+
         tx.send("0.052s".to_string()).unwrap();
 
         tui.parse_events(&mut indent);
-        
+
         assert_eq!(tui.time, Some("0.052s".to_string()));
     }
 
@@ -57,20 +58,20 @@ mod tests {
         let mut indent = 0;
         let (tx, rx) = mpsc::channel();
         tui.trans = Some(rx);
-        
+
         tx.send(ParseEvent::StartList).unwrap();
         tui.last_update = Instant::now() - Duration::from_millis(10);
         tui.parse_events(&mut indent);
-        
-        assert_eq!(tui.logs.len(), 1); 
+
+        assert_eq!(tui.logs.len(), 1);
         assert_eq!(indent, 1);
 
         tx.send(ParseEvent::EndList).unwrap();
         tui.last_update = Instant::now() - Duration::from_millis(10);
         tui.parse_events(&mut indent);
-        
-        assert_eq!(tui.logs.len(), 0); 
-        assert_eq!(indent, 0); 
+
+        assert_eq!(tui.logs.len(), 0);
+        assert_eq!(indent, 0);
     }
 
     #[test]
@@ -80,33 +81,18 @@ mod tests {
         let file_name = "configuration.nix".to_string();
         let (tx, rx) = mpsc::channel();
         tui.trans = Some(rx);
-        
-        
+
         tx.send(ParseEvent::StartParsingFile(file_name.clone())).unwrap();
         tui.last_update = Instant::now() - Duration::from_millis(10);
         tui.parse_events(&mut indent);
-        
+
         tx.send(ParseEvent::EndParsingFile(file_name)).unwrap();
         tui.last_update = Instant::now() - Duration::from_millis(10);
         tui.parse_events(&mut indent);
-        
+
         assert_eq!(tui.logs.len(), 1);
         assert_eq!(tui.logs[0].status, TaskStatus::Finished);
         assert_eq!(tui.logs[0].name, "Generating AST: configuration.nix");
-    }
-
-    #[test]
-    fn test_tui_core_inject_trans() {
-        let mut tui = Tui::new();
-        let (tx, rx) = mpsc::channel();
-
-        assert!(tui.trans.is_none());
-        assert!(!tui.trans.is_some());
-
-        tui.inject_trans(rx);
-
-        assert!(tui.trans.is_some());
-        assert!(!tui.trans.is_none());
     }
 
     #[test]

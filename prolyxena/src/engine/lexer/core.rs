@@ -1,15 +1,6 @@
-use std::collections::HashMap;
-use std::iter::Peekable;
-use std::str::Chars;
-use std::thread::sleep;
-use std::time::{ 
-    Duration, Instant
-};
 
 use crate::engine::core::*;
 use crate::engine::lexer::primitives::*;
-use crate::engine::lexer::structures::*;
-use crate::engine::lexer::functions::*;
 
 pub trait ParseCore {
     fn skip_whitespace(&mut self);

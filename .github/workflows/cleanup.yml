@@ -15,9 +15,6 @@ jobs:
     if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
 
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,12 +35,7 @@ jobs:
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo tarpaulin --fail-under 20"
 
       - name: Cargo Format
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo fmt"
-
-      - name: Auto-Commit 
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Style: rustfmt automatisch ausgeführt"
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo fmt --check"
 
       - name: Cargo Check
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check --release"
@@ -69,9 +61,6 @@ jobs:
     if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
 
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -92,12 +81,7 @@ jobs:
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo tarpaulin --fail-under 50"
 
       - name: Cargo Format
-        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo fmt"
-
-      - name: Auto-Commit 
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Style: rustfmt automatisch ausgeführt"
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo fmt --check"
 
       - name: Cargo Check
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo check --release"

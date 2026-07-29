@@ -15,9 +15,6 @@ jobs:
     if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
 
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -63,9 +60,6 @@ jobs:
     needs: check-guard
     if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
-
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout

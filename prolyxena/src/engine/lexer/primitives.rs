@@ -1,11 +1,8 @@
-use std::collections::HashMap;
-use std::iter::Peekable;
-use std::str::Chars;
 
-use crate::engine::lexer::core::*;
 use crate::engine::core::*;
-use crate::engine::lexer::structures::*;
+use crate::engine::lexer::core::*;
 use crate::engine::lexer::functions::*;
+use crate::engine::lexer::structures::*;
 
 pub trait ParsePrimitves {
     fn parse_single_value(&mut self) -> Result<NixValue, String>;
@@ -29,7 +26,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 } else {
                     self.parse_attr_set()
                 }
-            },
+            }
             Some(&'[') => self.parse_list(),
             Some(&'"') => self.parse_string(),
             Some(&'.') => self.parse_path(),
@@ -42,9 +39,12 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     self.log_event(ParseEvent::StartIndentedString);
                     self.parse_indented_string()
                 } else {
-                    Err(format!("Syntax-Fehler: Erwartet ''' um einen Indented String zu starten \nDatei: {} \nErwartet: Indented String", &self.path))
+                    Err(format!(
+                        "Syntax-Fehler: Erwartet ''' um einen Indented String zu starten \nDatei: {} \nErwartet: Indented String",
+                        self.path
+                    ))
                 }
-            },
+            }
             Some(&'(') => {
                 self.chars.next();
                 self.log_event(ParseEvent::StartGroup);
@@ -56,9 +56,12 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     self.log_event(ParseEvent::EndGroup);
                     Ok(expr)
                 } else {
-                    Err(format!("Syntax-Fehler: Erwartet ')' nach der Gruppe: '{:#?}' \nDatei: {} \nErwartet: Group", expr, &self.path))
+                    Err(format!(
+                        "Syntax-Fehler: Erwartet ')' nach der Gruppe: '{:#?}' \nDatei: {} \nErwartet: Group",
+                        expr, self.path
+                    ))
                 }
-            },
+            }
             Some(&'$') => {
                 self.chars.next();
                 if let Some(&'{') = self.chars.peek() {
@@ -72,16 +75,26 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                         self.log_event(ParseEvent::EndAntiquotation);
                         Ok(expr)
                     } else {
-                        Err(format!("Syntax-Fehler: Erwartet '}}' nach der Antiquotation \nDatei: {} \nErwartet: Antiquotation", &self.path))
+                        Err(format!(
+                            "Syntax-Fehler: Erwartet '}}' nach der Antiquotation \nDatei: {} \nErwartet: Antiquotation",
+                            self.path
+                        ))
                     }
                 } else {
-                    Err(format!("Syntax-Fehler: Erwartet '{{' nach '$' für eine Antiquotation \nDatei: {} \nErwartet: Antiquotation", &self.path))
+                    Err(format!(
+                        "Syntax-Fehler: Erwartet '{{' nach '$' für eine Antiquotation \nDatei: {} \nErwartet: Antiquotation",
+                        self.path
+                    ))
                 }
-            },
+            }
             Some(c) if c.is_ascii_digit() => self.parse_number(),
             Some(c) if c.is_alphanumeric() || *c == '_' => self.parse_identifier(),
-            None => Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei \nDatei: {} \nErwartet: Unknown", &self.path)),
-            Some(c) => Err(format!("Syntax-Fehler: Unerwartetes Zeichen '{}' \nDatei: {} \nErwartet: Unknown", c, &self.path)),
+            None => {
+                Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei \nDatei: {} \nErwartet: Unknown", self.path))
+            }
+            Some(c) => {
+                Err(format!("Syntax-Fehler: Unerwartetes Zeichen '{}' \nDatei: {} \nErwartet: Unknown", c, self.path))
+            }
         }
     }
 
@@ -98,7 +111,6 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         self.log_event(ParseEvent::EndPath);
         Ok(NixValue::Path(string))
     }
-
 
     fn parse_string(&mut self) -> Result<NixValue, String> {
         self.log_event(ParseEvent::StartString);
@@ -138,16 +150,22 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 Ok(float_val) => {
                     self.log_event(ParseEvent::EndNumber);
                     Ok(NixValue::Float(float_val))
-                    },
-                Err(_) => Err(format!("Syntax-Fehler: Ungültige Kommazahl: '{}' \nDatei: {} \nErwartet: Number(f64)", value_str, &self.path)),
+                }
+                Err(_) => Err(format!(
+                    "Syntax-Fehler: Ungültige Kommazahl: '{}' \nDatei: {} \nErwartet: Number(f64)",
+                    value_str, self.path
+                )),
             }
         } else {
             match value_str.parse::<u64>() {
-                Ok(int_val) =>  {
+                Ok(int_val) => {
                     self.log_event(ParseEvent::EndNumber);
                     Ok(NixValue::Int(int_val))
-                },
-                Err(_) => Err(format!("Syntax-Fehler: Ungültige Ganzzahl '{}' \nDatei: {} \nErwartet: Number(u64)", value_str, &self.path)),
+                }
+                Err(_) => Err(format!(
+                    "Syntax-Fehler: Ungültige Ganzzahl '{}' \nDatei: {} \nErwartet: Number(u64)",
+                    value_str, self.path
+                )),
             }
         }
     }
@@ -164,18 +182,21 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             }
         }
         if word.is_empty() {
-            return Err(format!("Syntax-Fehler: Unerwartet leerer Identifier \nDatei: {} \nErwartet: Identifier", &self.path));
+            return Err(format!(
+                "Syntax-Fehler: Unerwartet leerer Identifier \nDatei: {} \nErwartet: Identifier",
+                self.path
+            ));
         }
 
         match word.as_str() {
             "let" => {
                 self.log_event(ParseEvent::EndIdentifier);
                 self.parse_let_in()
-            },
+            }
             "with" => {
                 self.log_event(ParseEvent::EndIdentifier);
                 self.parse_with()
-            },
+            }
             "true" => {
                 self.log_event(ParseEvent::EndIdentifier);
                 Ok(NixValue::Bool(true))
@@ -196,11 +217,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         let mut left = self.parse_application()?;
         while let Some(op) = self.parse_operator() {
             let right = self.parse_application()?;
-            left = NixValue::BinaryOp {
-                left: Box::new(left),
-                operator: op,
-                right: Box::new(right),
-            }
+            left = NixValue::BinaryOp { left: Box::new(left), operator: op, right: Box::new(right) }
         }
         self.log_event(ParseEvent::EndExpression);
         Ok(left)
@@ -208,7 +225,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
 
     fn parse_operator(&mut self) -> Option<Operator> {
         self.skip_whitespace();
-        let mut scout = &mut self.chars.clone();
+        let scout = &mut self.chars.clone();
         let first = &scout.next()?;
         match first {
             '+' => {
@@ -255,7 +272,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     Some(Operator::Divide)
                 }
             }
-            _ => None
+            _ => None,
         }
     }
 
@@ -278,7 +295,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     string.push(c);
                     self.chars.next();
                 }
-            } 
+            }
             if let Some(&'\'') = self.chars.peek() {
                 string.push(c);
                 self.chars.next();
@@ -316,7 +333,10 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         }
         if let Some(&';') = self.chars.peek() {
         } else {
-            return Err(format!("Syntax-Fehler: Erwartet ';' nach dem Indented String \nDatei: {} \nErwartet: Indented String", &self.path));
+            return Err(format!(
+                "Syntax-Fehler: Erwartet ';' nach dem Indented String \nDatei: {} \nErwartet: Indented String",
+                self.path
+            ));
         }
         self.log_event(ParseEvent::EndIndentedString);
         Ok(NixValue::IndStr(output))

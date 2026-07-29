@@ -16,24 +16,24 @@ mod tests {
         let mut data3 = Lexer::new(content3, String::from("path.nix"));
         let mut data4 = Lexer::new(content4, String::from("path.nix"));
         let mut data5 = Lexer::new(content5, String::from("path.nix"));
-        
+
         let result1 = data1.parse_attr_set();
         let result2 = data2.parse_attr_set();
         let result3 = data3.parse_attr_set();
         let result4 = data4.parse_attr_set();
         let result5 = data5.parse_attr_set();
-        
+
         assert!(result1.is_ok());
         assert!(result2.is_ok());
         assert!(result3.is_err());
         assert!(result3.is_err());
         assert!(result5.is_err());
-                
-        assert!(matches!(result1, Ok(NixValue::AttrSet(_)))); 
-        assert!(matches!(result2, Ok(NixValue::AttrSet(_)))); 
 
-        assert!(!matches!(result1, Ok(NixValue::List(_)))); 
-        assert!(!matches!(result2, Ok(NixValue::List(_)))); 
+        assert!(matches!(result1, Ok(NixValue::AttrSet(_))));
+        assert!(matches!(result2, Ok(NixValue::AttrSet(_))));
+
+        assert!(!matches!(result1, Ok(NixValue::List(_))));
+        assert!(!matches!(result2, Ok(NixValue::List(_))));
     }
 
     #[test]
