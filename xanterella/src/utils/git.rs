@@ -1,159 +1,142 @@
-use log::{debug, error, info};
+use crate::prelude::*;
 
-use std::process::{self, Command};
-
-use crate::utils::get::*;
-
+#[derive(Debug, Clone)]
 pub enum Branches {
-    Xanterella,
     Main,
+    Xanterella,
 }
 
-pub fn git_full(cm_msg: String) {
-    info!("[ RUN ] - Starte Git Prozedur");
+#[derive(Debug, Clone)]
+pub enum PrType {
+    AddHost(String),
+    RemoveHost(String),
 
-    let diff =
-        Command::new("git").args(["diff", "--stat"]).current_dir(get_path(Paths::Nixconf)).output().unwrap_or_else(
-            |err| {
-                error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
-                process::exit(1);
-            },
-        );
-    if !diff.status.success() {
-        error!("[ FAILED ] - Git diff hat nicht funktioniert: {}", String::from_utf8_lossy(&diff.stderr));
-        process::exit(1);
-    }
-
-    debug!("{}", String::from_utf8_lossy(&diff.stdout));
-
-    let add =
-        Command::new("git").args(["add", "-A"]).current_dir(get_path(Paths::Nixconf)).output().unwrap_or_else(|err| {
-            error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
-            process::exit(1);
-        });
-    if !add.status.success() {
-        error!("[ FAILED ] - Git add hat nicht funktioniert: {}", String::from_utf8_lossy(&add.stderr));
-        process::exit(1);
-    }
-
-    info!("[ OK ] - Dateien wurden Git hinzuigefügt");
-
-    let commit = Command::new("git")
-        .args(["commit", "-am", &cm_msg])
-        .current_dir(get_path(Paths::Nixconf))
-        .output()
-        .unwrap_or_else(|err| {
-            error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
-            process::exit(1);
-        });
-    if !commit.status.success() {
-        error!("[ FAILED ] - Git commit hat nicht funktioniert: {}", String::from_utf8_lossy(&commit.stderr));
-        process::exit(1);
-    }
-
-    info!("[ OK ] - Änderungen Commited");
+    Changes(String),
 }
 
-pub fn git_checkout(branch: Branches) {
-    match branch {
-        Branches::Xanterella => {
-            let checkout = Command::new("git")
-                .arg("checkout")
-                .arg("xanterella")
-                .current_dir(get_path(Paths::Nixconf))
+pub trait Git {
+    fn git_commit(&mut self, msg: &str) -> Result<(), EventsFailed>;
+    fn git_checkout(&mut self, branch: Branches) -> Result<(), EventsFailed>;
+    fn git_merge(&mut self) -> Result<(), EventsFailed>;
+    fn git_pr(&mut self, pr: PrType) -> Result<(), EventsFailed>;
+}
+
+impl Git for Xanterella {
+    fn git_commit(&mut self, msg: &str) -> Result<(), EventsFailed> {
+        self.log_event(Events::RunGitCommit);
+
+        if !self.debug {
+            let cmd = Command::new("git")
+                .args(["commit", "-am", msg])
+                .current_dir(self.get_path(Paths::Nixconf))
                 .output()
-                .unwrap_or_else(|err| {
-                    error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
-                    process::exit(1);
-                });
-            if !checkout.status.success() {
-                error!("[ FAILED ] - Konnte die Branch nicht wechseln");
-                info!("[ OK ] - Branch wird erstellt");
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+            if !cmd.status.success() {
+                return Err(EventsFailed::GitCommit(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
+        };
+
+        self.log_event(Events::OkGitCommit);
+        Ok(())
+    }
+
+    fn git_checkout(&mut self, branch: Branches) -> Result<(), EventsFailed> {
+        self.log_event(Events::RunGitCheckout);
+
+        let br_name = match branch {
+            Branches::Main => "main",
+            Branches::Xanterella => "xanterella",
+        };
+
+        if !self.debug {
+            let cmd = Command::new("git")
+                .args(["checkout", br_name])
+                .current_dir(self.get_path(Paths::Nixconf))
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+            if !cmd.status.success() {
+                self.log_event(Events::RunGitCheckoutCreate);
 
                 let create = Command::new("git")
-                    .args(["checkout", "-b", "xanterella"])
-                    .current_dir(get_path(Paths::Nixconf))
+                    .args(["checkout", "-b", br_name])
+                    .current_dir(self.get_path(Paths::Nixconf))
                     .output()
-                    .unwrap_or_else(|err| {
-                        error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
-                        process::exit(1);
-                    });
-                if !create.status.success() {
-                    error!(
-                        "[ FAILED ] - Fehler beim erstellen der Branch: Xanterella: {}",
-                        String::from_utf8_lossy(&create.stderr)
-                    );
-                    process::exit(1);
-                }
+                    .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-                info!("[ OK ] - Branch xanterella erstellt und gewechselt");
-            }
-        }
-        Branches::Main => {
-            let checkout = Command::new("git")
-                .arg("checkout")
-                .arg("main")
-                .current_dir(get_path(Paths::Nixconf))
+                if !create.status.success() {
+                    return Err(EventsFailed::GitCheckout(String::from_utf8_lossy(&create.stderr).to_string()));
+                };
+
+                self.log_event(Events::OkGitCheckoutCreate);
+            };
+        };
+
+        self.log_event(Events::RunGitCheckout);
+        Ok(())
+    }
+
+    fn git_merge(&mut self) -> Result<(), EventsFailed> {
+        self.log_event(Events::RunGitMerge);
+
+        if !self.debug {
+            self.git_checkout(Branches::Xanterella)?;
+
+            let cmd = Command::new("git")
+                .args(["merge", "--ff-only", "-n", "main"])
+                .current_dir(self.get_path(Paths::Nixconf))
                 .output()
-                .unwrap_or_else(|err| {
-                    error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
-                    process::exit(1);
-                });
-            if !checkout.status.success() {
-                error!("[ FAILED ] - Konnte die Branch nicht wechseln");
-                info!("[ OK ] - Branch wird erstellt");
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-                let create = Command::new("git")
-                    .args(["checkout", "-b", "main"])
-                    .current_dir(get_path(Paths::Nixconf))
-                    .output()
-                    .unwrap_or_else(|err| {
-                        error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
-                        process::exit(1);
-                    });
-                if !create.status.success() {
-                    error!(
-                        "[ FAILED ] - Fehler beim erstellen der Branch: Main: {}",
-                        String::from_utf8_lossy(&create.stderr)
-                    );
-                    process::exit(1);
-                }
-
-                info!("[ OK ] - Branch main erstellt und gewechselt");
+            if !cmd.status.success() {
+                return Err(EventsFailed::GitMerge(String::from_utf8_lossy(&cmd.stderr).to_string()));
             }
-        }
+        };
+
+        self.log_event(Events::OkGitMerge);
+        Ok(())
+    }
+
+    fn git_pr(&mut self, pr: PrType) -> Result<(), EventsFailed> {
+        self.log_event(Events::RunGitPr);
+
+        let extra_part = "This is an automatic generated Pull Request";
+        let title = match pr {
+            PrType::AddHost(ref host) => format!("Xanterella: Add Host: {}", host),
+            PrType::RemoveHost(ref host) => format!("Xanterella: Remove Host: {}", host),
+            PrType::Changes(ref changes) => format!("Xanterella: Change Configs: {}", changes),
+        };
+        let body = match pr {
+            PrType::AddHost(ref host) => format!("Xanterella added a Host \nAdded Host: {} \n{}", host, extra_part),
+            PrType::RemoveHost(ref host) => {
+                format!("Xanterella removed a Host \nRemoved Host: {} \n{}", host, extra_part)
+            }
+            PrType::Changes(ref changes) => {
+                format!("Xanterella changed the Configs \nChanges: {} \n{}", changes, extra_part)
+            }
+        };
+
+        if !self.debug {
+            let cmd = Command::new("gh")
+                .args(["pr", "create", "--no-maintainer-edit"])
+                .args(["-B", "main"])
+                .args(["-t", &title])
+                .args(["-b", &body])
+                .current_dir(self.get_path(Paths::Nixconf))
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+            if !cmd.status.success() {
+                return Err(EventsFailed::GitPr(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
+        };
+
+        self.log_event(Events::OkGitPr);
+        Ok(())
     }
 }
 
-pub fn git_auto_pr(added_host: String) {
-    let title_message = format!("Xanterella: Added Host: {}", added_host);
-    let body_message = format!(
-        "
-        Xanterella hat einen neuen Host hinzugefügt
-        Added Host: {}
-        Diese Pull Request wurde durch 'git_auto_pr' getriggert
-        ",
-        added_host
-    );
-    git_checkout(Branches::Xanterella);
-
-    let pr = Command::new("gh")
-        .arg("pr")
-        .arg("create")
-        .args(["-B", "main"])
-        .args(["-t", &title_message])
-        .args(["-b", &body_message])
-        .arg("--no-maintainer-edit")
-        .current_dir(get_path(Paths::Nixconf))
-        .output()
-        .unwrap_or_else(|err| {
-            error!("[ FAILED ] - Konnte Git nicht starten: {}", err);
-            process::exit(1);
-        });
-    if !pr.status.success() {
-        error!("[ FAILED ] - Fehler beim erstellen der PR: {}", String::from_utf8_lossy(&pr.stderr));
-        process::exit(1);
-    }
-
-    git_checkout(Branches::Main);
-}
+#[cfg(test)]
+#[path = "git_test.rs"]
+mod tests;

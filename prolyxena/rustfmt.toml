@@ -10,4 +10,3 @@ use_small_heuristics = "Max"
 format_strings = false
 format_macro_matchers = false
 array_width = 120
-struct_lit_single_line = false

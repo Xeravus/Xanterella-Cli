@@ -1,22 +1,19 @@
 use std::collections::HashMap;
-use std::iter::Peekable;
-use std::str::Chars;
 
-use crate::engine::lexer::core::*;
 use crate::engine::core::*;
+use crate::engine::lexer::core::*;
 use crate::engine::lexer::primitives::*;
-use crate::engine::lexer::structures::*;
 
 pub trait ParseFunctions {
-    fn parse_let_in(&mut self) ->  Result<NixValue, String>;
+    fn parse_let_in(&mut self) -> Result<NixValue, String>;
     fn parse_with(&mut self) -> Result<NixValue, String>;
     fn is_lambda_ahead(&self) -> bool;
     fn parse_lambda(&mut self) -> Result<NixValue, String>;
 }
 
 impl<'a> ParseFunctions for Lexer<'a> {
-    fn parse_let_in(&mut self) ->  Result<NixValue, String> {
-        self.event.push(ParseEvent::StartLetIn);
+    fn parse_let_in(&mut self) -> Result<NixValue, String> {
+        self.log_event(ParseEvent::StartLetIn);
         let mut map = HashMap::new();
         loop {
             self.skip_whitespace();
@@ -30,7 +27,10 @@ impl<'a> ParseFunctions for Lexer<'a> {
             }
 
             if key.is_empty() {
-                return Err(format!("Syntax-Fehler: Leerer Key im Let-In Statment \nDatei: {} \nErwartet: Let-In Statment", &self.path));
+                return Err(format!(
+                    "Syntax-Fehler: Leerer Key im Let-In Statment \nDatei: {} \nErwartet: Let-In Statment",
+                    self.path
+                ));
             }
 
             if key == "in" {
@@ -42,7 +42,10 @@ impl<'a> ParseFunctions for Lexer<'a> {
             if let Some(&'=') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartetes '=' nach Key '{}' \nDatei: {} \nErwartet: Let-In Statment", key, &self.path));
+                return Err(format!(
+                    "Syntax-Fehler: Erwartetes '=' nach Key '{}' \nDatei: {} \nErwartet: Let-In Statment",
+                    key, self.path
+                ));
             }
 
             let value = self.parse_value()?;
@@ -51,31 +54,37 @@ impl<'a> ParseFunctions for Lexer<'a> {
             if let Some(&';') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartetes ';' nach dem Wert von'{}' \nDatei: {} \nErwartet: Let-In Statment", key, &self.path));
+                return Err(format!(
+                    "Syntax-Fehler: Erwartetes ';' nach dem Wert von'{}' \nDatei: {} \nErwartet: Let-In Statment",
+                    key, self.path
+                ));
             }
             map.insert(key, value);
         }
         self.skip_whitespace();
         let body = self.parse_value()?;
-        self.event.push(ParseEvent::EndLetIn);
+        self.log_event(ParseEvent::EndLetIn);
         Ok(NixValue::LetIn(map, Box::new(body)))
     }
 
     fn parse_with(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartWith);
+        self.log_event(ParseEvent::StartWith);
         self.skip_whitespace();
         let namespace = self.parse_value()?;
         self.skip_whitespace();
-        
+
         if let Some(&';') = self.chars.peek() {
             self.chars.next();
         } else {
-            return Err(format!("Syntax-Fehler: Erwartet ';' im 'with' Statment \nDatei: {} \nErwartet: With Statment", &self.path));
+            return Err(format!(
+                "Syntax-Fehler: Erwartet ';' im 'with' Statment \nDatei: {} \nErwartet: With Statment",
+                self.path
+            ));
         }
 
         self.skip_whitespace();
         let body = self.parse_value()?;
-        self.event.push(ParseEvent::EndWith);
+        self.log_event(ParseEvent::EndWith);
         Ok(NixValue::With(Box::new(namespace), Box::new(body)))
     }
 
@@ -84,7 +93,8 @@ impl<'a> ParseFunctions for Lexer<'a> {
         let mut depth = 1;
         scout.next();
 
-        while let Some(c) = scout.next() {
+        // while let Some(c) = scout.next() {
+        for c in scout.by_ref() {
             if c == '{' {
                 depth += 1;
             } else if c == '}' {
@@ -124,15 +134,12 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 break;
             }
         }
-        
-        match scout.peek() {
-            Some(&':') => true,
-            _ => false,
-        }
+
+        matches!(scout.peek(), Some(&':'))
     }
 
     fn parse_lambda(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartLambda);
+        self.log_event(ParseEvent::StartLambda);
         self.chars.next();
         let mut vec: Vec<String> = vec![];
         let mut alias = None;
@@ -153,7 +160,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
             if !key.is_empty() {
                 vec.push(key);
             }
-            
+
             self.skip_whitespace();
 
             if let Some(&',') = self.chars.peek() {
@@ -167,8 +174,13 @@ impl<'a> ParseFunctions for Lexer<'a> {
             match self.parse_identifier()? {
                 NixValue::Identifier(name) => {
                     alias = Some(name);
-                },
-                _ => return Err(format!("Syntax-Fehler: Gültiger Variablename nach '@' erwartet \nDatei: {} \nErwartet: Lambda", &self.path)),
+                }
+                _ => {
+                    return Err(format!(
+                        "Syntax-Fehler: Gültiger Variablename nach '@' erwartet \nDatei: {} \nErwartet: Lambda",
+                        self.path
+                    ));
+                }
             }
         }
         self.skip_whitespace();
@@ -176,11 +188,14 @@ impl<'a> ParseFunctions for Lexer<'a> {
         if let Some(&':') = self.chars.peek() {
             self.chars.next();
         } else {
-            return Err(format!("Syntax-Fehler: Erwartetes ':' nach den Funktions-Argumenten \nDatei: {} \nErwartet: Lambda", &self.path));
+            return Err(format!(
+                "Syntax-Fehler: Erwartetes ':' nach den Funktions-Argumenten \nDatei: {} \nErwartet: Lambda",
+                self.path
+            ));
         }
         self.skip_whitespace();
         let body = self.parse_value()?;
-        self.event.push(ParseEvent::EndLambda);
+        self.log_event(ParseEvent::EndLambda);
         Ok(NixValue::Lambda(vec, alias, Box::new(body)))
     }
 }
