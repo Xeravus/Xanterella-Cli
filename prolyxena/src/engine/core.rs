@@ -23,11 +23,7 @@ pub enum NixValue {
     Apply(Box<NixValue>, Box<NixValue>),
     Path(String),
     Antiquotation(Box<NixValue>),
-    BinaryOp {
-        left: Box<NixValue>,
-        operator: Operator,
-        right: Box<NixValue>,
-    },
+    BinaryOp { left: Box<NixValue>, operator: Operator, right: Box<NixValue> },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -101,23 +97,15 @@ pub struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
     pub fn new(content: &'a str, path: String) -> Self {
-        Lexer {
-            chars: content.chars().peekable(),
-            path,
-            trans: None,
-        }
+        Lexer { chars: content.chars().peekable(), path, trans: None }
     }
     pub fn new_trans(content: &'a str, path: String, sender: Sender<ParseEvent>) -> Self {
-        Lexer {
-            chars: content.chars().peekable(),
-            path,
-            trans: Some(sender),
-        }
+        Lexer { chars: content.chars().peekable(), path, trans: Some(sender) }
     }
 
     pub fn log_event(&self, event: ParseEvent) {
         if let Some(tx) = &self.trans {
-            tx.send(event);
+            let _ = tx.send(event);
         }
     }
 }

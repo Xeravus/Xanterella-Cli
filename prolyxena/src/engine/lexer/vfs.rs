@@ -1,14 +1,14 @@
-use crate::engine::core::*;
-use crate::engine::lexer::core::*;
+use std::collections::HashMap;
+use std::fs;
+use std::path::PathBuf;
+use std::process;
+use std::sync::mpsc::Sender;
+use std::time::Instant;
 
 use walkdir::WalkDir;
 
-use std::collections::HashMap;
-use std::fs;
-use std::process;
-use std::path::PathBuf;
-use std::sync::mpsc::Sender;
-use std::time::Instant;
+use crate::engine::core::*;
+use crate::engine::lexer::core::*;
 
 #[derive(Debug, Clone)]
 pub struct FsData {
@@ -21,22 +21,13 @@ pub struct FsData {
 
 #[derive(Debug, Clone)]
 pub enum FsNodes {
-    File {
-        name: String,
-        ast: NixValue,
-    },
+    File { name: String, ast: NixValue },
     Dir(HashMap<String, FsNodes>),
 }
 
 impl FsData {
     pub fn new(path: &str) -> Self {
-        FsData {
-            files: vec![],
-            path: path.to_string(),
-            fsnodes: FsNodes::Dir(HashMap::new()),
-            trans: None,
-            time: 0.0,
-        }
+        FsData { files: vec![], path: path.to_string(), fsnodes: FsNodes::Dir(HashMap::new()), trans: None, time: 0.0 }
     }
 
     pub fn new_trans(path: &str, trans: Sender<ParseEvent>) -> Self {
@@ -72,22 +63,15 @@ impl FsData {
                 .filter(|entry| entry.file_type().is_file())
                 .filter_map(|entry| {
                     let path_str = entry.path().to_str()?;
-                    if path_str.ends_with(".nix") {
-                        Some(path_str.to_string())
-                    } else {
-                        None
-                    }
+                    if path_str.ends_with(".nix") { Some(path_str.to_string()) } else { None }
                 })
                 .collect()
-            } else if self.path.ends_with(".nix") {
-                vec![
-                    self.path.to_string()
-                ]
-            } else {
-                eprintln!("Fehler: Keine Nix Datei(n) angegeben");
-                process::exit(1);
-                vec![]
-            };
+        } else if self.path.ends_with(".nix") {
+            vec![self.path.to_string()]
+        } else {
+            eprintln!("Fehler: Keine Nix Datei(n) angegeben");
+            process::exit(1);
+        };
         if let Some(tx) = &self.trans {
             let _ = tx.send(ParseEvent::EndGettingFiles);
         }
@@ -108,12 +92,11 @@ impl FsData {
             }
 
             let mut pointer = &mut self.fsnodes;
+            #[allow(clippy::needless_range_loop)]
             for j in 0..parts.len() - 1 {
                 let folder = parts[j];
                 if let FsNodes::Dir(map) = pointer {
-                    pointer = map.entry(folder.to_string()).or_insert_with(|| {
-                        FsNodes::Dir(HashMap::new())
-                    });
+                    pointer = map.entry(folder.to_string()).or_insert_with(|| FsNodes::Dir(HashMap::new()));
                 } else {
                     eprintln!("Fehler: Versucht einen Ordner in einer Datei zu erstellen");
                     break;
@@ -134,24 +117,21 @@ impl FsData {
                     Err(e) => {
                         eprintln!("Fehler beim Parsen: \n{}", e);
                         process::exit(1);
-                    },
+                    }
                 };
                 if let Some(tx) = &self.trans {
                     let _ = tx.send(ParseEvent::EndParsingFile(clean_path.to_string()));
                 }
-                map.insert(file_name.to_string(), FsNodes::File {
-                    name: file_name.to_string(), 
-                    ast
-                });
+                map.insert(file_name.to_string(), FsNodes::File { name: file_name.to_string(), ast });
             }
         }
-        if let Some(tx) = &self.trans { 
+        if let Some(tx) = &self.trans {
             let _ = tx.send(ParseEvent::EndGen);
         }
     }
 
     pub fn get_time(&self) -> String {
-        format!("{:.3}s", &self.time)
+        format!("{:.3}s", self.time)
     }
 }
 

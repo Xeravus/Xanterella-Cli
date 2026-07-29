@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 use std::str::Chars;
 
-use crate::engine::lexer::core::*;
 use crate::engine::core::*;
-use crate::engine::lexer::primitives::*;
+use crate::engine::lexer::core::*;
 use crate::engine::lexer::functions::*;
+use crate::engine::lexer::primitives::*;
 
 pub trait ParseStructures {
     fn parse_attr_set(&mut self) -> Result<NixValue, String>;
@@ -38,7 +38,10 @@ impl<'a> ParseStructures for Lexer<'a> {
             }
 
             if key.is_empty() {
-                return Err(format!("Syntax-Fehler: Leerer Key im AttrSet \nDatei: {} \nErwartet: Attribut Set", &self.path));
+                return Err(format!(
+                    "Syntax-Fehler: Leerer Key im AttrSet \nDatei: {} \nErwartet: Attribut Set",
+                    self.path
+                ));
             }
 
             if key == "inherit" {
@@ -58,12 +61,12 @@ impl<'a> ParseStructures for Lexer<'a> {
                         self.chars.next();
                     }
                     if inherit.is_empty() {
-                        return Err(format!("Syntax-Fehler: Unerwartetes Zeichen im 'inherit' Statment \nDatei: {} \nErwartet: Attribut Set(Inherit Statment)", &self.path));
+                        return Err(format!(
+                            "Syntax-Fehler: Unerwartetes Zeichen im 'inherit' Statment \nDatei: {} \nErwartet: Attribut Set(Inherit Statment)",
+                            self.path
+                        ));
                     }
-                    map.insert(
-                        inherit.clone(),
-                        NixValue::Identifier(inherit)
-                    );
+                    map.insert(inherit.clone(), NixValue::Identifier(inherit));
                 }
                 continue;
             }
@@ -72,7 +75,10 @@ impl<'a> ParseStructures for Lexer<'a> {
             if let Some(&'=') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartet '=' nach Key '{}' \nDatei: {} \nErwartet: Attribut Set", key, &self.path));
+                return Err(format!(
+                    "Syntax-Fehler: Erwartet '=' nach Key '{}' \nDatei: {} \nErwartet: Attribut Set",
+                    key, self.path
+                ));
             }
 
             let value = self.parse_value()?;
@@ -81,7 +87,10 @@ impl<'a> ParseStructures for Lexer<'a> {
             if let Some(&';') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartet ';' nach dem Wert von '{}' \nDatei: {} \nErwartet: Attribut Set", key, &self.path));
+                return Err(format!(
+                    "Syntax-Fehler: Erwartet ';' nach dem Wert von '{}' \nDatei: {} \nErwartet: Attribut Set",
+                    key, self.path
+                ));
             }
             map.insert(key, value);
         }
