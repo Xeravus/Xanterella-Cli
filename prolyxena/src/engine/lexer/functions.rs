@@ -1,11 +1,8 @@
 use std::collections::HashMap;
-use std::iter::Peekable;
-use std::str::Chars;
 
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
 use crate::engine::lexer::primitives::*;
-use crate::engine::lexer::structures::*;
 
 pub trait ParseFunctions {
     fn parse_let_in(&mut self) -> Result<NixValue, String>;

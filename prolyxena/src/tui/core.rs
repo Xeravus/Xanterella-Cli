@@ -10,7 +10,7 @@ use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_ra
 use ratatui::Frame;
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
-use ratatui::layout::{Alignment, Constraint, Direction, Layout};
+use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
 
 use crate::engine::core::*;
