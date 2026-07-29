@@ -57,3 +57,7 @@ impl<'a> Inject for XanterellaInstall<'a> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "inject_test.rs"]
+mod tests;
