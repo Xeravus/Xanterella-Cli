@@ -60,14 +60,13 @@ impl<'a> Deploy for XanterellaInstall<'a> {
     fn create_profile(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunCreateProfile);
 
-        let sys_path = fs::read_link(format!("{}/result", self.xanterella.get_path(Paths::Nixconf)))
-            .map_err(|err| EventsFailed::ReadSymLink(err.to_string()))?
-            .to_string_lossy()
-            .into_owned();
-
-        let profile_cmd = format!("nix-env --store /mnt -p /mnt/nix/var/nix/profiles/system --set {}", sys_path);
-
         if !self.xanterella.debug {
+            let sys_path = fs::read_link(format!("{}/result", self.xanterella.get_path(Paths::Nixconf)))
+                .map_err(|err| EventsFailed::ReadSymLink(err.to_string()))?
+                .to_string_lossy()
+                .into_owned();
+            let profile_cmd = format!("nix-env --store /mnt -p /mnt/nix/var/nix/profiles/system --set {}", sys_path);
+
             let cmd = Command::new("ssh")
                 .args(self.get_sshstring(User::Root))
                 .arg(profile_cmd)
