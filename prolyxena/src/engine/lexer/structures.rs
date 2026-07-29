@@ -1,11 +1,7 @@
 use std::collections::HashMap;
-use std::iter::Peekable;
-use std::str::Chars;
 
-use crate::engine::lexer::core::*;
 use crate::engine::core::*;
-use crate::engine::lexer::primitives::*;
-use crate::engine::lexer::functions::*;
+use crate::engine::lexer::core::*;
 
 pub trait ParseStructures {
     fn parse_attr_set(&mut self) -> Result<NixValue, String>;
@@ -14,7 +10,7 @@ pub trait ParseStructures {
 
 impl<'a> ParseStructures for Lexer<'a> {
     fn parse_attr_set(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartAttrSet);
+        self.log_event(ParseEvent::StartAttrSet);
         self.chars.next();
         let mut map = HashMap::new();
         loop {
@@ -25,8 +21,12 @@ impl<'a> ParseStructures for Lexer<'a> {
             }
 
             let mut key = String::new();
+            let mut quotes = false;
             while let Some(&c) = self.chars.peek() {
-                if c.is_whitespace() || c == '=' {
+                if c == '"' {
+                    quotes = !quotes;
+                }
+                if !quotes && (c.is_whitespace() || c == '=') {
                     break;
                 }
                 key.push(c);
@@ -34,7 +34,10 @@ impl<'a> ParseStructures for Lexer<'a> {
             }
 
             if key.is_empty() {
-                return Err(format!("Syntax-Fehler: Leerer Key im AttrSet\nDatei: {}", &self.path));
+                return Err(format!(
+                    "Syntax-Fehler: Leerer Key im AttrSet \nDatei: {} \nErwartet: Attribut Set",
+                    self.path
+                ));
             }
 
             if key == "inherit" {
@@ -54,12 +57,12 @@ impl<'a> ParseStructures for Lexer<'a> {
                         self.chars.next();
                     }
                     if inherit.is_empty() {
-                        return Err(format!("Syntax-Fehler: Unerwartetes Zeichen im 'inherit' Statment\nDatei: {}", &self.path));
+                        return Err(format!(
+                            "Syntax-Fehler: Unerwartetes Zeichen im 'inherit' Statment \nDatei: {} \nErwartet: Attribut Set(Inherit Statment)",
+                            self.path
+                        ));
                     }
-                    map.insert(
-                        inherit.clone(),
-                        NixValue::Identifier(inherit)
-                    );
+                    map.insert(inherit.clone(), NixValue::Identifier(inherit));
                 }
                 continue;
             }
@@ -68,7 +71,10 @@ impl<'a> ParseStructures for Lexer<'a> {
             if let Some(&'=') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartetes '=' nach Key '{}'\nDatei: {}", key, &self.path));
+                return Err(format!(
+                    "Syntax-Fehler: Erwartet '=' nach Key '{}' \nDatei: {} \nErwartet: Attribut Set",
+                    key, self.path
+                ));
             }
 
             let value = self.parse_value()?;
@@ -77,16 +83,19 @@ impl<'a> ParseStructures for Lexer<'a> {
             if let Some(&';') = self.chars.peek() {
                 self.chars.next();
             } else {
-                return Err(format!("Syntax-Fehler: Erwartetes ';' nach dem Wert von '{}'\nDatei: {}", key, &self.path));
+                return Err(format!(
+                    "Syntax-Fehler: Erwartet ';' nach dem Wert von '{}' \nDatei: {} \nErwartet: Attribut Set",
+                    key, self.path
+                ));
             }
             map.insert(key, value);
         }
-        self.event.push(ParseEvent::EndAttrSet);
+        self.log_event(ParseEvent::EndAttrSet);
         Ok(NixValue::AttrSet(map))
     }
 
     fn parse_list(&mut self) -> Result<NixValue, String> {
-        self.event.push(ParseEvent::StartList);
+        self.log_event(ParseEvent::StartList);
         self.chars.next();
         let mut output_vec: Vec<NixValue> = vec![];
         loop {
@@ -99,7 +108,11 @@ impl<'a> ParseStructures for Lexer<'a> {
             let value = self.parse_value()?;
             output_vec.push(value);
         }
-        self.event.push(ParseEvent::EndList);
+        self.log_event(ParseEvent::EndList);
         Ok(NixValue::List(output_vec))
     }
 }
+
+#[cfg(test)]
+#[path = "structures_test.rs"]
+mod tests;
