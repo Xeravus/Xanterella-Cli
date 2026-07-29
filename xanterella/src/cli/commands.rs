@@ -1,8 +1,7 @@
 use clap::{Parser, Subcommand};
 
-use crate::prelude::*;
-
 use crate::installer::ping::Ping;
+use crate::prelude::*;
 use crate::utils::config::Config;
 
 #[derive(Parser)]
@@ -36,14 +35,20 @@ pub async fn cli_parse() {
             let mut xanterella = Xanterella::new();
             let _ = xanterella.config_create_dir();
             let _ = xanterella.config_gen_basic();
-        },
-        Commands::Ping { ip } => {
+        }
+        Commands::Ping {
+            ip,
+        } => {
             let mut xanterella = Xanterella::new();
             let mut installer = XanterellaInstall::new(&mut xanterella);
             installer.set_ip(ip);
             let _ = installer.ping();
-        },
-        Commands::RemoteInstall { automate, speed, debug } => {
+        }
+        Commands::RemoteInstall {
+            automate,
+            speed,
+            debug,
+        } => {
             let mut xanterella = Xanterella::new();
             let mut installer = XanterellaInstall::new(&mut xanterella);
             installer.xanterella.set_automate(*automate);
@@ -53,8 +58,7 @@ pub async fn cli_parse() {
             let _ = installer.remote_prep_fs();
             let _ = installer.remote_install();
             let _ = installer.remote_install_cleanup();
-        },
-
+        }
     }
 }
 
