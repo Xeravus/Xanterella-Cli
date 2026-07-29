@@ -7,7 +7,16 @@ mod tests {
     fn test_core_core_new() {
         let data = Xanterella::new();
 
-        assert!(matches!(data, Xanterella { path: _, home: _, fast: _, debug: _, automate: _, }));
+        assert!(matches!(
+            data,
+            Xanterella {
+                path: _,
+                home: _,
+                fast: _,
+                debug: _,
+                automate: _,
+            }
+        ));
         assert!(matches!(&data.path, String));
         assert!(matches!(&data.home, String));
         assert!(matches!(data.fast, bool));

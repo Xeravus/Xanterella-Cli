@@ -22,7 +22,7 @@ mod tests {
 
         install3.ip = "test".to_string();
         install4.ip = "test".to_string();
-        
+
         let result1 = install1.get_sshstring(User::Root);
         let result2 = install2.get_sshstring(User::Cato);
         let result3 = install3.get_sshstring(User::Root);
@@ -165,8 +165,8 @@ mod tests {
         let result1 = install1.get_drives();
         let result2 = install2.get_drives();
 
-        assert!(result1.is_ok()); 
-        assert!(result2.is_err()); 
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
 
         assert!(matches!(result2, Err(EventsFailed::GetDrives(_))));
     }

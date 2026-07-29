@@ -1,6 +1,7 @@
+use std::env;
+
 use crate::installer::core::XanterellaInstall;
 use crate::prelude::*;
-use std::env;
 
 pub enum User {
     Root,
@@ -50,8 +51,11 @@ pub trait Get {
 
 impl Get for Xanterella {
     fn get_path(&mut self, path: Paths) -> String {
-        let home = if self.home.is_empty() { env::var("HOME").expect("Konnte die Home Varialbe nichht extrahieren") } else {
-            self.home.clone() };
+        let home = if self.home.is_empty() {
+            env::var("HOME").expect("Konnte die Home Varialbe nichht extrahieren")
+        } else {
+            self.home.clone()
+        };
         let config = PathBuf::from(&home).join(".config").join("xanterella");
         let result: PathBuf = match path {
             Paths::Nixconf => self.path.as_str().into(),

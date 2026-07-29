@@ -8,8 +8,24 @@ mod tests {
         let mut xanterella = Xanterella::new();
         let mut install = XanterellaInstall::new(&mut xanterella);
 
-        assert!(matches!(install, XanterellaInstall { xanterella: _, ip: _, drive: _, }));
-        assert!(matches!(install.xanterella, Xanterella { path: _, home: _, fast: _, debug: _, automate: _, }));
+        assert!(matches!(
+            install,
+            XanterellaInstall {
+                xanterella: _,
+                ip: _,
+                drive: _,
+            }
+        ));
+        assert!(matches!(
+            install.xanterella,
+            Xanterella {
+                path: _,
+                home: _,
+                fast: _,
+                debug: _,
+                automate: _,
+            }
+        ));
         assert!(matches!(&install.ip, String));
         assert!(matches!(&install.drive, String));
 

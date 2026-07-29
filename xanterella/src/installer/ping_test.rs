@@ -13,7 +13,7 @@ mod tests {
         let mut install1 = XanterellaInstall::new(&mut xanterella1);
         let mut install2 = XanterellaInstall::new(&mut xanterella2);
         let mut install3 = XanterellaInstall::new(&mut xanterella3);
-        
+
         install1.xanterella.debug = true;
         install2.ip = "127.0.0.1".to_string();
         install3.ip = "127.127.127.127.127".to_string();
@@ -38,7 +38,7 @@ mod tests {
         let mut install1 = XanterellaInstall::new(&mut xanterella1);
         let mut install2 = XanterellaInstall::new(&mut xanterella2);
         let mut install3 = XanterellaInstall::new(&mut xanterella3);
-        
+
         install1.xanterella.debug = true;
         install2.ip = "127.0.0.1".to_string();
         install3.ip = "127.127.127.127.127".to_string();
