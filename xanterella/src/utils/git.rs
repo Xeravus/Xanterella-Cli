@@ -137,3 +137,7 @@ impl Git for Xanterella {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "git_test.rs"]
+mod tests;
