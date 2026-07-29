@@ -40,7 +40,7 @@ mod tests {
 
         assert!(!matches!(result1, Ok(NixValue::AttrSet(_))));
     }
-    
+
     #[test]
     fn test_engine_lexer_functions_is_lambda_ahead() {
         let content1 = "test, }:";

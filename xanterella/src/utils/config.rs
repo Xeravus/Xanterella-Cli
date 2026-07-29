@@ -1,54 +1,46 @@
-use log::{error, info};
-use serde::{Deserialize, Serialize};
+use crate::prelude::*;
 
-use std::fs;
-use std::path::*;
-use std::process::{self};
-
-use crate::utils::get::*;
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Data {
     pub tailkey: String,
     pub wifi: String,
 }
 
-pub fn config_create_dir() {
-    info!("[ RUN ] - Erstelle Config Dir");
-
-    fs::create_dir_all(get_path(Paths::Config)).unwrap_or_else(|err| {
-        error!("[ FAILED ] - Konnte den Config Ordner nicht erstellen: {}", err);
-        process::exit(1);
-    });
-    info!("[ OK ] - Config Dir erstellt");
+pub trait Config {
+    fn config_create_dir(&mut self) -> Result<(), EventsFailed>;
+    fn config_gen_basic(&mut self) -> Result<(), EventsFailed>;
+    fn config_parse(&mut self) -> Result<Data, EventsFailed>;
 }
 
-pub fn config_create_subdir() {
-    info!("[ RUN ] - Erstelle Config SubDir");
+impl Config for Xanterella {
+    fn config_create_dir(&mut self) -> Result<(), EventsFailed> {
+        self.log_event(Events::RunConfigCreateDir);
 
-    fs::create_dir_all(format!("{}/templates", get_path(Paths::Config))).unwrap_or_else(|err| {
-        error!("[ FAILED ] - Konnte den Config Ordner nicht erstellen: {}", err);
-        process::exit(1);
-    });
-    info!("[ OK ] - Config SubDir erstellt");
-}
+        fs::create_dir_all(self.get_path(Paths::Config))
+            .map_err(|err| EventsFailed::ConfigCreateDir(err.to_string()))?;
 
-pub fn config_gen_basic() {
-    info!("[ RUN ] - Erstelle config.json");
+        self.log_event(Events::OkConfigCreateDir);
+        Ok(())
+    }
 
-    let basic = Data {
-        tailkey: String::from("tskey-auth-XXXXXXXXXXXXXXXXX-YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"),
-        wifi: String::from("Obi Wlan Kenobi"),
-    };
-    let json_string = serde_json::to_string_pretty(&basic).unwrap();
-    let json_path = PathBuf::from(get_path(Paths::Config)).join("config.json").display().to_string();
-    fs::write(&json_path, &json_string).expect("Konnte Datei nicht schreiben");
-    info!("[ OK ] - config.json erstellt");
-}
+    fn config_gen_basic(&mut self) -> Result<(), EventsFailed> {
+        self.log_event(Events::RunConfigGenBasic);
 
-pub fn config_parse() -> Data {
-    let json_path = PathBuf::from(get_path(Paths::Config)).join("config.json").display().to_string();
-    let file_content = fs::read_to_string(&json_path).expect("Datei konnte nicht gelesen werden");
-    let loaded_config: Data = serde_json::from_str(&file_content).unwrap();
-    loaded_config
+        let basic = Data {
+            tailkey: String::from("tskey-auth-XXXXXXXXXXXXXXXXX-YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"),
+            wifi: String::from("Obi Wlan Kenobi"),
+        };
+        let json_string = serde_json::to_string_pretty(&basic).unwrap();
+        let json_path = PathBuf::from(self.get_path(Paths::Config)).join("config.json").display().to_string();
+        fs::write(&json_path, &json_string).map_err(|err| EventsFailed::Fs(err.to_string()))?;
+
+        self.log_event(Events::OkConfigGenBasic);
+        Ok(())
+    }
+
+    fn config_parse(&mut self) -> Result<Data, EventsFailed> {
+        let json_path = PathBuf::from(self.get_path(Paths::Config)).join("config.json").display().to_string();
+        let file_content = fs::read_to_string(&json_path).map_err(|err| EventsFailed::Fs(err.to_string()))?;
+        serde_json::from_str::<Data>(&file_content).map_err(|err| EventsFailed::SerdeJson(err.to_string()))
+    }
 }

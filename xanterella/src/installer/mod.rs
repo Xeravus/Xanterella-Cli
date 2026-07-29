@@ -1,4 +1,6 @@
 pub mod core;
+pub mod deploy;
 pub mod drives;
-pub mod file;
-pub mod install;
+pub mod helper;
+pub mod inject;
+pub mod ping;

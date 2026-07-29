@@ -315,7 +315,7 @@ mod tests {
         let content2 = "test ++ test";
         let content3 = "test ++ ";
         let content4 = ";test";
-        
+
         let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let mut data2 = Lexer::new(content2, String::from("path.nix"));
         let mut data3 = Lexer::new(content3, String::from("path.nix"));
@@ -332,7 +332,7 @@ mod tests {
         assert!(result4.is_err());
 
         assert!(matches!(result1, Ok(NixValue::Identifier(test1))));
-        assert!(matches!(result2, Ok(NixValue::BinaryOp { left: test2, operator: Operator::Concat, right: test3,})));
+        assert!(matches!(result2, Ok(NixValue::BinaryOp { left: test2, operator: Operator::Concat, right: test3 })));
     }
 
     #[test]
@@ -346,7 +346,7 @@ mod tests {
         let mut data2 = Lexer::new(content2, String::from("path.nix"));
         let mut data3 = Lexer::new(content3, String::from("path.nix"));
         let mut data4 = Lexer::new(content4, String::from("path.nix"));
-    
+
         let result1 = data1.parse_operator();
         let result2 = data2.parse_operator();
         let result3 = data3.parse_operator();
