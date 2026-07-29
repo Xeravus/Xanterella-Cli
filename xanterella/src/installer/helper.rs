@@ -5,7 +5,7 @@ pub trait Helper {
     fn get_sshstring(&mut self, user: User) -> Vec<String>;
     fn get_hardware(&mut self) -> Result<String, EventsFailed>;
     fn sort_drives(&mut self, drives: Drives) -> Drives;
-    fn get_drive_size(size: &str) -> u64;
+    fn get_drive_size(&self, size: &str) -> u64;
     fn get_drives(&mut self) -> Result<Drives, EventsFailed>;
     fn get_part_name(&mut self, part: i8) -> String;
 }
@@ -45,14 +45,14 @@ impl<'a> Helper for XanterellaInstall<'a> {
     fn sort_drives(&mut self, drives: Drives) -> Drives {
         let mut drives = drives;
         drives.blockdevices.sort_by(|a, b| {
-            let size_a = Self::get_drive_size(&a.size);
-            let size_b = Self::get_drive_size(&b.size);
+            let size_a = self.get_drive_size(&a.size);
+            let size_b = self.get_drive_size(&b.size);
             size_b.cmp(&size_a)
         });
         drives
     }
 
-    fn get_drive_size(size: &str) -> u64 {
+    fn get_drive_size(&self, size: &str) -> u64 {
         let size = size.trim().to_uppercase();
         let mut multiplier: f64 = 1.0;
         let mut num_str = size.as_str();
@@ -123,3 +123,7 @@ impl<'a> Helper for XanterellaInstall<'a> {
         format!("{}{}{}", drive, p_suffix, part)
     }
 }
+
+#[cfg(test)]
+#[path = "helper_test.rs"]
+mod tests;
