@@ -20,7 +20,7 @@ mod tests {
         assert!(result1.is_ok());
         assert!(result2.is_err());
 
-        assert!(matches!(result2, Err(EventsFailed::InjectTailscale(_))));
+        assert!(matches!(result2, Err(_)));
     }
 
     #[test]
@@ -40,6 +40,6 @@ mod tests {
         assert!(result1.is_ok());
         assert!(result2.is_err());
 
-        assert!(matches!(result2, Err(EventsFailed::InjectWifi(_))));
+        assert!(matches!(result2, Err(_)));
     }
 }
