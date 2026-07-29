@@ -152,3 +152,7 @@ impl<'a> Drives for XanterellaInstall<'a> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "drives_test.rs"]
+mod tests;
