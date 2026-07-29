@@ -21,6 +21,11 @@ pub enum NixValue {
     Path(String),
     Antiquotation(Box<NixValue>),
     BinaryOp { left: Box<NixValue>, operator: Operator, right: Box<NixValue> },
+    BinaryOp {
+        left: Box<NixValue>,
+        operator: Operator,
+        right: Box<NixValue>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -1,7 +1,11 @@
 use clap::{Parser as CalpParser, Subcommand};
 
+use std::fs;
+
+use crate::core::parsing::*;
+use crate::engine::core::*;
+use crate::engine::lexer::core::*;
 use crate::engine::lexer::vfs::*;
-use crate::tui::core::*;
 
 #[derive(CalpParser)]
 #[command(name = "Prolyxena")]
