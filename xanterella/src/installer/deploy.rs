@@ -167,3 +167,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "deploy_test.rs"]
+mod tests;
