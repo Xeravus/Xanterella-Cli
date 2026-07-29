@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use crate::utils::get::*;
 
 #[derive(Debug, Clone)]
 pub enum Branches {
@@ -28,7 +27,7 @@ impl Git for Xanterella {
 
         if !self.debug {
             let cmd = Command::new("git")
-                .args(["commit", "-am", &msg])
+                .args(["commit", "-am", msg])
                 .current_dir(self.get_path(Paths::Nixconf))
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
@@ -137,3 +136,7 @@ impl Git for Xanterella {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "git_test.rs"]
+mod tests;

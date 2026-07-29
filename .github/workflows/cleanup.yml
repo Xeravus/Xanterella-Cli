@@ -52,7 +52,7 @@ jobs:
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo clippy -- -D warnings"
 
       - name: Cargo Test
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test"
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test -- --include-ignored"
 
       - name: Cargo Doc (Documentation Check)
         run: nix develop .#xanterella --command bash -c "cd xanterella && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --document-private-items"
@@ -106,7 +106,7 @@ jobs:
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo clippy -- -D warnings"
 
       - name: Cargo Test
-        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo test"
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo test -- --include-ignored"
 
       - name: Cargo Doc (Documentation Check)
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --document-private-items"

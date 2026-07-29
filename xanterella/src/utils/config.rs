@@ -41,6 +41,6 @@ impl Config for Xanterella {
     fn config_parse(&mut self) -> Result<Data, EventsFailed> {
         let json_path = PathBuf::from(self.get_path(Paths::Config)).join("config.json").display().to_string();
         let file_content = fs::read_to_string(&json_path).map_err(|err| EventsFailed::Fs(err.to_string()))?;
-        Ok(serde_json::from_str::<Data>(&file_content).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?)
+        serde_json::from_str::<Data>(&file_content).map_err(|err| EventsFailed::SerdeJson(err.to_string()))
     }
 }

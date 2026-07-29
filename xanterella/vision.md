@@ -24,7 +24,7 @@
 - [ ] GitHub Init
 - [ ] Tailscale Init
 
-## 0.5v Xanterella - Config
+## 0.5v Xanterella - Config -> Prolyxena
 - [x] Basic sort Host
 - [x] Basic add Host
     - [x] Basic remove Host

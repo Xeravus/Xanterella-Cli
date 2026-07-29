@@ -9,7 +9,6 @@ pub use serde::Deserialize;
 pub use serde::Serialize;
 
 pub use crate::core::core::Xanterella;
-pub use crate::core::core::*;
 // Enums
 pub use crate::core::result::Events;
 pub use crate::core::result::EventsFailed;

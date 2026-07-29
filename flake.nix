@@ -37,10 +37,17 @@
           rust-nightly
           rust-analyzer
           tokei
-          alejandra
           cargo-tarpaulin
           cargo-audit
           cargo-machete
+
+          alejandra
+          openssh
+          util-linux
+          iputils
+          parted
+          dosfstools
+          e2fsprogs
         ];
         nativeBuildInputs = [
           pkgs.pkg-config
