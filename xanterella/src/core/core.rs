@@ -9,6 +9,7 @@ pub struct Xanterella {
 }
 
 impl Xanterella {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Xanterella {
             path: String::new(),
@@ -41,8 +42,8 @@ impl Xanterella {
 
     pub fn log_event(&mut self, event: Events) {
         let (run, name): (bool, &str) = match event {
-            /// Utils
-            /// utils/Git.rs
+            // Utils
+            // utils/Git.rs
             Events::RunGitCommit            => (true, "Git Commit"),
             Events::RunGitCheckout          => (true, "Git Checkout"),
             Events::RunGitCheckoutCreate    => (true, "Git Checkout(Create)"),
@@ -54,18 +55,18 @@ impl Xanterella {
             Events::OkGitCheckoutCreate     => (false, "Git Checkout(Create)"),
             Events::OkGitMerge              => (false, "Git Merge"),
             Events::OkGitPr                 => (false, "Git Pull Request"),
-            /// utils/Check.rs
+            // utils/Check.rs
             Events::RunCheckNix             => (true, "Nix Flake Check"),
 
             Events::OkCheckNix              => (false, "Nix Flake Check"),
-            /// utils/Config.rs
+            // utils/Config.rs
             Events::RunConfigCreateDir      => (true, "Create Config Dir"),
             Events::RunConfigGenBasic       => (true, "Create basic Config"),
 
             Events::OkConfigCreateDir       => (false, "Create Config Dir"),
             Events::OkConfigGenBasic        => (false, "Create basic Config"),
-            /// Installer
-            /// installer/Core.rs
+            // Installer
+            // installer/Core.rs
             Events::RunRemoteIntegration    => (true, "Remote Integration"),
             Events::RunRemotePrepFs         => (true, "Remote Preperation of Fs"),
             Events::RunRemoteInstall        => (true, "Remote Install"),
@@ -75,13 +76,13 @@ impl Xanterella {
             Events::OkRemotePrepFs          => (false, "Remote Preperation of Fs"),
             Events::OkRemoteInstall         => (false, "Remote Install"),
             Events::OkRemoteInstallCleanup  => (false, "Remote Cleanup"),
-            /// installer/Ping.rs
+            // installer/Ping.rs
             Events::RunPing                 => (true, "Ping"),
             Events::RunPingSsh              => (true, "SSH Ping"),
 
             Events::OkPing                  => (false, "Ping"),
             Events::OkPingSsh               => (false, "SSH Ping"),
-            /// installer/Deploy.rs
+            // installer/Deploy.rs
             Events::RunNixBuild             => (true, "Nix Build"),
             Events::RunNixCopy              => (true, "Nix Copy"),
             Events::RunCreateProfile        => (true, "Create Profile"),
@@ -97,7 +98,7 @@ impl Xanterella {
             Events::OkActivateSys           => (false, "Activate Sys"),
             Events::OkActivateBootloader    => (false, "Activate Bootloader"),
             Events::OkRebootSys             => (false, "Reboot"),
-            /// installer/Drives.rs
+            // installer/Drives.rs
             Events::RunPartEfi              => (true, "Partitionate Efi"),
             Events::RunPartRoot             => (true, "Partitionate Root"),
             Events::RunFormatEfi            => (true, "Format Efi"),
@@ -113,19 +114,18 @@ impl Xanterella {
             Events::OkCreateBootDir         => (false, "Create Boot Dir"),
             Events::OkMountBoot             => (false, "Mount Boot"),
             Events::OkMountRoot             => (false, "Mount Root"),
-            /// installer/Helper.rs
+            // installer/Helper.rs
             Events::RunGetHardware          => (true, "Get Hardware"),
             Events::RunGetDrives            => (true, "Get Drives"),
 
             Events::OkGetHardware           => (false, "Get Hardware"),
             Events::OkGetDrives             => (false, "Get Drives"),
-            /// installer/Inject.rs
+            // installer/Inject.rs
             Events::RunInjectTailscale      => (true, "Inject Tailscale"),
             Events::RunInjectWifi           => (true, "Inject Wifi"),
 
             Events::OkInjectTailscale       => (false, "Inject Tailscale"),
             Events::OkInjectWifi            => (false, "Inject Wifi"),
-            _ => todo!(),
         };
 
         let prefix = match run {

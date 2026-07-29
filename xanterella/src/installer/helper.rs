@@ -13,8 +13,8 @@ pub trait Helper {
 impl<'a> Helper for XanterellaInstall<'a> {
     fn get_sshstring(&mut self, user: User) -> Vec<String> {
         let target = match user {
-            User::Root => format!("root@{}", &self.ip),
-            User::Cato => format!("cato@{}", &self.ip),
+            User::Root => format!("root@{}", self.ip),
+            User::Cato => format!("cato@{}", self.ip),
         };
         vec![
             "-o".to_string(),
@@ -118,7 +118,7 @@ impl<'a> Helper for XanterellaInstall<'a> {
     }
 
     fn get_part_name(&mut self, part: i8) -> String {
-        let drive = format!("/dev/{}", &self.drive.clone());
+        let drive = format!("/dev/{}", self.drive.clone());
         let p_suffix = if drive.contains("nvme") || drive.contains("mmclblk") { "p" } else { "" };
         format!("{}{}{}", drive, p_suffix, part)
     }

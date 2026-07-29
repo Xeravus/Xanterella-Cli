@@ -1,8 +1,7 @@
-use crate::installer::deploy::*;
-use crate::installer::drives::*;
-use crate::installer::helper::*;
-use crate::installer::inject::*;
-use crate::installer::ping::*;
+use crate::installer::deploy::Deploy;
+use crate::installer::drives::Drives;
+use crate::installer::inject::Inject;
+use crate::installer::ping::Ping;
 use crate::prelude::*;
 use crate::utils::check::*;
 use crate::utils::git::*;

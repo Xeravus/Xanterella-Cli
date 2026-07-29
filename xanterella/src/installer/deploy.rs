@@ -37,7 +37,7 @@ impl<'a> Deploy for XanterellaInstall<'a> {
 
         let fast_cmd = format!(
             "nix-store --export $(nix.store -qR ./result) | zstd -T0 -3 | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -C root@{} 'zstdcat | nix-store --store /mnt --import'",
-            &self.ip
+            self.ip
         );
 
         if !self.xanterella.debug {

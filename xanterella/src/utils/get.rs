@@ -1,6 +1,5 @@
 use std::env;
 
-use crate::installer::core::XanterellaInstall;
 use crate::prelude::*;
 
 pub enum User {
