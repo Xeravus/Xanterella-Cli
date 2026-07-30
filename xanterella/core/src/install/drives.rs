@@ -20,7 +20,7 @@ pub trait Drives {
     fn get_drive_size(&self, size: &str) -> u64;
     fn get_drives(&mut self) -> Result<StorageDrives, EventsFailed>;
     fn get_part_name(&mut self, part: i8) -> String;
-    
+
     /// Helper Functions
     fn part_efi(&mut self) -> Result<(), EventsFailed>;
     fn part_root(&mut self) -> Result<(), EventsFailed>;
@@ -90,7 +90,8 @@ impl<'a> Drives for XanterellaInstall<'a> {
                         .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
                 }
             } else {
-                serde_json::from_slice::<StorageDrives>(&cmd.stdout).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
+                serde_json::from_slice::<StorageDrives>(&cmd.stdout)
+                    .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
             }
         } else {
             let cmd =
@@ -100,7 +101,8 @@ impl<'a> Drives for XanterellaInstall<'a> {
                 return Err(EventsFailed::Lsblk(String::from_utf8_lossy(&cmd.stderr).to_string()));
             };
 
-            serde_json::from_slice::<StorageDrives>(&cmd.stdout).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
+            serde_json::from_slice::<StorageDrives>(&cmd.stdout)
+                .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
         };
 
         self.xanterella.log_event(Events::OkGetDrives);

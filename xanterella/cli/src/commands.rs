@@ -1,6 +1,5 @@
 use clap::{Parser, Subcommand};
-
-use xanterella_core::{Xanterella, XanterellaInstall, Config, Ping};
+use xanterella_core::{Config, Ping, Xanterella, XanterellaInstall};
 
 #[derive(Parser)]
 #[command(name = "Xanterella")]
