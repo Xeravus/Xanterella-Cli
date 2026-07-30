@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 pub trait Helper {
     fn get_hardware(&mut self) -> Result<String, EventsFailed>;
+    fn get_sshstring(&mut self, user: User) -> Vec<String>;
 }
 
 impl<'a> Helper for XanterellaInstall<'a> {
@@ -20,6 +21,20 @@ impl<'a> Helper for XanterellaInstall<'a> {
 
         self.xanterella.log_event(Events::OkGetHardware);
         Ok(String::from_utf8_lossy(&cmd.stdout).to_string())
+    }
+
+    fn get_sshstring(&mut self, user: User) -> Vec<String> {
+        let target = match user {
+            User::Root => format!("root@{}", self.ip),
+            User::Cato => format!("cato@{}", self.ip),
+        };
+        vec![
+            "-o".to_string(),
+            "StrictHostKeyChecking=no".to_string(),
+            "-o".to_string(),
+            "UserKnownHostsFile=/dev/null".to_string(),
+            target,
+        ]
     }
 }
 

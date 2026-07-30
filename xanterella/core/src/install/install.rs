@@ -1,10 +1,11 @@
-use crate::installer::deploy::Deploy;
-use crate::installer::drives::Drives;
-use crate::installer::inject::Inject;
-use crate::installer::ping::Ping;
 use crate::prelude::*;
-use crate::utils::check::*;
-use crate::utils::git::*;
+
+use crate::git::Git;
+use crate::nix::check::Check;
+use crate::install::inject::Inject;
+use crate::install::deploy::Deploy;
+use crate::install::ping::Ping;
+use crate::install::drives::Drives;
 
 pub struct XanterellaInstall<'a> {
     pub xanterella: &'a mut Xanterella,
@@ -13,6 +14,7 @@ pub struct XanterellaInstall<'a> {
 }
 
 impl<'a> XanterellaInstall<'a> {
+    #[allow(clippy::new_without_default)]
     pub fn new(xanterella: &'a mut Xanterella) -> Self {
         XanterellaInstall {
             xanterella,
@@ -21,12 +23,12 @@ impl<'a> XanterellaInstall<'a> {
         }
     }
 
-    pub fn set_ip(&mut self, ip: &str) {
-        self.ip = ip.to_string();
+    pub fn set_ip(&mut self, value: &str) {
+        self.ip = value.to_string();
     }
 
-    pub fn set_drive(&mut self, drive: &str) {
-        self.drive = drive.to_string();
+    pub fn set_drive(&mut self, value: &str) {
+        self.drive = value.to_string();
     }
 
     pub fn remote_integration(&mut self) -> Result<(), EventsFailed> {
@@ -91,5 +93,5 @@ impl<'a> XanterellaInstall<'a> {
 }
 
 #[cfg(test)]
-#[path = "core_test.rs"]
+#[path = "install_test.rs"]
 mod tests;

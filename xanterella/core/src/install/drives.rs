@@ -1,12 +1,24 @@
-use crate::installer::core::*;
-use crate::installer::helper::*;
 use crate::prelude::*;
+
+#[derive(serde::Deserialize, Debug, Clone, PartialEq)]
+pub struct StorageDrives {
+    pub blockdevices: Vec<BlockDevice>,
+}
+
+#[derive(serde::Deserialize, Debug, Clone, PartialEq)]
+pub struct BlockDevice {
+    pub name: String,
+    pub size: String,
+
+    #[serde(rename = "type")]
+    pub device_type: String,
+}
 
 pub trait Drives {
     /// Get / Sort Functions
-    fn sort_drives(&mut self, drives: Drives) -> Drives;
+    fn sort_drives(&mut self, drives: StorageDrives) -> StorageDrives;
     fn get_drive_size(&self, size: &str) -> u64;
-    fn get_drives(&mut self) -> Result<Drives, EventsFailed>;
+    fn get_drives(&mut self) -> Result<StorageDrives, EventsFailed>;
     fn get_part_name(&mut self, part: i8) -> String;
     
     /// Helper Functions
@@ -19,7 +31,88 @@ pub trait Drives {
     fn mount_root(&mut self) -> Result<(), EventsFailed>;
 }
 
-impl<'a> Drives for Xanterella<'a> {
+impl<'a> Drives for XanterellaInstall<'a> {
+    fn sort_drives(&mut self, drives: StorageDrives) -> StorageDrives {
+        let mut drives = drives;
+        drives.blockdevices.sort_by(|a, b| {
+            let size_a = self.get_drive_size(&a.size);
+            let size_b = self.get_drive_size(&b.size);
+            size_b.cmp(&size_a)
+        });
+        drives
+    }
+
+    fn get_drive_size(&self, size: &str) -> u64 {
+        let size = size.trim().to_uppercase();
+        let mut multiplier: f64 = 1.0;
+        let mut num_str = size.as_str();
+
+        if size.ends_with('T') {
+            multiplier = 1024.0 * 1024.0 * 1024.0 * 1024.0;
+            num_str = &size[..size.len() - 1];
+        } else if size.ends_with('G') {
+            multiplier = 1024.0 * 1024.0 * 1024.0;
+            num_str = &size[..size.len() - 1];
+        } else if size.ends_with('M') {
+            multiplier = 1024.0 * 1024.0;
+            num_str = &size[..size.len() - 1];
+        } else if size.ends_with('K') {
+            multiplier = 1024.0;
+            num_str = &size[..size.len() - 1];
+        };
+
+        let val: f64 = num_str.parse().unwrap_or(0.0);
+
+        (val * multiplier) as u64
+    }
+
+    fn get_drives(&mut self) -> Result<StorageDrives, EventsFailed> {
+        self.xanterella.log_event(Events::RunGetDrives);
+
+        let parsed_drives = if !&self.ip.contains("127.0.0.1") {
+            let cmd = Command::new("ssh")
+                .args(self.get_sshstring(User::Root))
+                .args(["lslbk", "--json"])
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+            if !cmd.status.success() {
+                let cmd_again = Command::new("ssh")
+                    .args(self.get_sshstring(User::Cato))
+                    .args(["lslbk", "--json"])
+                    .output()
+                    .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+                if !cmd_again.status.success() {
+                    return Err(EventsFailed::GetDrives(String::from_utf8_lossy(&cmd.stderr).to_string()));
+                } else {
+                    serde_json::from_slice::<StorageDrives>(&cmd_again.stdout)
+                        .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
+                }
+            } else {
+                serde_json::from_slice::<StorageDrives>(&cmd.stdout).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
+            }
+        } else {
+            let cmd =
+                Command::new("lsblk").arg("--json").output().map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+            if !cmd.status.success() {
+                return Err(EventsFailed::Lsblk(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            };
+
+            serde_json::from_slice::<StorageDrives>(&cmd.stdout).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
+        };
+
+        self.xanterella.log_event(Events::OkGetDrives);
+        Ok(parsed_drives)
+    }
+
+    fn get_part_name(&mut self, part: i8) -> String {
+        let drive = format!("/dev/{}", self.drive.clone());
+        let p_suffix = if drive.contains("nvme") || drive.contains("mmclblk") { "p" } else { "" };
+        format!("{}{}{}", drive, p_suffix, part)
+    }
+
     fn part_efi(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPartEfi);
 

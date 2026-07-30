@@ -15,20 +15,6 @@ pub enum Paths {
 }
 
 #[derive(serde::Deserialize, Debug, Clone, PartialEq)]
-pub struct Drives {
-    pub blockdevices: Vec<BlockDevice>,
-}
-
-#[derive(serde::Deserialize, Debug, Clone, PartialEq)]
-pub struct BlockDevice {
-    pub name: String,
-    pub size: String,
-
-    #[serde(rename = "type")]
-    pub device_type: String,
-}
-
-#[derive(serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct Taildevices {
     #[serde(rename = "Peer")]
     pub devices: HashMap<String, DeviceInfo>,

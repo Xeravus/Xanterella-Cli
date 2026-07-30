@@ -1,3 +1,8 @@
-fn main() {
-    println!("Hello, world!");
+mod commands;
+
+use commands::cli_parse;
+
+#[tokio::main]
+pub async fn main() {
+    cli_parse().await;
 }

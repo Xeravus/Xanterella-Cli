@@ -1,5 +1,3 @@
-use crate::installer::core::XanterellaInstall;
-use crate::installer::helper::*;
 use crate::prelude::*;
 
 pub trait Ping {

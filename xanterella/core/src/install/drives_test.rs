@@ -1,79 +1,146 @@
-use crate::installer::helper::*;
+use crate::install::drives::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn test_installer_helper_get_sshstring() {
+    fn test_installer_drives_part_efi() {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
-        let mut xanterella3 = Xanterella::new();
-        let mut xanterella4 = Xanterella::new();
-        let mut xanterella5 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(&mut xanterella1);
         let mut install2 = XanterellaInstall::new(&mut xanterella2);
-        let mut install3 = XanterellaInstall::new(&mut xanterella3);
-        let mut install4 = XanterellaInstall::new(&mut xanterella4);
-        let mut install5 = XanterellaInstall::new(&mut xanterella5);
 
-        install1.ip = "127.0.0.1".to_string();
-        install2.ip = "127.0.0.1".to_string();
+        install1.xanterella.debug = true;
+        install2.ip = "127.127.127.127.127".to_string();
 
-        install3.ip = "test".to_string();
-        install4.ip = "test".to_string();
+        let result1 = install1.part_efi();
+        let result2 = install2.part_efi();
 
-        let result1 = install1.get_sshstring(User::Root);
-        let result2 = install2.get_sshstring(User::Cato);
-        let result3 = install3.get_sshstring(User::Root);
-        let result4 = install4.get_sshstring(User::Cato);
-        let result5 = install5.get_sshstring(User::Root);
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
 
-        assert!(!result1.is_empty());
-        assert!(!result2.is_empty());
-        assert!(!result3.is_empty());
-        assert!(!result4.is_empty());
-        assert!(!result5.is_empty());
-
-        assert_eq!(result1[0], "-o".to_string());
-        assert_eq!(result2[0], "-o".to_string());
-        assert_eq!(result3[0], "-o".to_string());
-        assert_eq!(result4[0], "-o".to_string());
-        assert_eq!(result5[0], "-o".to_string());
-
-        assert_eq!(result1[1], "StrictHostKeyChecking=no".to_string());
-        assert_eq!(result2[1], "StrictHostKeyChecking=no".to_string());
-        assert_eq!(result3[1], "StrictHostKeyChecking=no".to_string());
-        assert_eq!(result4[1], "StrictHostKeyChecking=no".to_string());
-        assert_eq!(result5[1], "StrictHostKeyChecking=no".to_string());
-
-        assert_eq!(result1[2], "-o".to_string());
-        assert_eq!(result2[2], "-o".to_string());
-        assert_eq!(result3[2], "-o".to_string());
-        assert_eq!(result4[2], "-o".to_string());
-        assert_eq!(result5[2], "-o".to_string());
-
-        assert_eq!(result1[3], "UserKnownHostsFile=/dev/null".to_string());
-        assert_eq!(result2[3], "UserKnownHostsFile=/dev/null".to_string());
-        assert_eq!(result3[3], "UserKnownHostsFile=/dev/null".to_string());
-        assert_eq!(result4[3], "UserKnownHostsFile=/dev/null".to_string());
-        assert_eq!(result5[3], "UserKnownHostsFile=/dev/null".to_string());
-
-        assert_eq!(result1[4], "root@127.0.0.1".to_string());
-        assert_eq!(result2[4], "cato@127.0.0.1".to_string());
-        assert_eq!(result3[4], "root@test".to_string());
-        assert_eq!(result4[4], "cato@test".to_string());
-        assert_eq!(result5[4], "root@".to_string());
+        assert!(matches!(result2, Err(EventsFailed::PartEfi(_))));
     }
 
     #[test]
-    fn test_installer_helper_get_hardware() {
-        let mut xanterella = Xanterella::new();
-        let mut install = XanterellaInstall::new(&mut xanterella);
+    fn test_installer_drives_part_root() {
+        let mut xanterella1 = Xanterella::new();
+        let mut xanterella2 = Xanterella::new();
 
-        let result = install.get_hardware();
+        let mut install1 = XanterellaInstall::new(&mut xanterella1);
+        let mut install2 = XanterellaInstall::new(&mut xanterella2);
 
-        assert!(result.is_err());
+        install1.xanterella.debug = true;
+        install2.ip = "127.127.127.127.127".to_string();
+
+        let result1 = install1.part_root();
+        let result2 = install2.part_root();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+
+        assert!(matches!(result2, Err(EventsFailed::PartRoot(_))));
+    }
+
+    #[test]
+    fn test_installer_drives_format_efi() {
+        let mut xanterella1 = Xanterella::new();
+        let mut xanterella2 = Xanterella::new();
+
+        let mut install1 = XanterellaInstall::new(&mut xanterella1);
+        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+
+        install1.xanterella.debug = true;
+        install2.ip = "127.127.127.127.127".to_string();
+
+        let result1 = install1.format_efi();
+        let result2 = install2.format_efi();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+
+        assert!(matches!(result2, Err(EventsFailed::FormatEfi(_))));
+    }
+
+    #[test]
+    fn test_installer_drives_format_root() {
+        let mut xanterella1 = Xanterella::new();
+        let mut xanterella2 = Xanterella::new();
+
+        let mut install1 = XanterellaInstall::new(&mut xanterella1);
+        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+
+        install1.xanterella.debug = true;
+        install2.ip = "127.127.127.127.127".to_string();
+
+        let result1 = install1.format_root();
+        let result2 = install2.format_root();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+
+        assert!(matches!(result2, Err(EventsFailed::FormatRoot(_))));
+    }
+
+    #[test]
+    fn test_installer_drives_create_boot_dir() {
+        let mut xanterella1 = Xanterella::new();
+        let mut xanterella2 = Xanterella::new();
+
+        let mut install1 = XanterellaInstall::new(&mut xanterella1);
+        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+
+        install1.xanterella.debug = true;
+        install2.ip = "127.127.127.127.127".to_string();
+
+        let result1 = install1.create_boot_dir();
+        let result2 = install2.create_boot_dir();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+
+        assert!(matches!(result2, Err(EventsFailed::CreateBootDir(_))));
+    }
+
+    #[test]
+    fn test_installer_drives_mount_boot() {
+        let mut xanterella1 = Xanterella::new();
+        let mut xanterella2 = Xanterella::new();
+
+        let mut install1 = XanterellaInstall::new(&mut xanterella1);
+        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+
+        install1.xanterella.debug = true;
+        install2.ip = "127.127.127.127.127".to_string();
+
+        let result1 = install1.mount_boot();
+        let result2 = install2.mount_boot();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+
+        assert!(matches!(result2, Err(EventsFailed::MountBoot(_))));
+    }
+
+    #[test]
+    fn test_installer_drives_mount_root() {
+        let mut xanterella1 = Xanterella::new();
+        let mut xanterella2 = Xanterella::new();
+
+        let mut install1 = XanterellaInstall::new(&mut xanterella1);
+        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+
+        install1.xanterella.debug = true;
+        install2.ip = "127.127.127.127.127".to_string();
+
+        let result1 = install1.mount_root();
+        let result2 = install2.mount_root();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+
+        assert!(matches!(result2, Err(EventsFailed::MountRoot(_))));
     }
 
     #[test]
@@ -110,8 +177,8 @@ mod tests {
                 }
             ]
         }"#;
-        let parsed: Drives = serde_json::from_str(mock_json).unwrap();
-        let sorted: Drives = install.sort_drives(parsed);
+        let parsed: StorageDrives = serde_json::from_str(mock_json).unwrap();
+        let sorted: StorageDrives = install.sort_drives(parsed);
 
         assert_eq!(sorted.blockdevices.len(), 5);
         assert_eq!(sorted.blockdevices[0].name, "nvme0n1");

@@ -1,6 +1,6 @@
-use crate::installer::core::XanterellaInstall;
-use crate::installer::helper::*;
 use crate::prelude::*;
+
+use crate::install::install::XanterellaInstall;
 
 pub trait Deploy {
     fn nix_build(&mut self) -> Result<(), EventsFailed>;

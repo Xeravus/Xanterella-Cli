@@ -1,7 +1,6 @@
-use crate::installer::core::XanterellaInstall;
-use crate::installer::helper::*;
 use crate::prelude::*;
-use crate::utils::config::*;
+
+use crate::config::Config;
 
 pub trait Inject {
     fn inject_tailscale(&mut self) -> Result<(), EventsFailed>;

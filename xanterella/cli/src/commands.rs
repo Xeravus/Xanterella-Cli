@@ -1,8 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::installer::ping::Ping;
-use crate::prelude::*;
-use crate::utils::config::Config;
+use xanterella_core::{Xanterella, XanterellaInstall, Config, Ping};
 
 #[derive(Parser)]
 #[command(name = "Xanterella")]

@@ -1,10 +1,10 @@
-use crate::installer::drives::*;
+use crate::install::deploy::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn test_installer_drives_part_efi() {
+    fn test_installer_deploy_nix_build() {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
@@ -12,19 +12,19 @@ mod tests {
         let mut install2 = XanterellaInstall::new(&mut xanterella2);
 
         install1.xanterella.debug = true;
-        install2.ip = "127.127.127.127.127".to_string();
+        install1.xanterella.home = "/test".to_string();
 
-        let result1 = install1.part_efi();
-        let result2 = install2.part_efi();
+        let result1 = install1.nix_build();
+        let result2 = install2.nix_build();
 
         assert!(result1.is_ok());
         assert!(result2.is_err());
 
-        assert!(matches!(result2, Err(EventsFailed::PartEfi(_))));
+        assert!(matches!(result2, Err(EventsFailed::FailedCmd(_))));
     }
 
     #[test]
-    fn test_installer_drives_part_root() {
+    fn test_installer_deploy_nix_copy() {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
@@ -32,19 +32,19 @@ mod tests {
         let mut install2 = XanterellaInstall::new(&mut xanterella2);
 
         install1.xanterella.debug = true;
-        install2.ip = "127.127.127.127.127".to_string();
+        install1.xanterella.home = "/test".to_string();
 
-        let result1 = install1.part_root();
-        let result2 = install2.part_root();
+        let result1 = install1.nix_copy();
+        let result2 = install2.nix_copy();
 
         assert!(result1.is_ok());
         assert!(result2.is_err());
 
-        assert!(matches!(result2, Err(EventsFailed::PartRoot(_))));
+        assert!(matches!(result2, Err(EventsFailed::FailedCmd(_))));
     }
 
     #[test]
-    fn test_installer_drives_format_efi() {
+    fn test_installer_deploy_nix_create_profile() {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
@@ -52,19 +52,19 @@ mod tests {
         let mut install2 = XanterellaInstall::new(&mut xanterella2);
 
         install1.xanterella.debug = true;
-        install2.ip = "127.127.127.127.127".to_string();
+        install1.xanterella.home = "/test".to_string();
 
-        let result1 = install1.format_efi();
-        let result2 = install2.format_efi();
+        let result1 = install1.create_profile();
+        let result2 = install2.create_profile();
 
         assert!(result1.is_ok());
         assert!(result2.is_err());
 
-        assert!(matches!(result2, Err(EventsFailed::FormatEfi(_))));
+        assert!(matches!(result2, Err(EventsFailed::ReadSymLink(_))));
     }
 
     #[test]
-    fn test_installer_drives_format_root() {
+    fn test_installer_deploy_nix_prep_sys() {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
@@ -72,19 +72,19 @@ mod tests {
         let mut install2 = XanterellaInstall::new(&mut xanterella2);
 
         install1.xanterella.debug = true;
-        install2.ip = "127.127.127.127.127".to_string();
+        install1.ip = "127.127.127.127.127".to_string();
 
-        let result1 = install1.format_root();
-        let result2 = install2.format_root();
+        let result1 = install1.prep_sys();
+        let result2 = install2.prep_sys();
 
         assert!(result1.is_ok());
         assert!(result2.is_err());
 
-        assert!(matches!(result2, Err(EventsFailed::FormatRoot(_))));
+        assert!(matches!(result2, Err(EventsFailed::PrepSys(_))));
     }
 
     #[test]
-    fn test_installer_drives_create_boot_dir() {
+    fn test_installer_deploy_nix_activate_sys() {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
@@ -92,19 +92,19 @@ mod tests {
         let mut install2 = XanterellaInstall::new(&mut xanterella2);
 
         install1.xanterella.debug = true;
-        install2.ip = "127.127.127.127.127".to_string();
+        install1.ip = "127.127.127.127.127".to_string();
 
-        let result1 = install1.create_boot_dir();
-        let result2 = install2.create_boot_dir();
+        let result1 = install1.activate_sys();
+        let result2 = install2.activate_sys();
 
         assert!(result1.is_ok());
         assert!(result2.is_err());
 
-        assert!(matches!(result2, Err(EventsFailed::CreateBootDir(_))));
+        assert!(matches!(result2, Err(EventsFailed::ActivateSys(_))));
     }
 
     #[test]
-    fn test_installer_drives_mount_boot() {
+    fn test_installer_deploy_nix_activate_bootloader() {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
@@ -114,17 +114,17 @@ mod tests {
         install1.xanterella.debug = true;
         install2.ip = "127.127.127.127.127".to_string();
 
-        let result1 = install1.mount_boot();
-        let result2 = install2.mount_boot();
+        let result1 = install1.activate_bootloader();
+        let result2 = install2.activate_bootloader();
 
         assert!(result1.is_ok());
         assert!(result2.is_err());
 
-        assert!(matches!(result2, Err(EventsFailed::MountBoot(_))));
+        assert!(matches!(result2, Err(EventsFailed::ActivateBootloader(_))));
     }
 
     #[test]
-    fn test_installer_drives_mount_root() {
+    fn test_installer_deploy_nix_reboot_sys() {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
@@ -132,14 +132,14 @@ mod tests {
         let mut install2 = XanterellaInstall::new(&mut xanterella2);
 
         install1.xanterella.debug = true;
-        install2.ip = "127.127.127.127.127".to_string();
+        install1.ip = "127.127.127.127.127".to_string();
 
-        let result1 = install1.mount_root();
-        let result2 = install2.mount_root();
+        let result1 = install1.reboot_sys();
+        let result2 = install2.reboot_sys();
 
         assert!(result1.is_ok());
         assert!(result2.is_err());
 
-        assert!(matches!(result2, Err(EventsFailed::MountRoot(_))));
+        assert!(matches!(result2, Err(EventsFailed::RebootSys(_))));
     }
 }
