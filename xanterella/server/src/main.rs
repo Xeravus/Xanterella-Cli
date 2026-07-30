@@ -1,7 +1,9 @@
-use axum::extract::Path;
-use axum::{Json, Router, http::StatusCode, response::IntoResponse, routing::get};
-use serde_json::Value;
+use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde_json::json;
+
+mod app;
+
+use crate::app::*;
 
 #[derive(Debug)]
 enum ApiError {
@@ -33,56 +35,4 @@ async fn main() {
     println!("Server running on http://localhost:3000");
 
     axum::serve(listener, app).await.expect("Failed to start Server");
-}
-
-fn create_app() -> Router {
-    Router::new()
-        .route("/health", get(health_check))
-        .route("/users", get(list_users))
-        .route("/users/{id}", get(get_user))
-}
-
-async fn health_check() -> impl IntoResponse {
-    Json(json!({
-        "status": "ok",
-        "message": "Server is running",
-    }))
-}
-
-async fn list_users() -> Result<Json<Value>, ApiError> {
-    Err(ApiError::InternalError)
-}
-
-async fn get_user(Path(id): Path<u32>) -> Result<Json<Value>, ApiError> {
-    if id > 100 {
-        return Err(ApiError::NotFound);
-    }
-
-    Ok(Json(json!({
-        "id": id,
-        "name": "User"
-    })))
-}
-
-#[cfg(test)]
-mod tests {
-    use axum::{body::Body, http::Request};
-    use tower::ServiceExt;
-
-    use super::*;
-
-    #[tokio::test]
-    async fn test_health_check() {
-        let app = create_app();
-
-        let request = Request::builder().uri("/health").body(Body::empty()).unwrap();
-
-        let response = app.oneshot(request).await.unwrap();
-
-        assert_eq!(response.status(), StatusCode::OK);
-
-        let body = response.collect().await.unwrap();
-        let json: Value = serde_json::from_slice(&body.to_bytes()).unwrap();
-        assert_eq!(json["status"], "ok");
-    }
 }
