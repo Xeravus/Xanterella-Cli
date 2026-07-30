@@ -68,6 +68,20 @@
         ];
         env.RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
       };
+      workspaces = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          rust-nightly
+          rust-analyzer
+          tokei
+          cargo-tarpaulin
+          cargo-audit
+          cargo-machete
+        ];
+        nativeBuildInputs = [
+          pkgs.pkg-config
+        ];
+        env.RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+      };
     };
     packages."x86_64-linux" = {
       xanterella = naerskLib.buildPackage {
@@ -81,6 +95,15 @@
       };
       prolyxena = naerskLib.buildPackage {
         src = ./prolyxena/.;
+        buildInputs = [
+          pkgs.pkg-config
+        ];
+        nativeBuildInputs = [
+          pkgs.pkg-config
+        ];
+      };
+      workspaces = naerskLib.buildPackage {
+        src = ./workspaces/.;
         buildInputs = [
           pkgs.pkg-config
         ];
