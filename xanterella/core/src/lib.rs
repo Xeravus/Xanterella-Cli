@@ -1,14 +1,16 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+pub mod config;
+pub mod xanterella;
+pub mod xanterella_install;
+pub mod get;
+pub mod git;
+pub mod helper;
+pub mod result;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod prelude;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use result::{Events, EventsFailed};
+pub use git::{Branches, PrType, Git};
+pub use config::{Data, Config};
+pub use xanterella::Xanterella;
+pub use xanterella_install::XanterellaInstall;
+pub use get::{User, Paths};

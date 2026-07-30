@@ -138,5 +138,5 @@ impl Xanterella {
 }
 
 #[cfg(test)]
-#[path = "core_test.rs"]
+#[path = "xanterella_test.rs"]
 mod tests;
