@@ -1,4 +1,4 @@
-use crate::utils::git::*;
+use crate::git::*;
 
 #[cfg(test)]
 mod tests {

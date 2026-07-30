@@ -1,4 +1,4 @@
-use crate::core::core::*;
+use crate::xanterella::*;
 
 #[cfg(test)]
 mod tests {

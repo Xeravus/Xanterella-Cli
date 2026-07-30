@@ -1,4 +1,4 @@
-use crate::installer::helper::*;
+use crate::helper::*;
 
 #[cfg(test)]
 mod tests {

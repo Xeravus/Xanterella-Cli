@@ -1,4 +1,4 @@
-use crate::installer::drives::*;
+use crate::drives::*;
 
 #[cfg(test)]
 mod tests {
