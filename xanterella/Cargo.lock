@@ -711,13 +711,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "xanterella-builder"
-version = "0.1.0"
-dependencies = [
- "xanterella-core",
-]
-
-[[package]]
 name = "xanterella-cli"
 version = "0.1.0"
 dependencies = [
