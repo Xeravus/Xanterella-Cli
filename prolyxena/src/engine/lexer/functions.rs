@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use indexmap::IndexMap;
 
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
@@ -14,7 +14,7 @@ pub trait ParseFunctions {
 impl<'a> ParseFunctions for Lexer<'a> {
     fn parse_let_in(&mut self) -> Result<NixValue, String> {
         self.log_event(ParseEvent::StartLetIn);
-        let mut map = HashMap::new();
+        let mut map = IndexMap::new();
         loop {
             self.skip_whitespace();
             let mut key = String::new();

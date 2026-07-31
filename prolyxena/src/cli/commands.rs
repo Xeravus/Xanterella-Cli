@@ -41,7 +41,7 @@ pub fn prolyxena_parse(file: String, animation: bool, output: bool, time: bool) 
         let mut data = FsData::new(&file);
         data.load();
         if output {
-            println!("\n AST: \n{:#?}", data.fsnodes);
+            println!("{:#?}", data.fsnodes);
         }
         if time {
             println!("Time: {}", data.get_time());
