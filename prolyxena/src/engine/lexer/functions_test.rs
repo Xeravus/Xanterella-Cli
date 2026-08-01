@@ -7,17 +7,32 @@ mod tests {
     fn test_engine_lexer_functions_parse_let_in() {
         let content1 = "in test";
         let content2 = "n test";
+        let content3 = " test";
+        let content4 = "in test; test";
+        let content5 = "test test";
+
+        let error3 = "Syntax-Fehler: Leerer Key im Let-In Statment \nDatei: path.nix \n Erwartet: Let-In Statment".to_string();
 
         let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
+        let mut data4 = Lexer::new(content4, String::from("path.nix"));
+        let mut data5 = Lexer::new(content5, String::from("path.nix"));
 
         let result1 = data1.parse_let_in();
         let result2 = data2.parse_let_in();
+        let result3 = data3.parse_let_in();
+        let result4 = data4.parse_let_in();
+        let result5 = data5.parse_let_in();
 
         assert!(result1.is_ok());
         assert!(result2.is_err());
+        assert!(result3.is_err());
+        assert!(result4.is_ok());
+        assert!(result5.is_err());
 
         assert!(matches!(result1, Ok(NixValue::LetIn(..))));
+        assert!(matches!(result3, Err(error3)));
 
         assert!(!matches!(result1, Ok(NixValue::AttrSet(_))));
     }
