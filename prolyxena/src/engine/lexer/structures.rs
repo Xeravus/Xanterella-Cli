@@ -1,8 +1,7 @@
-use indexmap::IndexMap;
+use std::collections::HashMap;
 
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
-use crate::engine::lexer::primitives::*;
 
 pub trait ParseStructures {
     fn parse_attr_set(&mut self) -> Result<NixValue, String>;
@@ -13,7 +12,7 @@ impl<'a> ParseStructures for Lexer<'a> {
     fn parse_attr_set(&mut self) -> Result<NixValue, String> {
         self.log_event(ParseEvent::StartAttrSet);
         self.chars.next();
-        let mut map = IndexMap::new();
+        let mut map = HashMap::new();
         loop {
             self.skip_whitespace();
             if let Some(&'}') = self.chars.peek() {
@@ -106,7 +105,7 @@ impl<'a> ParseStructures for Lexer<'a> {
                 break;
             }
 
-            let value = self.parse_single_value()?;
+            let value = self.parse_value()?;
             output_vec.push(value);
         }
         self.log_event(ParseEvent::EndList);

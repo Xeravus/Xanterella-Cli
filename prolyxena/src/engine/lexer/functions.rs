@@ -1,4 +1,4 @@
-use indexmap::IndexMap;
+use std::collections::HashMap;
 
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
@@ -14,7 +14,7 @@ pub trait ParseFunctions {
 impl<'a> ParseFunctions for Lexer<'a> {
     fn parse_let_in(&mut self) -> Result<NixValue, String> {
         self.log_event(ParseEvent::StartLetIn);
-        let mut map = IndexMap::new();
+        let mut map = HashMap::new();
         loop {
             self.skip_whitespace();
             let mut key = String::new();
@@ -43,7 +43,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 self.chars.next();
             } else {
                 return Err(format!(
-                    "Syntax-Fehler: Erwartet '=' nach Key '{}' \nDatei: {} \nErwartet: Let-In Statment",
+                    "Syntax-Fehler: Erwartetes '=' nach Key '{}' \nDatei: {} \nErwartet: Let-In Statment",
                     key, self.path
                 ));
             }
@@ -55,7 +55,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 self.chars.next();
             } else {
                 return Err(format!(
-                    "Syntax-Fehler: Erwartet ';' nach dem Wert '{}' \nDatei: {} \nErwartet: Let-In Statment",
+                    "Syntax-Fehler: Erwartetes ';' nach dem Wert von'{}' \nDatei: {} \nErwartet: Let-In Statment",
                     key, self.path
                 ));
             }

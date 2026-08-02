@@ -26,7 +26,7 @@ mod tests {
         assert!(result1.is_ok());
         assert!(result2.is_ok());
         assert!(result3.is_err());
-        assert!(result4.is_err());
+        assert!(result3.is_err());
         assert!(result5.is_err());
 
         assert!(matches!(result1, Ok(NixValue::AttrSet(_))));

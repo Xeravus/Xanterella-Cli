@@ -176,28 +176,6 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             if c.is_alphanumeric() || c == '_' || c == '-' || c == '.' {
                 word.push(c);
                 self.chars.next();
-            } else if c == '$' {
-                word.push(c);
-                self.chars.next();
-                if let Some(&'{') = self.chars.peek() {
-                    word.push('{');
-                    self.chars.next();
-                    self.log_event(ParseEvent::StartAntiquotation);
-                    while let Some(&d) = self.chars.peek() {
-                        if d.is_alphanumeric() || d == '_' || d == '-' || d == '.' {
-                            word.push(d);
-                            self.chars.next();
-                        } else if d == '}' {
-                            word.push(d);
-                            self.chars.next();
-                            break;
-                        } else {
-                            return Err(format!("Syntax-Fehler: Unerwartetes Zeichen: '{}' \nDatei: {} \nErwartet: Antiquotation(Antiquotation inside an Identifier)", c, self.path));
-                        }
-                    }
-                } else {
-                    return Err(format!("Syntax-Fehler: Erwartet '{{' nach einem '$' für eine Antiquotation \nDatei: {} \nErwartet: Antiquotation(Antiquotation inside an Indentifier)", self.path));
-                }
             } else {
                 break;
             }
