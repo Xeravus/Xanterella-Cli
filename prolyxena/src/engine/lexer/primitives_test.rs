@@ -276,6 +276,21 @@ mod tests {
     }
 
     #[test]
+    fn test_engine_lexer_primitives_parse_identifier_antiquotation() {
+        let content1 = "le${pkgs}";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+
+        let result1 = data1.parse_identifier();
+
+        assert!(result1.is_ok());
+
+        assert!(matches!(result1, Ok(NixValue::Identifier(..))));
+
+        assert!(!matches!(result1, Ok(NixValue::AttrSet(_))));
+    }
+
+    #[test]
     fn test_engine_lexer_primitives_parse_identifier_bool() {
         let content1 = "true";
         let content2 = "false";

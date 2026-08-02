@@ -124,6 +124,8 @@ mod tests {
         let mut tui16 = Tui::new(false, false);
         let mut tui17 = Tui::new(false, false);
         let mut tui18 = Tui::new(false, false);
+        let mut tui19 = Tui::new(false, false);
+        let mut tui20 = Tui::new(false, false);
 
         let mut indent1 = 0;
         let mut indent2 = 0;
@@ -143,6 +145,8 @@ mod tests {
         let mut indent16 = 0;
         let mut indent17 = 0;
         let mut indent18 = 0;
+        let mut indent19 = 0;
+        let mut indent20 = 0;
 
         let (tx1, rx1) = mpsc::channel();
         let (tx2, rx2) = mpsc::channel();
@@ -162,6 +166,8 @@ mod tests {
         let (tx16, rx16) = mpsc::channel();
         let (tx17, rx17) = mpsc::channel();
         let (tx18, rx18) = mpsc::channel();
+        let (tx19, rx19) = mpsc::channel();
+        let (tx20, rx20) = mpsc::channel();
 
         tui1.trans = Some(rx1);
         tui2.trans = Some(rx2);
@@ -181,6 +187,8 @@ mod tests {
         tui16.trans = Some(rx16);
         tui17.trans = Some(rx17);
         tui18.trans = Some(rx18);
+        tui19.trans = Some(rx19);
+        tui20.trans = Some(rx20);
 
         tx1.send(ParseEvent::StartAttrSet).unwrap();
         tx2.send(ParseEvent::StartList).unwrap();
@@ -200,6 +208,8 @@ mod tests {
         tx16.send(ParseEvent::StartIndentedString).unwrap();
         tx17.send(ParseEvent::StartGen).unwrap();
         tx18.send(ParseEvent::StartGettingFiles).unwrap();
+        tx19.send(ParseEvent::Finished("test".to_string())).unwrap();
+        tx20.send(ParseEvent::StartSortingFile("test.nix".to_string())).unwrap();
 
         tui1.last_update = Instant::now() - Duration::from_millis(10);
         tui2.last_update = Instant::now() - Duration::from_millis(10);
@@ -219,6 +229,8 @@ mod tests {
         tui16.last_update = Instant::now() - Duration::from_millis(10);
         tui17.last_update = Instant::now() - Duration::from_millis(10);
         tui18.last_update = Instant::now() - Duration::from_millis(10);
+        tui19.last_update = Instant::now() - Duration::from_millis(10);
+        tui20.last_update = Instant::now() - Duration::from_millis(10);
 
         tui1.parse_events(&mut indent1);
         tui2.parse_events(&mut indent2);
@@ -238,6 +250,8 @@ mod tests {
         tui16.parse_events(&mut indent16);
         tui17.parse_events(&mut indent17);
         tui18.parse_events(&mut indent18);
+        tui19.parse_events(&mut indent19);
+        tui20.parse_events(&mut indent20);
 
         assert_eq!(tui1.logs.len(), 1);
         assert_eq!(tui2.logs.len(), 1);
@@ -257,6 +271,8 @@ mod tests {
         assert_eq!(tui16.logs.len(), 1);
         assert_eq!(tui17.logs.len(), 1);
         assert_eq!(tui18.logs.len(), 1);
+        assert_eq!(tui19.logs.len(), 0);
+        assert_eq!(tui20.logs.len(), 1);
 
         assert_eq!(tui1.logs[0].status, TaskStatus::Running);
         assert_eq!(tui1.logs[0].status, TaskStatus::Running);
@@ -277,6 +293,7 @@ mod tests {
         assert_eq!(tui16.logs[0].status, TaskStatus::Running);
         assert_eq!(tui17.logs[0].status, TaskStatus::Running);
         assert_eq!(tui18.logs[0].status, TaskStatus::Running);
+        assert_eq!(tui20.logs[0].status, TaskStatus::Running);
 
         assert_eq!(indent1, 1);
         assert_eq!(indent2, 1);
@@ -296,6 +313,8 @@ mod tests {
         assert_eq!(indent16, 1);
         assert_eq!(indent17, 1);
         assert_eq!(indent18, 1);
+        assert_eq!(indent19, 0);
+        assert_eq!(indent20, 1);
 
         tx1.send(ParseEvent::EndAttrSet).unwrap();
         tx2.send(ParseEvent::EndList).unwrap();
@@ -315,6 +334,7 @@ mod tests {
         tx16.send(ParseEvent::EndIndentedString).unwrap();
         tx17.send(ParseEvent::EndGen).unwrap();
         tx18.send(ParseEvent::EndGettingFiles).unwrap();
+        tx20.send(ParseEvent::EndSortingFile("test.nix".to_string())).unwrap();
 
         tui1.last_update = Instant::now() - Duration::from_millis(10);
         tui2.last_update = Instant::now() - Duration::from_millis(10);
@@ -334,6 +354,7 @@ mod tests {
         tui16.last_update = Instant::now() - Duration::from_millis(10);
         tui17.last_update = Instant::now() - Duration::from_millis(10);
         tui18.last_update = Instant::now() - Duration::from_millis(10);
+        tui20.last_update = Instant::now() - Duration::from_millis(10);
 
         tui1.parse_events(&mut indent1);
         tui2.parse_events(&mut indent2);
@@ -353,6 +374,7 @@ mod tests {
         tui16.parse_events(&mut indent16);
         tui17.parse_events(&mut indent17);
         tui18.parse_events(&mut indent18);
+        tui20.parse_events(&mut indent20);
 
         assert_eq!(tui1.logs.len(), 0);
         assert_eq!(tui2.logs.len(), 0);
@@ -372,6 +394,8 @@ mod tests {
         assert_eq!(tui16.logs.len(), 0);
         assert_eq!(tui17.logs.len(), 1);
         assert_eq!(tui18.logs.len(), 0);
+        assert_eq!(tui19.logs.len(), 0);
+        assert_eq!(tui20.logs.len(), 0);
 
         assert_eq!(indent1, 0);
         assert_eq!(indent2, 0);
@@ -391,5 +415,7 @@ mod tests {
         assert_eq!(indent16, 0);
         assert_eq!(indent17, 0);
         assert_eq!(indent18, 0);
+        assert_eq!(indent19, 0);
+        assert_eq!(indent20, 0);
     }
 }

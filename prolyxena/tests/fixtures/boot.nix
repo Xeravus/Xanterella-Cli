@@ -46,9 +46,13 @@
           generic-extlinux-compatible = {
             enable = true;
           };
+	  indstr = ''
+	  gengengenngenn${{pkgs, pkw, pwd, ... }: {b = a; a = b;}}
+	  '';
+	  binaryop = test1 ++ test2;
         };
         kernelPackages = pkgs.linuxPackages_6_12;
-        kernelParams = ["btusb.enable_autosuspend=0"];
+        kernelParams = ["btusb.enable_autosuspend=0" "${pkgs}"];
       };
     })
   ];

@@ -4,6 +4,7 @@ use std::sync::mpsc::{self, Receiver};
 #[allow(unused_imports)]
 use std::thread;
 use std::time::{Duration, Instant};
+use std::env::var;
 
 use crossterm::event::{self, Event, KeyCode};
 use crossterm::execute;
@@ -81,8 +82,10 @@ impl Tui {
             prolyxena.load();
             let _ = time_tx.send(prolyxena.get_time());
         });
-        #[cfg(not(test))]
-        let _ = self.start_tui();
+        if var("PROLYXENA_TEST").is_err() {
+            #[cfg(not(test))]
+            let _ = self.start_tui();
+        }
     }
 
     pub fn start_tui(&mut self) -> Result<(), Box<dyn std::error::Error>> {

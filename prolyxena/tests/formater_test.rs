@@ -2,6 +2,7 @@ use tempfile::Builder;
 use std::fs;
 
 use prolyxena::engine::lexer::vfs::*;
+use prolyxena::engine::formater::write::*;
 
 #[test]
 fn int_test_formater_colmena_host_nix() {
@@ -151,4 +152,30 @@ fn int_test_formater_with() {
     assert_ne!(data_nrm.sort, data_fmt.sort);
     assert_eq!(data_nrm.files, data_fmt.files);
     assert_eq!(data_nrm.path, data_fmt.path);
+}
+
+#[test]
+fn int_test_formater_full() {
+    let inital_content = include_str!("fixtures/fmt/colmena-hosts_no_fmt.nix");
+    let expected_content = include_str!("fixtures/fmt/colmena-hosts_fmt.nix");
+
+    let temp_file = Builder::new()
+        .suffix(".nix")
+        .tempfile()
+        .unwrap();
+
+    let temp_path = temp_file.path().to_str().unwrap();
+    fs::write(temp_path, inital_content).unwrap();
+
+    let mut data = FsData::new(&temp_path);
+
+    data.sort(true);
+    data.load();
+    let _ = data.walk_tree();
+
+    let content = fs::read_to_string(temp_path).unwrap();
+
+    assert_eq!(content, expected_content);
+    assert_ne!(content, inital_content);
+    assert_ne!(expected_content, inital_content);
 }

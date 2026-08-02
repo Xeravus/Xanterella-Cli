@@ -1,5 +1,9 @@
 use clap::{Parser as CalpParser, Subcommand};
 
+use std::io::Write as StdOut;
+use std::io::stdout;
+use std::env::var;
+
 use crate::engine::lexer::vfs::*;
 use crate::engine::formater::write::Write;
 use crate::tui::core::*;
@@ -42,15 +46,17 @@ pub fn cli_parse() {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Show { path, animation, output, time, debug } => {
-            prolyxena_parse(path.to_string(), *animation, *output, *time, *debug);
+            let mut stdout = stdout();
+            prolyxena_parse(&mut stdout, path.to_string(), *animation, *output, *time, *debug);
         }
         Commands::Format { path, animation, output, time, debug } => {
-            prolyxena_format(path.to_string(), *animation, *output, *time, *debug);
+            let mut stdout = stdout();
+            prolyxena_format(&mut stdout, path.to_string(), *animation, *output, *time, *debug);
         }
     }
 }
 
-pub fn prolyxena_parse(file: String, animation: bool, output: bool, time: bool, debug: bool) {
+pub fn prolyxena_parse(writer: &mut impl StdOut, file: String, animation: bool, output: bool, time: bool, debug: bool) {
     if animation {
         let mut tui = Tui::new(false, debug);
         tui.load(&file);
@@ -58,15 +64,15 @@ pub fn prolyxena_parse(file: String, animation: bool, output: bool, time: bool, 
         let mut data = FsData::new(&file);
         data.load();
         if output {
-            println!("{:#?}", data.fsnodes);
+            let _ = writeln!(writer, "{:#?}", data.fsnodes);
         }
         if time {
-            println!("Time: {}", data.get_time());
+            let _ = writeln!(writer, "Time: {}", data.get_time());
         }
     }
 }
 
-pub fn prolyxena_format(file: String, animation: bool, output: bool, time: bool, debug: bool) {
+pub fn prolyxena_format(writer: &mut impl StdOut, file: String, animation: bool, output: bool, time: bool, debug: bool) {
     if animation {
         let mut tui = Tui::new(true, debug);
         tui.load(&file);
@@ -76,10 +82,10 @@ pub fn prolyxena_format(file: String, animation: bool, output: bool, time: bool,
         data.load();
         let _ = data.walk_tree();
         if output {
-            println!("{:#?}", data.fsnodes);
+            let _ = writeln!(writer, "{:#?}", data.fsnodes);
         }
         if time {
-            println!("Time: {}", data.get_time());
+            let _ = writeln!(writer, "Time: {}", data.get_time());
         }
     }
 }
