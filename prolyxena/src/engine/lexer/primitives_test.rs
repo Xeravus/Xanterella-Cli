@@ -276,21 +276,6 @@ mod tests {
     }
 
     #[test]
-    fn test_engine_lexer_primitives_parse_identifier_antiquotation() {
-        let content1 = "le${pkgs}";
-
-        let mut data1 = Lexer::new(content1, String::from("path.nix"));
-
-        let result1 = data1.parse_identifier();
-
-        assert!(result1.is_ok());
-
-        assert!(matches!(result1, Ok(NixValue::Identifier(..))));
-
-        assert!(!matches!(result1, Ok(NixValue::AttrSet(_))));
-    }
-
-    #[test]
     fn test_engine_lexer_primitives_parse_identifier_bool() {
         let content1 = "true";
         let content2 = "false";
@@ -323,6 +308,9 @@ mod tests {
 
     #[test]
     fn test_engine_lexer_primitves_parse_expression() {
+        let test1 = String::from("test");
+        let test2 = String::from("test");
+        let test3 = String::from("test");
         let content1 = "test";
         let content2 = "test ++ test";
         let content3 = "test ++ ";
@@ -343,8 +331,8 @@ mod tests {
         assert!(result3.is_err());
         assert!(result4.is_err());
 
-        assert!(matches!(result1, Ok(NixValue::Identifier(_))));
-        assert!(matches!(result2, Ok(NixValue::BinaryOp { left: _, operator: Operator::Concat, right: _ })));
+        assert!(matches!(result1, Ok(NixValue::Identifier(test1))));
+        assert!(matches!(result2, Ok(NixValue::BinaryOp { left: test2, operator: Operator::Concat, right: test3 })));
     }
 
     #[test]

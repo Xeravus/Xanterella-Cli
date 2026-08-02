@@ -1,10 +1,8 @@
 use std::borrow::Cow;
 use std::io;
 use std::sync::mpsc::{self, Receiver};
-#[allow(unused_imports)]
 use std::thread;
 use std::time::{Duration, Instant};
-use std::env::var;
 
 use crossterm::event::{self, Event, KeyCode};
 use crossterm::execute;
@@ -27,8 +25,6 @@ pub struct Tui {
     trans: Option<Receiver<ParseEvent>>,
     last_update: Instant,
     num_of_pars: u32,
-    sort: bool,
-    debug: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -53,7 +49,7 @@ pub enum TaskBool {
 
 impl Tui {
     #[allow(clippy::new_without_default)]
-    pub fn new(sort: bool, debug: bool) -> Self {
+    pub fn new() -> Self {
         Tui {
             logs: Vec::new(),
             path: String::new(),
@@ -62,30 +58,24 @@ impl Tui {
             trans: None,
             last_update: Instant::now(),
             num_of_pars: 0,
-            sort,
-            debug,
         }
     }
 
     pub fn load(&mut self, path: &str) {
         self.path = path.to_string();
         let (tx, rx) = mpsc::channel::<ParseEvent>();
-        #[allow(unused)]
         let (time_tx, time_rx) = mpsc::channel::<String>();
         self.trans = Some(rx);
         self.time_rx = Some(time_rx);
         let mut prolyxena = FsData::new_trans(path, tx.clone());
-        prolyxena.sort(self.sort);
 
         #[cfg(not(test))]
         thread::spawn(move || {
             prolyxena.load();
             let _ = time_tx.send(prolyxena.get_time());
         });
-        if var("PROLYXENA_TEST").is_err() {
-            #[cfg(not(test))]
-            let _ = self.start_tui();
-        }
+        #[cfg(not(test))]
+        let _ = self.start_tui();
     }
 
     pub fn start_tui(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -124,7 +114,7 @@ impl Tui {
             None => "running...",
         };
 
-        let sidebar_text = format!(" Path: {} \n Time: {} \n Number of Actions: {} / {}", self.path, time, self.num_of_pars, self.logs.len());
+        let sidebar_text = format!(" Path: {} \n Time: {} \n Number of Actions: {}", self.path, time, self.num_of_pars);
 
         let sidebar_block = Block::default().title(" Prolyxena Output ").borders(Borders::ALL);
         let main_block = Block::default().title(" Prolyxena Parsegraph ").borders(Borders::ALL);
@@ -173,16 +163,13 @@ impl Tui {
                 ParseEvent::Finished(_) => (TaskBool::Keep, "Finished".into()),
 
                 ParseEvent::StartGen => (TaskBool::True, "Generating Tree".into()),
-                ParseEvent::EndGen => (TaskBool::Keep, "Generating Tree".into()),
+                ParseEvent::EndGen => (TaskBool::False, "Generating Tree".into()),
 
                 ParseEvent::StartGettingFiles => (TaskBool::True, "Getting Files".into()),
                 ParseEvent::EndGettingFiles => (TaskBool::False, "Getting Files".into()),
 
                 ParseEvent::StartParsingFile(file) => (TaskBool::True, format!("Generating AST: {}", file).into()),
                 ParseEvent::EndParsingFile(file) => (TaskBool::Keep, format!("Generating AST: {}", file).into()),
-
-                ParseEvent::StartSortingFile(file) => (TaskBool::True, format!("Sorting AST: {}", file).into()),
-                ParseEvent::EndSortingFile(file) => (TaskBool::False, format!("Sorting AST: {}", file).into()),
 
                 ParseEvent::StartAttrSet => (TaskBool::True, "Parsing Attribut Set".into()),
                 ParseEvent::EndAttrSet => (TaskBool::False, "Parsing Attribut Set".into()),
@@ -252,12 +239,8 @@ impl Tui {
                     }
                 }
                 TaskBool::False => {
-                    if !self.debug {
-                        if let Some(index) = self.logs.iter().rposition(|t| t.status == TaskStatus::Running || t.status == TaskStatus::Finished) {
-                            self.logs.remove(index);
-                        }
-                    } else {
-                        self.logs.push(ParseTask { name, indent: *indent, status: TaskStatus::Finished });
+                    if let Some(index) = self.logs.iter().rposition(|t| t.status == TaskStatus::Running) {
+                        self.logs.remove(index);
                     }
                 }
                 TaskBool::Keep => {

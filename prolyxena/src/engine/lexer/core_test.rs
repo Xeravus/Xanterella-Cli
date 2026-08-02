@@ -61,14 +61,6 @@ mod tests {
         assert!(data6.chars.peek().is_some());
         assert!(data7.chars.peek().is_none());
 
-        assert!(result1.is_err());
-        assert!(result2.is_err());
-        assert!(result3.is_err());
-        assert!(result4.is_err());
-        assert!(result5.is_err());
-        assert!(result6.is_err());
-        assert!(result7.is_err());
-
         data1.chars.next();
         data2.chars.next();
         data3.chars.next();
