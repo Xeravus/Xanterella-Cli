@@ -1,13 +1,14 @@
-use std::collections::HashMap;
 use std::fs;
 use std::process;
 use std::sync::mpsc::Sender;
 use std::time::Instant;
 
 use walkdir::WalkDir;
+use indexmap::IndexMap;
 
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
+use crate::engine::formater::sort::Sort;
 
 #[derive(Debug, Clone)]
 pub struct FsData {
@@ -16,26 +17,28 @@ pub struct FsData {
     pub fsnodes: FsNodes,
     pub trans: Option<Sender<ParseEvent>>,
     pub time: f64,
+    pub sort: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FsNodes {
     File { name: String, ast: NixValue },
-    Dir(HashMap<String, FsNodes>),
+    Dir(IndexMap<String, FsNodes>),
 }
 
 impl FsData {
     pub fn new(path: &str) -> Self {
-        FsData { files: vec![], path: path.to_string(), fsnodes: FsNodes::Dir(HashMap::new()), trans: None, time: 0.0 }
+        FsData { files: vec![], path: path.to_string(), fsnodes: FsNodes::Dir(IndexMap::new()), trans: None, time: 0.0, sort: false }
     }
 
     pub fn new_trans(path: &str, trans: Sender<ParseEvent>) -> Self {
         FsData {
             files: vec![],
             path: path.to_string(),
-            fsnodes: FsNodes::Dir(HashMap::new()),
+            fsnodes: FsNodes::Dir(IndexMap::new()),
             trans: Some(trans),
             time: 0.0,
+            sort: false,
         }
     }
 
@@ -47,6 +50,10 @@ impl FsData {
         if let Some(tx) = &self.trans {
             tx.send(ParseEvent::Finished(self.get_time())).ok();
         }
+    }
+
+    pub fn sort(&mut self, sort: bool) {
+        self.sort = sort;
     }
 
     pub fn get_files(&mut self) {
@@ -95,7 +102,7 @@ impl FsData {
             for j in 0..parts.len() - 1 {
                 let folder = parts[j];
                 if let FsNodes::Dir(map) = pointer {
-                    pointer = map.entry(folder.to_string()).or_insert_with(|| FsNodes::Dir(HashMap::new()));
+                    pointer = map.entry(folder.to_string()).or_insert_with(|| FsNodes::Dir(IndexMap::new()));
                 } else {
                     eprintln!("Fehler: Versucht einen Ordner in einer Datei zu erstellen");
                     break;
@@ -112,7 +119,18 @@ impl FsData {
                     None => Lexer::new(&content, i.clone()),
                 };
                 let ast = match file_data.parse_value() {
-                    Ok(parsed_ast) => parsed_ast,
+                    Ok(mut parsed_ast) => {
+                        if self.sort {
+                            if let Some(tx) = &self.trans {
+                                let _ = tx.send(ParseEvent::StartSortingFile(clean_path.to_string()));
+                                parsed_ast.sort_ast();
+                                let _ = tx.send(ParseEvent::EndSortingFile(clean_path.to_string()));
+                            } else {
+                                parsed_ast.sort_ast();
+                            }
+                        }
+                        parsed_ast
+                    },
                     Err(e) => {
                         eprintln!("Fehler beim Parsen: \n{}", e);
                         process::exit(1);
