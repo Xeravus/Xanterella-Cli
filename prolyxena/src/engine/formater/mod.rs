@@ -1,3 +1,3 @@
 pub mod core;
-pub mod write;
 pub mod sort;
+pub mod write;

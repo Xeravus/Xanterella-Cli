@@ -1,8 +1,8 @@
-use crate::engine::lexer::vfs::*;
+use std::fs;
+
 use crate::engine::core::*;
 use crate::engine::formater::core::Format;
-
-use std::fs;
+use crate::engine::lexer::vfs::*;
 
 pub trait Write {
     fn walk_tree(&mut self) -> Result<(), String>;
@@ -19,7 +19,7 @@ impl Write for FsData {
             for j in 0..parts.len() - 1 {
                 let folder = parts[j];
                 if let FsNodes::Dir(map) = pointer {
-                    pointer = map. get_mut(folder).ok_or("Cant Extract Values out of IndexMap".to_string())?;
+                    pointer = map.get_mut(folder).ok_or("Cant Extract Values out of IndexMap".to_string())?;
                 } else {
                     return Err("Tree is Corrupt".to_string());
                 }
@@ -27,7 +27,6 @@ impl Write for FsData {
             let file_name = parts.last().unwrap().to_string();
             if let FsNodes::Dir(map) = pointer {
                 let file = map.get(&file_name).unwrap();
-                
 
                 if let FsNodes::File { name: _, ast } = file {
                     write(ast, &i);

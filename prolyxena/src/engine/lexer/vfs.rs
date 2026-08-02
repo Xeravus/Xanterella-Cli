@@ -3,12 +3,12 @@ use std::process;
 use std::sync::mpsc::Sender;
 use std::time::Instant;
 
-use walkdir::WalkDir;
 use indexmap::IndexMap;
+use walkdir::WalkDir;
 
 use crate::engine::core::*;
-use crate::engine::lexer::core::*;
 use crate::engine::formater::sort::Sort;
+use crate::engine::lexer::core::*;
 
 #[derive(Debug, Clone)]
 pub struct FsData {
@@ -28,7 +28,14 @@ pub enum FsNodes {
 
 impl FsData {
     pub fn new(path: &str) -> Self {
-        FsData { files: vec![], path: path.to_string(), fsnodes: FsNodes::Dir(IndexMap::new()), trans: None, time: 0.0, sort: false }
+        FsData {
+            files: vec![],
+            path: path.to_string(),
+            fsnodes: FsNodes::Dir(IndexMap::new()),
+            trans: None,
+            time: 0.0,
+            sort: false,
+        }
     }
 
     pub fn new_trans(path: &str, trans: Sender<ParseEvent>) -> Self {
@@ -130,7 +137,7 @@ impl FsData {
                             }
                         }
                         parsed_ast
-                    },
+                    }
                     Err(e) => {
                         eprintln!("Fehler beim Parsen: \n{}", e);
                         process::exit(1);

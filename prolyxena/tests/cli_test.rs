@@ -1,17 +1,14 @@
-use tempfile::Builder;
-use std::fs;
 use std::env::set_var;
+use std::fs;
 
 use prolyxena::cli::commands::*;
+use tempfile::Builder;
 
 #[test]
 fn int_test_cli_commands_prolyxena_parse_no_stdout() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -29,10 +26,7 @@ fn int_test_cli_commands_prolyxena_parse_no_stdout() {
 fn int_test_cli_commands_prolyxena_parse_time() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -50,10 +44,7 @@ fn int_test_cli_commands_prolyxena_parse_time() {
 fn int_test_cli_commands_prolyxena_parse_output() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -71,10 +62,7 @@ fn int_test_cli_commands_prolyxena_parse_output() {
 fn int_test_cli_commands_prolyxena_parse_all() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -94,10 +82,7 @@ fn int_test_cli_commands_prolyxena_parse_all() {
 fn int_test_cli_commands_prolyxena_parse_animation() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -107,7 +92,7 @@ fn int_test_cli_commands_prolyxena_parse_animation() {
     unsafe {
         set_var("PROLYXENA_TEST", "1");
     }
-    
+
     prolyxena_parse(&mut buffer, temp_path.to_string(), true, false, false, false);
 
     let output_string = String::from_utf8(buffer).unwrap();
@@ -119,10 +104,7 @@ fn int_test_cli_commands_prolyxena_parse_animation() {
 fn int_test_cli_commands_prolyxena_format_no_stdout() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -140,10 +122,7 @@ fn int_test_cli_commands_prolyxena_format_no_stdout() {
 fn int_test_cli_commands_prolyxena_format_time() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -161,10 +140,7 @@ fn int_test_cli_commands_prolyxena_format_time() {
 fn int_test_cli_commands_prolyxena_format_output() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -182,10 +158,7 @@ fn int_test_cli_commands_prolyxena_format_output() {
 fn int_test_cli_commands_prolyxena_format_all() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -205,10 +178,7 @@ fn int_test_cli_commands_prolyxena_format_all() {
 fn int_test_cli_commands_prolyxena_format_animation() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -218,7 +188,7 @@ fn int_test_cli_commands_prolyxena_format_animation() {
     unsafe {
         set_var("PROLYXENA_TEST", "1");
     }
-    
+
     prolyxena_format(&mut buffer, temp_path.to_string(), true, false, false, false);
 
     let output_string = String::from_utf8(buffer).unwrap();

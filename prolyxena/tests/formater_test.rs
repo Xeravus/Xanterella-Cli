@@ -1,17 +1,14 @@
-use tempfile::Builder;
 use std::fs;
 
-use prolyxena::engine::lexer::vfs::*;
 use prolyxena::engine::formater::write::*;
+use prolyxena::engine::lexer::vfs::*;
+use tempfile::Builder;
 
 #[test]
 fn int_test_formater_colmena_host_nix() {
     let inital_content = include_str!("fixtures/colmena-hosts.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -38,10 +35,7 @@ fn int_test_formater_colmena_host_nix() {
 fn int_test_formater_modules_boot_boot_nix() {
     let inital_content = include_str!("fixtures/boot.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -68,10 +62,7 @@ fn int_test_formater_modules_boot_boot_nix() {
 fn int_test_formater_modules_essentials_tailscale_nix() {
     let inital_content = include_str!("fixtures/tailscale.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -98,10 +89,7 @@ fn int_test_formater_modules_essentials_tailscale_nix() {
 fn int_test_formater_let_in() {
     let inital_content = include_str!("fixtures/fmt/let-in.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -128,10 +116,7 @@ fn int_test_formater_let_in() {
 fn int_test_formater_with() {
     let inital_content = include_str!("fixtures/fmt/with.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();
@@ -159,10 +144,7 @@ fn int_test_formater_full() {
     let inital_content = include_str!("fixtures/fmt/colmena-hosts_no_fmt.nix");
     let expected_content = include_str!("fixtures/fmt/colmena-hosts_fmt.nix");
 
-    let temp_file = Builder::new()
-        .suffix(".nix")
-        .tempfile()
-        .unwrap();
+    let temp_file = Builder::new().suffix(".nix").tempfile().unwrap();
 
     let temp_path = temp_file.path().to_str().unwrap();
     fs::write(temp_path, inital_content).unwrap();

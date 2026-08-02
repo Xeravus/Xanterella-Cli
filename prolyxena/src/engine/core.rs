@@ -1,7 +1,8 @@
-use indexmap::IndexMap;
 use std::iter::Peekable;
 use std::str::Chars;
 use std::sync::mpsc::Sender;
+
+use indexmap::IndexMap;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum NixValue {

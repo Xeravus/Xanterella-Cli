@@ -1,10 +1,10 @@
 use std::borrow::Cow;
+use std::env::var;
 use std::io;
 use std::sync::mpsc::{self, Receiver};
 #[allow(unused_imports)]
 use std::thread;
 use std::time::{Duration, Instant};
-use std::env::var;
 
 use crossterm::event::{self, Event, KeyCode};
 use crossterm::execute;
@@ -124,7 +124,13 @@ impl Tui {
             None => "running...",
         };
 
-        let sidebar_text = format!(" Path: {} \n Time: {} \n Number of Actions: {} / {}", self.path, time, self.num_of_pars, self.logs.len());
+        let sidebar_text = format!(
+            " Path: {} \n Time: {} \n Number of Actions: {} / {}",
+            self.path,
+            time,
+            self.num_of_pars,
+            self.logs.len()
+        );
 
         let sidebar_block = Block::default().title(" Prolyxena Output ").borders(Borders::ALL);
         let main_block = Block::default().title(" Prolyxena Parsegraph ").borders(Borders::ALL);
@@ -253,7 +259,11 @@ impl Tui {
                 }
                 TaskBool::False => {
                     if !self.debug {
-                        if let Some(index) = self.logs.iter().rposition(|t| t.status == TaskStatus::Running || t.status == TaskStatus::Finished) {
+                        if let Some(index) = self
+                            .logs
+                            .iter()
+                            .rposition(|t| t.status == TaskStatus::Running || t.status == TaskStatus::Finished)
+                        {
                             self.logs.remove(index);
                         }
                     } else {

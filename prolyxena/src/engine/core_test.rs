@@ -1,5 +1,6 @@
-use crate::engine::core::*;
 use std::sync::mpsc;
+
+use crate::engine::core::*;
 
 #[cfg(test)]
 mod tests {

@@ -1,3 +1,3 @@
 pub mod core;
-pub mod lexer;
 pub mod formater;
+pub mod lexer;

@@ -2,11 +2,11 @@ use crate::engine::formater::sort::*;
 
 #[cfg(test)]
 mod tests {
-    use crate::engine::lexer::core::ParseCore;
-    use crate::engine::core::*;
     use indexmap::IndexMap;
 
     use super::*;
+    use crate::engine::core::*;
+    use crate::engine::lexer::core::ParseCore;
     #[test]
     fn test_engine_formater_core_attr_set() {
         let content = "
@@ -20,15 +20,22 @@ mod tests {
         let result1 = lexer.parse_value();
         let mut result2 = result1.clone();
 
-        assert_eq!(result1, Ok(NixValue::AttrSet(IndexMap::from([
-                        (String::from("bb"), NixValue::Bool(true)), 
-                        (String::from("ab"), NixValue::Bool(true))
-        ]))));
+        assert_eq!(
+            result1,
+            Ok(NixValue::AttrSet(IndexMap::from([
+                (String::from("bb"), NixValue::Bool(true)),
+                (String::from("ab"), NixValue::Bool(true))
+            ])))
+        );
 
         result2.as_mut().unwrap().sort_ast();
 
-        assert_eq!(result2, Ok(NixValue::AttrSet(IndexMap::from([
-                        (String::from("ab"), NixValue::Bool(true)), (String::from("bb"), NixValue::Bool(true))
-        ]))));
+        assert_eq!(
+            result2,
+            Ok(NixValue::AttrSet(IndexMap::from([
+                (String::from("ab"), NixValue::Bool(true)),
+                (String::from("bb"), NixValue::Bool(true))
+            ])))
+        );
     }
 }

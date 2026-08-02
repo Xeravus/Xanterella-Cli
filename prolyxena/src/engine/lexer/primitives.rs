@@ -192,11 +192,17 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                             self.chars.next();
                             break;
                         } else {
-                            return Err(format!("Syntax-Fehler: Unerwartetes Zeichen: '{}' \nDatei: {} \nErwartet: Antiquotation(Antiquotation inside an Identifier)", c, self.path));
+                            return Err(format!(
+                                "Syntax-Fehler: Unerwartetes Zeichen: '{}' \nDatei: {} \nErwartet: Antiquotation(Antiquotation inside an Identifier)",
+                                c, self.path
+                            ));
                         }
                     }
                 } else {
-                    return Err(format!("Syntax-Fehler: Erwartet '{{' nach einem '$' für eine Antiquotation \nDatei: {} \nErwartet: Antiquotation(Antiquotation inside an Indentifier)", self.path));
+                    return Err(format!(
+                        "Syntax-Fehler: Erwartet '{{' nach einem '$' für eine Antiquotation \nDatei: {} \nErwartet: Antiquotation(Antiquotation inside an Indentifier)",
+                        self.path
+                    ));
                 }
             } else {
                 break;

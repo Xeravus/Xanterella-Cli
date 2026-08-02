@@ -1,10 +1,10 @@
-use clap::{Parser as CalpParser, Subcommand};
-
 use std::io::Write as StdOut;
 use std::io::stdout;
 
-use crate::engine::lexer::vfs::*;
+use clap::{Parser as CalpParser, Subcommand};
+
 use crate::engine::formater::write::Write;
+use crate::engine::lexer::vfs::*;
 use crate::tui::core::*;
 
 #[derive(CalpParser)]
@@ -71,7 +71,9 @@ pub fn prolyxena_parse(writer: &mut impl StdOut, file: String, animation: bool, 
     }
 }
 
-pub fn prolyxena_format(writer: &mut impl StdOut, file: String, animation: bool, output: bool, time: bool, debug: bool) {
+pub fn prolyxena_format(
+    writer: &mut impl StdOut, file: String, animation: bool, output: bool, time: bool, debug: bool,
+) {
     if animation {
         let mut tui = Tui::new(true, debug);
         tui.load(&file);
