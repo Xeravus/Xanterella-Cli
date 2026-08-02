@@ -1,11 +1,12 @@
-use std::collections::HashMap;
 use std::iter::Peekable;
 use std::str::Chars;
 use std::sync::mpsc::Sender;
 
+use indexmap::IndexMap;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum NixValue {
-    AttrSet(HashMap<String, NixValue>),
+    AttrSet(IndexMap<String, NixValue>),
     List(Vec<NixValue>),
     Str(String),
     IndStr(Vec<StringFragment>),
@@ -14,7 +15,7 @@ pub enum NixValue {
     Bool(bool),
     Identifier(String),
     Group(Box<NixValue>),
-    LetIn(HashMap<String, NixValue>, Box<NixValue>),
+    LetIn(IndexMap<String, NixValue>, Box<NixValue>),
     With(Box<NixValue>, Box<NixValue>),
     Lambda(Vec<String>, Option<String>, Box<NixValue>),
     Apply(Box<NixValue>, Box<NixValue>),
@@ -49,6 +50,8 @@ pub enum ParseEvent {
     EndGettingFiles,
     StartParsingFile(String),
     EndParsingFile(String),
+    StartSortingFile(String),
+    EndSortingFile(String),
     // Error(Err),
     // Start
     StartAttrSet,
