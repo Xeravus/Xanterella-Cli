@@ -16,7 +16,7 @@ mod tests {
 
     #[test]
     fn test_engine_core_new_trans() {
-        let (tx, rx) = mpsc::channel();
+        let (tx, _rx) = mpsc::channel();
         let lexer = Lexer::new_trans("", String::from("path.nix"), tx);
 
         assert!(!lexer.path.is_empty());

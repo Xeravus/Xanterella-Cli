@@ -306,58 +306,58 @@ impl<'a> ParsePrimitves for Lexer<'a> {
     fn parse_indented_string(&mut self) -> Result<NixValue, String> {
         let mut output = vec![];
         let mut string = String::new();
+
         while let Some(&c) = self.chars.peek() {
-            if let Some(&'$') = self.chars.peek() {
-                let scout = &mut self.chars.clone();
-                scout.next();
-                if let Some(&'{') = scout.peek() {
-                    if !&string.is_empty() {
-                        output.push(StringFragment::Text(string.clone()));
-                        string.clear();
-                    }
-                    let parsed_expr = self.parse_single_value()?;
-                    let expr = StringFragment::Antiquotation(Box::new(parsed_expr));
-                    output.push(expr)
-                } else {
-                    string.push(c);
+            match c {
+                '$' => {
                     self.chars.next();
-                }
-            }
-            if let Some(&'\'') = self.chars.peek() {
-                string.push(c);
-                self.chars.next();
-                if let Some(&'\'') = self.chars.peek() {
-                    string.push(c);
-                    self.chars.next();
-                    if let Some(&'\'') = self.chars.peek() {
-                        string.push(c);
+                    if let Some(&'{') = self.chars.peek() {
                         self.chars.next();
-                    } else if let Some(&'$') = self.chars.peek() {
-                        string.push(c);
-                        self.chars.next();
-                    } else {
-                        string.pop();
-                        string.pop();
-                        if !&string.is_empty() {
+                        if !string.is_empty() {
                             output.push(StringFragment::Text(string.clone()));
                             string.clear();
                         }
-                        break;
+
+                        let parsed_expr = self.parse_single_value()?;
+                        let expr = StringFragment::Antiquotation(Box::new(parsed_expr));
+                        output.push(expr);
+                    } else {
+                        string.push('$');
                     }
-                } else {
+                }
+                '\'' => {
+                    self.chars.next();
+                    if let Some(&'\'') = self.chars.peek() {
+                        self.chars.next();
+
+                        if let Some(&'\'') = self.chars.peek() {
+                            self.chars.next();
+                            string.push('\'');
+                            string.push('\'');
+                            string.push('\'');
+                        } else if let Some(&'$') = self.chars.peek() {
+                            self.chars.next();
+                            string.push('\'');
+                            string.push('\'');
+                            string.push('$');
+                        } else {
+                            if !string.is_empty() {
+                                output.push(StringFragment::Text(string.clone()));
+                                string.clear();
+                            }
+                            break;
+                        }
+                    } else {
+                        string.push('\'');
+                    }
+                }
+                _ => {
                     string.push(c);
                     self.chars.next();
                 }
             }
+        }
 
-            if let Some(&s) = self.chars.peek() {
-                string.push(s);
-                self.chars.next();
-            }
-        }
-        if !&string.is_empty() {
-            output.push(StringFragment::Text(string.clone()));
-        }
         if let Some(&';') = self.chars.peek() {
         } else {
             return Err(format!(
@@ -365,6 +365,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 self.path
             ));
         }
+
         self.log_event(ParseEvent::EndIndentedString);
         Ok(NixValue::IndStr(output))
     }

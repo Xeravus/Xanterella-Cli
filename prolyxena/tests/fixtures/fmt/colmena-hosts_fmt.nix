@@ -23,7 +23,7 @@ in {
       a = b;
       b = a;
     });
-    indstr = ''      whdhwdlwadjwadjwaj ${{
+    indstr = ''      whdhwdlwadjwadjwaj {
   a,
   b,
   c,

@@ -16,8 +16,8 @@ fn int_test_formater_colmena_host_nix() {
     let mut data_nrm = FsData::new(&temp_path);
     let mut data_fmt = FsData::new(&temp_path);
 
-    data_nrm.sort(false);
-    data_fmt.sort(true);
+    data_nrm.set_sort(false);
+    data_fmt.set_sort(true);
 
     data_nrm.load();
     data_fmt.load();
@@ -43,8 +43,8 @@ fn int_test_formater_modules_boot_boot_nix() {
     let mut data_nrm = FsData::new(&temp_path);
     let mut data_fmt = FsData::new(&temp_path);
 
-    data_nrm.sort(false);
-    data_fmt.sort(true);
+    data_nrm.set_sort(false);
+    data_fmt.set_sort(true);
 
     data_nrm.load();
     data_fmt.load();
@@ -70,8 +70,8 @@ fn int_test_formater_modules_essentials_tailscale_nix() {
     let mut data_nrm = FsData::new(&temp_path);
     let mut data_fmt = FsData::new(&temp_path);
 
-    data_nrm.sort(false);
-    data_fmt.sort(true);
+    data_nrm.set_sort(false);
+    data_fmt.set_sort(true);
 
     data_nrm.load();
     data_fmt.load();
@@ -97,8 +97,8 @@ fn int_test_formater_let_in() {
     let mut data_nrm = FsData::new(&temp_path);
     let mut data_fmt = FsData::new(&temp_path);
 
-    data_nrm.sort(false);
-    data_fmt.sort(true);
+    data_nrm.set_sort(false);
+    data_fmt.set_sort(true);
 
     data_nrm.load();
     data_fmt.load();
@@ -124,8 +124,8 @@ fn int_test_formater_with() {
     let mut data_nrm = FsData::new(&temp_path);
     let mut data_fmt = FsData::new(&temp_path);
 
-    data_nrm.sort(false);
-    data_fmt.sort(true);
+    data_nrm.set_sort(false);
+    data_fmt.set_sort(true);
 
     data_nrm.load();
     data_fmt.load();
@@ -151,7 +151,7 @@ fn int_test_formater_full() {
 
     let mut data = FsData::new(&temp_path);
 
-    data.sort(true);
+    data.set_sort(true);
     data.load();
     let _ = data.walk_tree();
 
