@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::io;
 use std::sync::mpsc::{self, Receiver};
+#[allow(unused_imports)]
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -68,6 +69,7 @@ impl Tui {
     pub fn load(&mut self, path: &str) {
         self.path = path.to_string();
         let (tx, rx) = mpsc::channel::<ParseEvent>();
+        #[allow(unused)]
         let (time_tx, time_rx) = mpsc::channel::<String>();
         self.trans = Some(rx);
         self.time_rx = Some(time_rx);

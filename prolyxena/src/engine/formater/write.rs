@@ -2,8 +2,6 @@ use crate::engine::lexer::vfs::*;
 use crate::engine::core::*;
 use crate::engine::formater::core::Format;
 
-use indexmap::IndexMap;
-
 use std::fs;
 
 pub trait Write {
@@ -41,5 +39,5 @@ impl Write for FsData {
 
 pub fn write(ast: &NixValue, path: &String) {
     println!("{}", ast.format_nix(0));
-    fs::write(path, ast.format_nix(0));
+    let _ = fs::write(path, ast.format_nix(0));
 }

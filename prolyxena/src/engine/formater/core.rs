@@ -152,7 +152,6 @@ impl Format for NixValue {
                 out.push_str(&rb.format_nix(depth));
                 out
             },
-            _ => todo!("{:?}", self),
         }
     }
 }

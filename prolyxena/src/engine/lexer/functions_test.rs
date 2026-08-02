@@ -11,8 +11,6 @@ mod tests {
         let content4 = "in test; test";
         let content5 = "test test";
 
-        let error3 = "Syntax-Fehler: Leerer Key im Let-In Statment \nDatei: path.nix \n Erwartet: Let-In Statment".to_string();
-
         let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let mut data2 = Lexer::new(content2, String::from("path.nix"));
         let mut data3 = Lexer::new(content3, String::from("path.nix"));
@@ -32,7 +30,7 @@ mod tests {
         assert!(result5.is_err());
 
         assert!(matches!(result1, Ok(NixValue::LetIn(..))));
-        assert!(matches!(result3, Err(error3)));
+        assert!(matches!(result3, Err(_)));
 
         assert!(!matches!(result1, Ok(NixValue::AttrSet(_))));
     }
@@ -63,10 +61,10 @@ mod tests {
         let content3 = "test, } @ inputs :";
         let content4 = "}";
 
-        let mut data1 = Lexer::new(content1, String::from("path.nix"));
-        let mut data2 = Lexer::new(content2, String::from("path.nix"));
-        let mut data3 = Lexer::new(content3, String::from("path.nix"));
-        let mut data4 = Lexer::new(content4, String::from("path.nix"));
+        let data1 = Lexer::new(content1, String::from("path.nix"));
+        let data2 = Lexer::new(content2, String::from("path.nix"));
+        let data3 = Lexer::new(content3, String::from("path.nix"));
+        let data4 = Lexer::new(content4, String::from("path.nix"));
 
         let result1 = data1.is_lambda_ahead();
         let result2 = data2.is_lambda_ahead();

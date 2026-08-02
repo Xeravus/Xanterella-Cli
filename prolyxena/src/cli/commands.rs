@@ -74,7 +74,7 @@ pub fn prolyxena_format(file: String, animation: bool, output: bool, time: bool,
         let mut data = FsData::new(&file);
         data.sort(true);
         data.load();
-        data.walk_tree();
+        let _ = data.walk_tree();
         if output {
             println!("{:#?}", data.fsnodes);
         }

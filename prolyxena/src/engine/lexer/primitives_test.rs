@@ -308,9 +308,6 @@ mod tests {
 
     #[test]
     fn test_engine_lexer_primitves_parse_expression() {
-        let test1 = String::from("test");
-        let test2 = String::from("test");
-        let test3 = String::from("test");
         let content1 = "test";
         let content2 = "test ++ test";
         let content3 = "test ++ ";
@@ -331,8 +328,8 @@ mod tests {
         assert!(result3.is_err());
         assert!(result4.is_err());
 
-        assert!(matches!(result1, Ok(NixValue::Identifier(test1))));
-        assert!(matches!(result2, Ok(NixValue::BinaryOp { left: test2, operator: Operator::Concat, right: test3 })));
+        assert!(matches!(result1, Ok(NixValue::Identifier(_))));
+        assert!(matches!(result2, Ok(NixValue::BinaryOp { left: _, operator: Operator::Concat, right: _ })));
     }
 
     #[test]

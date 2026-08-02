@@ -1,8 +1,6 @@
-use tempfile::{Builder, NamedTempFile};
+use tempfile::Builder;
 use std::fs;
 
-use prolyxena::engine::core::*;
-use prolyxena::engine::lexer::core::*;
 use prolyxena::engine::lexer::vfs::*;
 
 #[test]

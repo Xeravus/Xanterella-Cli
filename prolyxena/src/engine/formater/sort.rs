@@ -1,6 +1,4 @@
-use indexmap::IndexMap;
-
-use crate::engine::core::{Lexer, NixValue, StringFragment};
+use crate::engine::core::{NixValue, StringFragment};
 
 pub trait Sort {
     fn sort_ast(&mut self);
@@ -63,5 +61,5 @@ impl Sort for NixValue {
 }
 
 #[cfg(test)]
-#[path = "core_test.rs"]
+#[path = "sort_test.rs"]
 mod tests;
