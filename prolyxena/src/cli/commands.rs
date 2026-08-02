@@ -2,7 +2,6 @@ use clap::{Parser as CalpParser, Subcommand};
 
 use std::io::Write as StdOut;
 use std::io::stdout;
-use std::env::var;
 
 use crate::engine::lexer::vfs::*;
 use crate::engine::formater::write::Write;

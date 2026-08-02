@@ -15,12 +15,13 @@ impl Write for FsData {
             let clean_path = rel_path.trim_start_matches('/');
             let parts: Vec<&str> = clean_path.split('/').collect();
             let mut pointer = &mut self.fsnodes;
+            #[allow(clippy::needless_range_loop)]
             for j in 0..parts.len() - 1 {
                 let folder = parts[j];
                 if let FsNodes::Dir(map) = pointer {
-                    pointer = map. get_mut(folder).ok_or(format!("Cant Extract Values out of IndexMap"))?;
+                    pointer = map. get_mut(folder).ok_or("Cant Extract Values out of IndexMap".to_string())?;
                 } else {
-                    return Err(format!("Tree is Corrupt"));
+                    return Err("Tree is Corrupt".to_string());
                 }
             }
             let file_name = parts.last().unwrap().to_string();

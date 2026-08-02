@@ -46,8 +46,8 @@ impl Format for NixValue {
                 out.push_str(&inner_indent);
                 for i in vec {
                     match i {
-                        StringFragment::Text(s) => out.push_str(&format!("{}", s)),
-                        StringFragment::Antiquotation(s) => out.push_str(&format!("{}", s.format_nix(0))),
+                        StringFragment::Text(s) => out.push_str(s),
+                        StringFragment::Antiquotation(s) => out.push_str(&s.format_nix(0)),
                     }
                 }
                 out.push('\'');
@@ -89,9 +89,9 @@ impl Format for NixValue {
             NixValue::Lambda(vec, alias, b) => {
                 let mut out = String::new();
                 if vec.is_empty() {
-                    out.push_str(&format!("{{ }}:"));
+                    out.push_str("{ }:");
                 } else {
-                    out.push_str(&format!("{{\n"));
+                    out.push_str("{\n");
                 }
                 
                 for i in vec {
@@ -130,22 +130,22 @@ impl Format for NixValue {
 
                 match op {
                     Operator::Add => {
-                        out.push_str(&format!(" + "));
+                        out.push_str(" + ");
                     },
                     Operator::Sub => {
-                        out.push_str(&format!(" - "));
+                        out.push_str(" - ");
                     },
                     Operator::Concat => {
-                        out.push_str(&format!(" ++ "));
+                        out.push_str(" ++ ");
                     },
                     Operator::Equal => {
-                        out.push_str(&format!(" == "));
+                        out.push_str(" == ");
                     },
                     Operator::Merge => {
-                        out.push_str(&format!(" // "));
+                        out.push_str(" // ");
                     },
                     Operator::Divide => {
-                        out.push_str(&format!(" / "));
+                        out.push_str(" / ");
                     },
                 }
 
