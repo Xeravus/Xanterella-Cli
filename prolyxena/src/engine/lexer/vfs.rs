@@ -8,6 +8,7 @@ use walkdir::WalkDir;
 
 use crate::engine::core::*;
 use crate::engine::formater::sort::Sort;
+use crate::engine::formater::flattening::Flattening;
 use crate::engine::lexer::core::*;
 
 #[derive(Debug, Clone)]
@@ -18,6 +19,8 @@ pub struct FsData {
     pub trans: Option<Sender<ParseEvent>>,
     pub time: f64,
     pub sort: bool,
+    pub expand: bool,
+    pub flatten: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -35,6 +38,8 @@ impl FsData {
             trans: None,
             time: 0.0,
             sort: false,
+            expand: false,
+            flatten: false,
         }
     }
 
@@ -46,7 +51,21 @@ impl FsData {
             trans: Some(trans),
             time: 0.0,
             sort: false,
+            expand: false,
+            flatten: false,
         }
+    }
+
+    pub fn set_sort(&mut self, sort: bool) {
+        self.sort = sort;
+    }
+
+    pub fn set_expand(&mut self, expand: bool) {
+        self.expand = expand;
+    }
+
+    pub fn set_flatten(&mut self, flatten: bool) {
+        self.flatten = flatten;
     }
 
     pub fn load(&mut self) {
@@ -57,10 +76,6 @@ impl FsData {
         if let Some(tx) = &self.trans {
             tx.send(ParseEvent::Finished(self.get_time())).ok();
         }
-    }
-
-    pub fn sort(&mut self, sort: bool) {
-        self.sort = sort;
     }
 
     pub fn get_files(&mut self) {
@@ -127,13 +142,33 @@ impl FsData {
                 };
                 let ast = match file_data.parse_value() {
                     Ok(mut parsed_ast) => {
-                        if self.sort {
+                        if self.sort || self.expand || self.flatten {
                             if let Some(tx) = &self.trans {
-                                let _ = tx.send(ParseEvent::StartSortingFile(clean_path.to_string()));
-                                parsed_ast.sort_ast();
-                                let _ = tx.send(ParseEvent::EndSortingFile(clean_path.to_string()));
+                                if self.expand {
+                                    let _ = tx.send(ParseEvent::StartExpandingFile(clean_path.to_string()));
+                                    parsed_ast.expand();
+                                    let _ = tx.send(ParseEvent::EndExpandingFile(clean_path.to_string()));
+                                }
+                                if self.flatten {
+                                    let _ = tx.send(ParseEvent::StartFlatteningFile(clean_path.to_string()));
+                                    parsed_ast.flatten();
+                                    let _ = tx.send(ParseEvent::EndFlatteningFile(clean_path.to_string()));
+                                }
+                                if self.sort {
+                                    let _ = tx.send(ParseEvent::StartSortingFile(clean_path.to_string()));
+                                    parsed_ast.sort_ast();
+                                    let _ = tx.send(ParseEvent::EndSortingFile(clean_path.to_string()));
+                                }
                             } else {
-                                parsed_ast.sort_ast();
+                                if self.expand {
+                                    parsed_ast.expand();
+                                }
+                                if self.flatten {
+                                    parsed_ast.flatten();
+                                }
+                                if self.sort {
+                                    parsed_ast.sort_ast();
+                                }
                             }
                         }
                         parsed_ast

@@ -29,6 +29,8 @@ pub struct Tui {
     num_of_pars: u32,
     sort: bool,
     debug: bool,
+    expand: bool,
+    flatten: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -53,7 +55,7 @@ pub enum TaskBool {
 
 impl Tui {
     #[allow(clippy::new_without_default)]
-    pub fn new(sort: bool, debug: bool) -> Self {
+    pub fn new() -> Self {
         Tui {
             logs: Vec::new(),
             path: String::new(),
@@ -62,9 +64,27 @@ impl Tui {
             trans: None,
             last_update: Instant::now(),
             num_of_pars: 0,
-            sort,
-            debug,
+            sort: false,
+            debug: false,
+            expand: false,
+            flatten: false,
         }
+    }
+
+    pub fn set_sort(&mut self, sort: bool) {
+        self.sort = sort;
+    }
+
+    pub fn set_expand(&mut self, expand: bool) {
+        self.expand = expand;
+    }
+
+    pub fn set_flatten(&mut self, flatten: bool) {
+        self.flatten = flatten;
+    }
+
+    pub fn set_debug(&mut self, debug: bool) {
+        self.debug = debug;
     }
 
     pub fn load(&mut self, path: &str) {
@@ -75,7 +95,9 @@ impl Tui {
         self.trans = Some(rx);
         self.time_rx = Some(time_rx);
         let mut prolyxena = FsData::new_trans(path, tx.clone());
-        prolyxena.sort(self.sort);
+        prolyxena.set_sort(self.sort);
+        prolyxena.set_expand(self.expand);
+        prolyxena.set_flatten(self.flatten);
 
         #[cfg(not(test))]
         thread::spawn(move || {
@@ -189,6 +211,12 @@ impl Tui {
 
                 ParseEvent::StartSortingFile(file) => (TaskBool::True, format!("Sorting AST: {}", file).into()),
                 ParseEvent::EndSortingFile(file) => (TaskBool::False, format!("Sorting AST: {}", file).into()),
+
+                ParseEvent::StartExpandingFile(file) => (TaskBool::True, format!("Expanding AST: {}", file).into()),
+                ParseEvent::EndExpandingFile(file) => (TaskBool::False, format!("Expanding AST: {}", file).into()),
+
+                ParseEvent::StartFlatteningFile(file) => (TaskBool::True, format!("Flattening AST: {}", file).into()),
+                ParseEvent::EndFlatteningFile(file) => (TaskBool::False, format!("Flattening AST: {}", file).into()),
 
                 ParseEvent::StartAttrSet => (TaskBool::True, "Parsing Attribut Set".into()),
                 ParseEvent::EndAttrSet => (TaskBool::False, "Parsing Attribut Set".into()),

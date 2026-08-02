@@ -52,6 +52,10 @@ pub enum ParseEvent {
     EndParsingFile(String),
     StartSortingFile(String),
     EndSortingFile(String),
+    StartExpandingFile(String),
+    EndExpandingFile(String),
+    StartFlatteningFile(String),
+    EndFlatteningFile(String),
     // Error(Err),
     // Start
     StartAttrSet,

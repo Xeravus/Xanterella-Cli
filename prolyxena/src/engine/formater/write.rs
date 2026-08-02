@@ -38,6 +38,5 @@ impl Write for FsData {
 }
 
 pub fn write(ast: &NixValue, path: &String) {
-    println!("{}", ast.format_nix(0));
     let _ = fs::write(path, ast.format_nix(0));
 }
