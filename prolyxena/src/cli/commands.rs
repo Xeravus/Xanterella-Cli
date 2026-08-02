@@ -62,16 +62,39 @@ pub fn cli_parse() {
     match &cli.command {
         Commands::Show { path, expand, flatten, sort, animation, output, time, debug } => {
             let mut stdout = stdout();
-            prolyxena_parse(&mut stdout, path.to_string(), *expand, *flatten, *sort, *animation, *output, *time, *debug);
+            prolyxena_parse(
+                &mut stdout,
+                path.to_string(),
+                *expand,
+                *flatten,
+                *sort,
+                *animation,
+                *output,
+                *time,
+                *debug,
+            );
         }
         Commands::Format { path, expand, flatten, sort, animation, output, time, debug } => {
             let mut stdout = stdout();
-            prolyxena_format(&mut stdout, path.to_string(), *expand, *flatten, *sort, *animation, *output, *time, *debug);
+            prolyxena_format(
+                &mut stdout,
+                path.to_string(),
+                *expand,
+                *flatten,
+                *sort,
+                *animation,
+                *output,
+                *time,
+                *debug,
+            );
         }
     }
 }
 
-pub fn prolyxena_parse(writer: &mut impl StdOut, file: String, expand: bool, flatten: bool, sort: bool, animation: bool, output: bool, time: bool, debug: bool) {
+pub fn prolyxena_parse(
+    writer: &mut impl StdOut, file: String, expand: bool, flatten: bool, sort: bool, animation: bool, output: bool,
+    time: bool, debug: bool,
+) {
     if animation {
         let mut tui = Tui::new();
         tui.set_debug(debug);
@@ -95,7 +118,8 @@ pub fn prolyxena_parse(writer: &mut impl StdOut, file: String, expand: bool, fla
 }
 
 pub fn prolyxena_format(
-    writer: &mut impl StdOut, file: String, expand: bool, flatten: bool, sort: bool, animation: bool, output: bool, time: bool, debug: bool,
+    writer: &mut impl StdOut, file: String, expand: bool, flatten: bool, sort: bool, animation: bool, output: bool,
+    time: bool, debug: bool,
 ) {
     if animation {
         let mut tui = Tui::new();

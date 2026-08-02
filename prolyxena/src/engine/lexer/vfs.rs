@@ -7,8 +7,8 @@ use indexmap::IndexMap;
 use walkdir::WalkDir;
 
 use crate::engine::core::*;
-use crate::engine::formater::sort::Sort;
 use crate::engine::formater::flattening::Flattening;
+use crate::engine::formater::sort::Sort;
 use crate::engine::lexer::core::*;
 
 #[derive(Debug, Clone)]

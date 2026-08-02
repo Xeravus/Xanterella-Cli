@@ -1,6 +1,6 @@
-use crate::engine::core::*;
-
 use indexmap::IndexMap;
+
+use crate::engine::core::*;
 
 pub trait Flattening {
     fn expand(&mut self);
@@ -64,9 +64,8 @@ impl Flattening for NixValue {
                         if i == parts.len() - 1 {
                             cur_level.insert(part.to_string(), value.clone());
                         } else {
-                            let node = cur_level
-                                .entry(part.to_string())
-                                .or_insert_with(|| NixValue::AttrSet(IndexMap::new()));
+                            let node =
+                                cur_level.entry(part.to_string()).or_insert_with(|| NixValue::AttrSet(IndexMap::new()));
 
                             if let NixValue::AttrSet(inner_map) = node {
                                 cur_level = inner_map;
@@ -74,7 +73,7 @@ impl Flattening for NixValue {
                                 *node = NixValue::AttrSet(IndexMap::new());
                                 if let NixValue::AttrSet(inner_map) = node {
                                     cur_level = inner_map;
-                                } else { 
+                                } else {
                                     unreachable!()
                                 }
                             }
@@ -137,9 +136,8 @@ impl Flattening for NixValue {
                         if i == parts.len() - 1 {
                             cur_level.insert(part.to_string(), value.clone());
                         } else {
-                            let node = cur_level
-                                .entry(part.to_string())
-                                .or_insert_with(|| NixValue::AttrSet(IndexMap::new()));
+                            let node =
+                                cur_level.entry(part.to_string()).or_insert_with(|| NixValue::AttrSet(IndexMap::new()));
 
                             if let NixValue::AttrSet(inner_map) = node {
                                 cur_level = inner_map;
@@ -210,7 +208,7 @@ impl Flattening for NixValue {
                             changed = true;
                             for (inner_key, inner_value) in inner_map {
                                 new_map.insert(format!("{}.{}", key, inner_key), inner_value);
-                            } 
+                            }
                         } else {
                             new_map.insert(key, value);
                         }
