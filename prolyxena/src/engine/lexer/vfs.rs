@@ -8,7 +8,7 @@ use indexmap::IndexMap;
 
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
-use crate::formater::core::Sort;
+use crate::engine::formater::sort::Sort;
 
 #[derive(Debug, Clone)]
 pub struct FsData {
@@ -20,7 +20,7 @@ pub struct FsData {
     pub sort: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FsNodes {
     File { name: String, ast: NixValue },
     Dir(IndexMap<String, FsNodes>),
@@ -121,9 +121,15 @@ impl FsData {
                 let ast = match file_data.parse_value() {
                     Ok(mut parsed_ast) => {
                         if self.sort {
-                            parsed_ast.sort_ast();
+                            if let Some(tx) = &self.trans {
+                                let _ = tx.send(ParseEvent::StartSortingFile(clean_path.to_string()));
+                                parsed_ast.sort_ast();
+                                let _ = tx.send(ParseEvent::EndSortingFile(clean_path.to_string()));
+                            } else {
+                                parsed_ast.sort_ast();
+                            }
                         }
-                            parsed_ast
+                        parsed_ast
                     },
                     Err(e) => {
                         eprintln!("Fehler beim Parsen: \n{}", e);

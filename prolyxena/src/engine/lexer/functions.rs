@@ -43,7 +43,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 self.chars.next();
             } else {
                 return Err(format!(
-                    "Syntax-Fehler: Erwartetes '=' nach Key '{}' \nDatei: {} \nErwartet: Let-In Statment",
+                    "Syntax-Fehler: Erwartet '=' nach Key '{}' \nDatei: {} \nErwartet: Let-In Statment",
                     key, self.path
                 ));
             }
@@ -55,7 +55,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 self.chars.next();
             } else {
                 return Err(format!(
-                    "Syntax-Fehler: Erwartetes ';' nach dem Wert von'{}' \nDatei: {} \nErwartet: Let-In Statment",
+                    "Syntax-Fehler: Erwartet ';' nach dem Wert '{}' \nDatei: {} \nErwartet: Let-In Statment",
                     key, self.path
                 ));
             }

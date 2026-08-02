@@ -7,7 +7,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_tui_core_new() {
-        let mut data = Tui::new();
+        let mut data = Tui::new(false);
 
         assert!(data.logs.is_empty());
         assert!(data.path.is_empty());
@@ -19,7 +19,7 @@ mod tests {
 
     #[test]
     fn test_tui_core_channels_time() {
-        let mut tui = Tui::new();
+        let mut tui = Tui::new(false);
         let mut indent = 0;
         let (tx, rx) = mpsc::channel();
         tui.time_rx = Some(rx);
@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn test_tui_core_parse_events_clock() {
-        let mut tui = Tui::new();
+        let mut tui = Tui::new(false);
         let mut indent = 0;
         let (tx, rx) = mpsc::channel();
         tui.trans = Some(rx);
@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_tui_core_parse_events_remove() {
-        let mut tui = Tui::new();
+        let mut tui = Tui::new(false);
         let mut indent = 0;
         let (tx, rx) = mpsc::channel();
         tui.trans = Some(rx);
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn test_tui_core_parse_events_keeps_finished_tasks() {
-        let mut tui = Tui::new();
+        let mut tui = Tui::new(false);
         let mut indent = 0;
         let file_name = "configuration.nix".to_string();
         let (tx, rx) = mpsc::channel();
@@ -97,7 +97,7 @@ mod tests {
 
     #[test]
     fn test_tui_core_load() {
-        let mut tui = Tui::new();
+        let mut tui = Tui::new(false);
         tui.load("/testestestestest");
         assert_eq!(tui.path, String::from("/testestestestest"));
         assert!(tui.trans.is_some());
@@ -106,24 +106,24 @@ mod tests {
 
     #[test]
     fn test_tui_core_parse_events_events() {
-        let mut tui1 = Tui::new();
-        let mut tui2 = Tui::new();
-        let mut tui3 = Tui::new();
-        let mut tui4 = Tui::new();
-        let mut tui5 = Tui::new();
-        let mut tui6 = Tui::new();
-        let mut tui7 = Tui::new();
-        let mut tui8 = Tui::new();
-        let mut tui9 = Tui::new();
-        let mut tui10 = Tui::new();
-        let mut tui11 = Tui::new();
-        let mut tui12 = Tui::new();
-        let mut tui13 = Tui::new();
-        let mut tui14 = Tui::new();
-        let mut tui15 = Tui::new();
-        let mut tui16 = Tui::new();
-        let mut tui17 = Tui::new();
-        let mut tui18 = Tui::new();
+        let mut tui1 = Tui::new(false);
+        let mut tui2 = Tui::new(false);
+        let mut tui3 = Tui::new(false);
+        let mut tui4 = Tui::new(false);
+        let mut tui5 = Tui::new(false);
+        let mut tui6 = Tui::new(false);
+        let mut tui7 = Tui::new(false);
+        let mut tui8 = Tui::new(false);
+        let mut tui9 = Tui::new(false);
+        let mut tui10 = Tui::new(false);
+        let mut tui11 = Tui::new(false);
+        let mut tui12 = Tui::new(false);
+        let mut tui13 = Tui::new(false);
+        let mut tui14 = Tui::new(false);
+        let mut tui15 = Tui::new(false);
+        let mut tui16 = Tui::new(false);
+        let mut tui17 = Tui::new(false);
+        let mut tui18 = Tui::new(false);
 
         let mut indent1 = 0;
         let mut indent2 = 0;
@@ -370,7 +370,7 @@ mod tests {
         assert_eq!(tui14.logs.len(), 0);
         assert_eq!(tui15.logs.len(), 0);
         assert_eq!(tui16.logs.len(), 0);
-        assert_eq!(tui17.logs.len(), 0);
+        assert_eq!(tui17.logs.len(), 1);
         assert_eq!(tui18.logs.len(), 0);
 
         assert_eq!(indent1, 0);
