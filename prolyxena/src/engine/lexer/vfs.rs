@@ -29,6 +29,13 @@ pub enum FsNodes {
     Dir(IndexMap<String, FsNodes>),
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum ReOderMode {
+    Expand,
+    Flatten,
+    Sort,
+}
+
 impl FsData {
     pub fn new(path: &str) -> Self {
         FsData {
@@ -191,6 +198,25 @@ impl FsData {
 
     pub fn get_time(&self) -> String {
         format!("{:.3}s", self.time)
+    }
+}
+
+impl FsNodes {
+    pub fn reorder_tree(&mut self, mode: &ReOderMode) {
+        match self {
+            FsNodes::Dir(map) => {
+                for (_, value) in map {
+                    value.reorder_tree(&mode);
+                }
+            }
+            FsNodes::File { ast, .. } => {
+                match mode {
+                    ReOderMode::Expand => ast.expand(),
+                    ReOderMode::Flatten => ast.flatten(),
+                    ReOderMode::Sort => ast.sort_ast(),
+                }
+            }
+        }
     }
 }
 
