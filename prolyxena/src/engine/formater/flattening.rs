@@ -276,3 +276,146 @@ impl Flattening for NixValue {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::engine::lexer::core::*;
+    use super::*;
+    
+    fn expand_assert(ini: &str, exp: &str) {
+        let mut lexer_ini = Lexer::new(ini, String::from("path.nix"));
+        let mut lexer_exp = Lexer::new(exp, String::from("path.nix"));
+
+        let mut result_ini = lexer_ini.parse_value().unwrap();
+        let result_exp = lexer_exp.parse_value().unwrap();
+
+        result_ini.expand();
+
+        assert_eq!(result_ini, result_exp);
+    }
+
+    #[test]
+    fn test_engine_formater_flattening_expand_attr_set_normal() {
+        let initial_content = "{ a.b.c = true; }";
+        let expectet_content = "{ a = { b = { c = true; }; }; }";
+        expand_assert(initial_content, expectet_content);
+    }
+    
+    #[test]
+    fn test_engine_formater_flattening_expand_attr_set_quotes() {
+        let initial_content = "{ a.\"b\".c = true; }";
+        let expectet_content = "{ a = { \"b\" = { c = true; }; }; }";
+        expand_assert(initial_content, expectet_content);
+    }
+    
+    #[test]
+    fn test_engine_formater_flattening_expand_attr_set_antiquotation() {
+        let initial_content = "{ a.\"${b}\".c = true; }";
+        let expectet_content = "{ a = { \"${b}\" = { c = true; }; }; }";
+        expand_assert(initial_content, expectet_content);
+    }
+    
+    #[test]
+    fn test_engine_formater_flattening_expand_attr_set_nothing_to_expand() {
+        let initial_content = "{ a = true; }";
+        let expectet_content = "{ a = true; }";
+        expand_assert(initial_content, expectet_content);
+    }
+    
+    #[test]
+    fn test_engine_formater_flattening_expand_let_in_no_body_normal() {
+        let initial_content = "let a.b.c = true; in {}";
+        let expectet_content = "let a = { b = { c = true; }; }; in {}";
+        expand_assert(initial_content, expectet_content);
+    }
+    
+    #[test]
+    fn test_engine_formater_flattening_expand_let_in_no_body_quotes() {
+        let initial_content = "let a.\"b\".c = true; in {}";
+        let expectet_content = "let a = { \"b\" = { c = true; }; }; in {}";
+        expand_assert(initial_content, expectet_content);
+    }
+    
+    #[test]
+    fn test_engine_formater_flattening_expand_let_in_no_body_antiquotation() {
+        let initial_content = "let a.\"${b}\".c = true; in {}";
+        let expectet_content = "let a = { \"${b}\" = { c = true; }; }; in {}";
+        expand_assert(initial_content, expectet_content);
+    }
+    
+    #[test]
+    fn test_engine_formater_flattening_expand_let_in_body_normal() {
+        let initial_content = "let a.b.c = true; in { a.b.c = true; }";
+        let expectet_content = "let a = { b = { c = true; }; }; in { a = { b = { c = true; }; }; }";
+        expand_assert(initial_content, expectet_content);
+    }
+    
+    #[test]
+    fn test_engine_formater_flattening_expand_let_in_body_quotes() {
+        let initial_content = "let a.\"b\".c = true; in { a.\"b\".c = true; }";
+        let expectet_content = "let a = { \"b\" = { c = true; }; }; in { a = { \"b\" = { c = true; }; }; }";
+        expand_assert(initial_content, expectet_content);
+    }
+    
+    #[test]
+    fn test_engine_formater_flattening_expand_let_in_body_antiquotation() {
+        let initial_content = "let a.\"${b}\".c = true; in { a.\"${b}\".c = true; }";
+        let expectet_content = "let a = { \"${b}\" = { c = true; }; }; in { a = { \"${b}\" = { c = true; }; }; }";
+        expand_assert(initial_content, expectet_content);
+    }
+
+    #[test]
+    fn test_engine_formater_flattening_expand_list_normal() {
+        let initial_content = "{ a = [ a b c ]; }";
+        let expectet_content = "{ a = [ a b c ]; }";
+        expand_assert(initial_content, expectet_content);
+    }
+
+    #[test]
+    fn test_engine_formater_flattening_expand_group() {
+        let initial_content = "{ a = (b { c.d.e = true; }); }";
+        let expectet_content = "{ a = (b { c = { d = { e = true; }; }; }); }";
+        expand_assert(initial_content, expectet_content);
+    }
+
+    #[test]
+    fn test_engine_formater_flattening_expand_antiquotation() {
+        let initial_content = "{ a = \"${pkgs.pkgs.pkgs}\"; }";
+        let expectet_content = "{ a = \"${pkgs.pkgs.pkgs}\"; }";
+        expand_assert(initial_content, expectet_content);
+    }
+
+    #[test]
+    fn test_engine_formater_flattening_expand_with() {
+        let initial_content = "{ a = with pkgs.pkgs; []; }";
+        let expectet_content = "{ a = with pkgs.pkgs; []; }";
+        expand_assert(initial_content, expectet_content);
+    }
+
+    #[test]
+    fn test_engine_formater_flattening_expand_apply() {
+        let initial_content = "{ a = (a b{ a.b.c = true; }); }";
+        let expectet_content = "{ a = (a b{ a = { b = { c = true; }; }; }); }";
+        expand_assert(initial_content, expectet_content);
+    }
+
+    #[test]
+    fn test_engine_formater_flattening_expand_lambda() {
+        let initial_content = "{}: { a.b.c = true; }";
+        let expectet_content = "{}: { a = { b = { c = true; }; }; }";
+        expand_assert(initial_content, expectet_content);
+    }
+
+    #[test]
+    fn test_engine_formater_flattening_expand_binary_op() {
+        let initial_content = "{ a = b.c.d ++ e.f.g; }";
+        let expectet_content = "{ a = b.c.d ++ e.f.g; }";
+        expand_assert(initial_content, expectet_content);
+    }
+    #[test]
+    fn test_engine_formater_flattening_expand_ind_str_antiquotation() {
+        let initial_content = "{ a = '' ${pkgs.pkgs.pkgs} ''; }";
+        let expectet_content = "{ a = '' ${pkgs.pkgs.pkgs} ''; }";
+        expand_assert(initial_content, expectet_content);
+    }
+}
