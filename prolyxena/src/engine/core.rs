@@ -30,6 +30,7 @@ pub enum Operator {
     Sub,
     Concat,
     Equal,
+    Unequal,
     Merge,
     Divide,
 }
