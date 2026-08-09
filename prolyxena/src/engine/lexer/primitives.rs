@@ -87,7 +87,13 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 }
             }
             Some(c) if c.is_ascii_digit() => self.parse_number(),
-            Some(c) if c.is_alphanumeric() || *c == '_' => self.parse_identifier(),
+            Some(c) if c.is_alphanumeric() || *c == '_' => {
+                if self.is_lambda_ahead() {
+                    self.parse_lambda()
+                } else {
+                    self.parse_identifier()
+                }
+            },
             None => {
                 Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei \nDatei: {} \nErwartet: Unknown", self.path))
             }
@@ -282,6 +288,17 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     self.log_event(ParseEvent::StartOperator);
                     self.log_event(ParseEvent::EndOperator);
                     Some(Operator::Equal)
+                } else {
+                    None
+                }
+            }
+            '!' => {
+                if let Some(&'=') = scout.peek() {
+                    self.chars.next();
+                    self.chars.next();
+                    self.log_event(ParseEvent::StartOperator);
+                    self.log_event(ParseEvent::EndOperator);
+                    Some(Operator::Unequal)
                 } else {
                     None
                 }

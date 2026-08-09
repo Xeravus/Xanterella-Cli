@@ -90,10 +90,45 @@ impl<'a> ParseFunctions for Lexer<'a> {
 
     fn is_lambda_ahead(&self) -> bool {
         let mut scout = self.chars.clone();
-        let mut depth = 1;
-        scout.next();
 
-        // while let Some(c) = scout.next() {
+        if let Some(&c) = scout.peek() {
+            if c.is_alphanumeric() || c == '_' {
+                while let Some(&ch) = scout.peek() {
+                    if ch.is_alphanumeric() || c == '-' || c == '_' {
+                        scout.next();
+                    }
+                }
+
+                while let Some(&ch) = scout.peek() {
+                    if ch.is_whitespace() {
+                        scout.next();
+                    } else {
+                        break;
+                    }
+                }
+
+                if let Some(&'@') = scout.peek() {
+                    scout.next();
+                    while let Some(&ch) = scout.peek() {
+                        if ch.is_whitespace() {
+                            scout.next();
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    scout = self.chars.clone();
+                }
+            }
+        }
+
+        if let Some(&'{') = scout.peek() {
+            scout.next();
+        } else {
+            return false;
+        }
+
+        let mut depth = 0;
         for c in scout.by_ref() {
             if c == '{' {
                 depth += 1;
@@ -104,22 +139,15 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 }
             }
         }
+
         if depth != 0 {
             return false;
-        }
-
-        while let Some(&c) = scout.peek() {
-            if c.is_whitespace() {
-                scout.next();
-            } else {
-                break;
-            }
         }
 
         if let Some(&'@') = scout.peek() {
             scout.next();
             while let Some(&c) = scout.peek() {
-                if c.is_whitespace() || c.is_alphanumeric() || c == '_' || c == '-' {
+                if c.is_whitespace() || c.is_alphanumeric() || c == '-' || c =='_' {
                     scout.next();
                 } else {
                     break;
@@ -140,9 +168,42 @@ impl<'a> ParseFunctions for Lexer<'a> {
 
     fn parse_lambda(&mut self) -> Result<NixValue, String> {
         self.log_event(ParseEvent::StartLambda);
-        self.chars.next();
+
         let mut vec: Vec<String> = vec![];
         let mut alias = None;
+        let mut is_prefix = false;
+
+        self.skip_whitespace();
+
+        if let Some(&c) = self.chars.peek() {
+            if c.is_alphanumeric() || c == '_' {
+                let mut temp_alias = String::new();
+                while let Some(&ch) = self.chars.peek() {
+                    if ch.is_alphanumeric() || ch == '-' || ch == '_' {
+                        temp_alias.push(ch);
+                        self.chars.next();
+                    } else {
+                        break;
+                    }
+                }
+
+                self.skip_whitespace();
+
+                if let Some(&'@') = self.chars.peek() {
+                    self.chars.next();
+                    alias = Some(temp_alias);
+                    is_prefix = true;
+                    self.skip_whitespace();
+                }
+            }
+        }
+
+        if let Some(&'{') = self.chars.peek() {
+            self.chars.next();
+        } else {
+            return Err(format!("Syntax-Fehler: Erwartet '{{' für ein Lambda \nDatei: {} \nErwartet: Lambda", self.path));
+        }
+
         loop {
             self.skip_whitespace();
             if let Some(&'}') = self.chars.peek() {
@@ -167,22 +228,27 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 self.chars.next();
             }
         }
+
         self.skip_whitespace();
-        if let Some(&'@') = self.chars.peek() {
-            self.chars.next();
-            self.skip_whitespace();
-            match self.parse_identifier()? {
-                NixValue::Identifier(name) => {
-                    alias = Some(name);
-                }
-                _ => {
-                    return Err(format!(
-                        "Syntax-Fehler: Gültiger Variablename nach '@' erwartet \nDatei: {} \nErwartet: Lambda",
-                        self.path
-                    ));
+
+        if !is_prefix {
+            if let Some(&'@') = self.chars.peek() {
+                self.chars.next();
+                self.skip_whitespace();
+                match self.parse_identifier()? {
+                    NixValue::Identifier(name) => {
+                        alias = Some(name);
+                    }
+                    _ => {
+                        return Err(format!(
+                            "Syntax-Fehler: Gültiger Variablename nach '@' erwartet \nDatei: {} \nErwartet: Lambda",
+                            self.path
+                        ));
+                    }
                 }
             }
         }
+
         self.skip_whitespace();
 
         if let Some(&':') = self.chars.peek() {
@@ -196,7 +262,16 @@ impl<'a> ParseFunctions for Lexer<'a> {
         self.skip_whitespace();
         let body = self.parse_value()?;
         self.log_event(ParseEvent::EndLambda);
-        Ok(NixValue::Lambda(vec, alias, Box::new(body)))
+        let parsed_alias = match alias {
+            Some(al) => {
+                match is_prefix {
+                    true => LambdaTypes::Prefix(al.to_string()),
+                    false => LambdaTypes::Suffix(al.to_string()),
+                }
+            }
+            None => LambdaTypes::Nofix,
+        };
+        Ok(NixValue::Lambda(vec, parsed_alias, Box::new(body)))
     }
 }
 

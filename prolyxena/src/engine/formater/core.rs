@@ -88,29 +88,69 @@ impl Format for NixValue {
                 out.push_str(&b.format_nix(depth));
                 out
             }
-            NixValue::Lambda(vec, alias, b) => {
+            NixValue::Lambda(vec, alias, body) => {
                 let mut out = String::new();
-                if vec.is_empty() {
-                    out.push_str("{ }:");
-                } else {
-                    out.push_str("{\n");
-                }
+                match alias {
+                    LambdaTypes::Nofix => {
+                        if vec.is_empty() {
+                            out.push_str("{ }:");
+                            out
+                        } else {
+                            out.push_str("{\n");
 
-                for i in vec {
-                    if i != "..." {
-                        out.push_str(&format!("{}{},\n", inner_indent, i));
-                    }
-                }
-                out.push_str(&format!("{}...\n", inner_indent));
-                out.push('}');
+                            for i in vec {
+                                if i != "..." {
+                                    out.push_str(&format!("{}{},\n", inner_indent, i));
+                                }
+                            }
+                            out.push_str(&format!("{}...\n", inner_indent));
+                            out.push_str("}: ");
+                            out.push_str(&body.format_nix(depth));
+                            out
+                        }
+                    },
+                    LambdaTypes::Prefix(prefix_alias) => {
+                        out.push_str(prefix_alias);
+                        out.push_str(" @ ");
+                        if vec.is_empty() {
+                            out.push_str("{ }:");
+                            out
+                        } else {
+                            out.push_str("{\n");
 
-                if let Some(al) = alias {
-                    out.push_str(&format!(" @ {}", al));
+                            for i in vec {
+                                if i != "..." {
+                                    out.push_str(&format!("{}{},\n", inner_indent, i));
+                                }
+                            }
+
+                            out.push_str(&format!("{}...\n", inner_indent));
+                            out.push_str("}: ");
+                            out.push_str(&body.format_nix(depth));
+                            out
+                        }
+                    },
+                    LambdaTypes::Suffix(suffix_alias) => {
+                        if vec.is_empty() {
+                            out.push_str("{ }");
+                            out
+                        } else {
+                            out.push_str("{\n");
+
+                            for i in vec {
+                                if i != "..." {
+                                    out.push_str(&format!("{}{},\n", inner_indent, i));
+                                }
+                            }
+                            out.push_str(&format!("{}...\n", inner_indent));
+                            out.push_str("} @ ");
+                            out.push_str(suffix_alias);
+                            out.push_str(" : ");
+                            out.push_str(&body.format_nix(depth));
+                            out
+                        }
+                    },
                 }
-                out.push(':');
-                out.push(' ');
-                out.push_str(&b.format_nix(depth));
-                out
             }
             NixValue::Apply(lb, rb) => {
                 let mut out = String::new();
