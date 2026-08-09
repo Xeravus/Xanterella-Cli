@@ -143,6 +143,9 @@ impl Format for NixValue {
                     Operator::Equal => {
                         out.push_str(" == ");
                     }
+                    Operator::Unequal => {
+                        out.push_str(" != ");
+                    }
                     Operator::Merge => {
                         out.push_str(" // ");
                     }
@@ -155,5 +158,43 @@ impl Format for NixValue {
                 out
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use indexmap::IndexMap;
+
+    #[test]
+    fn test_engine_formater_core_attr_set_empty() {
+        let inital_content = NixValue::AttrSet(IndexMap::new());
+        let expected_content = "{ }";
+
+        assert_eq!(inital_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_attr_set_normal() {
+        let inital_content = NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("a")))]));
+        let expected_content = "{\n  a = a;\n}";
+
+        assert_eq!(inital_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_list_empty() {
+        let inital_content = NixValue::List(Vec::new());
+        let expected_content = "[ ]";
+
+        assert_eq!(inital_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_list_normal() {
+        let inital_content = NixValue::List(vec![NixValue::Identifier(String::from("a")), NixValue::Identifier(String::from("b"))]);
+        let expected_content = "[\n  a\n  b\n]";
+
+        assert_eq!(inital_content.format_nix(0), expected_content);
     }
 }
