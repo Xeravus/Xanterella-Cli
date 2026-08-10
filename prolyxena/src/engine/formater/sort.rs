@@ -1,4 +1,4 @@
-use crate::engine::core::{NixValue, StringFragment};
+use crate::engine::core::{NixValue, StringFragment, LambdaTypes};
 
 pub trait Sort {
     fn sort_ast(&mut self);
@@ -13,9 +13,16 @@ impl Sort for NixValue {
                     value.sort_ast();
                 }
             }
-            NixValue::Lambda(vec, _, body) => {
-                vec.sort();
-                body.sort_ast();
+            NixValue::Lambda(lambdatype) => {
+                match lambdatype {
+                    LambdaTypes::Nofix(vec, body)| LambdaTypes::Suffix(vec, _, body) | LambdaTypes::Prefix(vec, _, body) => {
+                        vec.sort();
+                        body.sort_ast();
+                    }
+                    LambdaTypes::Single(_, body) => {
+                        body.sort_ast();
+                    }
+                }
             }
             NixValue::LetIn(map, body) => {
                 map.sort_keys();

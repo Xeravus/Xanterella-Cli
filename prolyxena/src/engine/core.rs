@@ -17,7 +17,7 @@ pub enum NixValue {
     Group(Box<NixValue>),
     LetIn(IndexMap<String, NixValue>, Box<NixValue>),
     With(Box<NixValue>, Box<NixValue>),
-    Lambda(Vec<String>, LambdaTypes, Box<NixValue>),
+    Lambda(LambdaTypes),
     Apply(Box<NixValue>, Box<NixValue>),
     Path(String),
     Antiquotation(Box<NixValue>),
@@ -26,9 +26,10 @@ pub enum NixValue {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LambdaTypes {
-    Nofix,
-    Prefix(String),
-    Suffix(String),
+    Nofix(Vec<String>, Box<NixValue>),
+    Prefix(Vec<String>, String, Box<NixValue>),
+    Suffix(Vec<String>, String, Box<NixValue>),
+    Single(String, Box<NixValue>),
 }
 
 #[derive(Debug, Clone, PartialEq)]

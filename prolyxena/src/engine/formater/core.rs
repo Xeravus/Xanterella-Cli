@@ -88,19 +88,19 @@ impl Format for NixValue {
                 out.push_str(&b.format_nix(depth));
                 out
             }
-            NixValue::Lambda(vec, alias, body) => {
+            NixValue::Lambda(lambdatype) => {
                 let mut out = String::new();
-                match alias {
-                    LambdaTypes::Nofix => {
+                match lambdatype {
+                    LambdaTypes::Nofix(vec, body) => {
                         if vec.is_empty() {
                             out.push_str("{ }:");
-                            out
+                            return out;
                         } else {
                             out.push_str("{\n");
 
                             for i in vec {
                                 if i != "..." {
-                                    out.push_str(&format!("{}{},\n", inner_indent, i));
+                                    out.push_str(&format!("{}{},\n", inner_indent, i))
                                 }
                             }
                             out.push_str(&format!("{}...\n", inner_indent));
@@ -108,48 +108,49 @@ impl Format for NixValue {
                             out.push_str(&body.format_nix(depth));
                             out
                         }
-                    },
-                    LambdaTypes::Prefix(prefix_alias) => {
-                        out.push_str(prefix_alias);
-                        out.push_str(" @ ");
+                    }
+                    LambdaTypes::Suffix(vec, alias, body) => {
                         if vec.is_empty() {
-                            out.push_str("{ }:");
-                            out
+                            out.push_str("{ }: ");
                         } else {
                             out.push_str("{\n");
-
-                            for i in vec {
-                                if i != "..." {
-                                    out.push_str(&format!("{}{},\n", inner_indent, i));
-                                }
-                            }
-
-                            out.push_str(&format!("{}...\n", inner_indent));
-                            out.push_str("}: ");
-                            out.push_str(&body.format_nix(depth));
-                            out
-                        }
-                    },
-                    LambdaTypes::Suffix(suffix_alias) => {
-                        if vec.is_empty() {
-                            out.push_str("{ }");
-                            out
-                        } else {
-                            out.push_str("{\n");
-
+                            
                             for i in vec {
                                 if i != "..." {
                                     out.push_str(&format!("{}{},\n", inner_indent, i));
                                 }
                             }
                             out.push_str(&format!("{}...\n", inner_indent));
-                            out.push_str("} @ ");
-                            out.push_str(suffix_alias);
-                            out.push_str(" : ");
+                            out.push_str(&format!("{}}} ", inner_indent));
+                        }
+                        out.push_str(&format!("@ {} : ", alias));
+                        out.push_str(&body.format_nix(depth));
+                        out
+                    }
+                    LambdaTypes::Prefix(vec, alias, body) => {
+                        out.push_str(&format!("{} @ ", alias));
+                        if vec.is_empty() {
+                            out.push_str(" { }: ");
+                            return out;
+                        } else {
+                            out.push_str("{\n");
+
+                            for i in vec {
+                                if i != "..." {
+                                    out.push_str(&format!("{}{},\n", inner_indent, i))
+                                }
+                            }
+                            out.push_str(&format!("{}...\n", inner_indent));
+                            out.push_str(&format!("{}}}: ", inner_indent));
                             out.push_str(&body.format_nix(depth));
                             out
                         }
-                    },
+                    }
+                    LambdaTypes::Single(alias, body) => {
+                        out.push_str(&format!("{}: ", alias));
+                        out.push_str(&body.format_nix(depth));
+                        out
+                    }
                 }
             }
             NixValue::Apply(lb, rb) => {

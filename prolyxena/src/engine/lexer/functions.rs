@@ -11,6 +11,15 @@ pub trait ParseFunctions {
     fn parse_lambda(&mut self) -> Result<NixValue, String>;
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum LamType {
+    None,
+    Nofix,
+    Suffix,
+    Prefix,
+    Single,
+}
+
 impl<'a> ParseFunctions for Lexer<'a> {
     fn parse_let_in(&mut self) -> Result<NixValue, String> {
         self.log_event(ParseEvent::StartLetIn);
@@ -118,6 +127,8 @@ impl<'a> ParseFunctions for Lexer<'a> {
                             break;
                         }
                     }
+                } else if let Some(':') = scout.peek() {
+                    return true;
                 } else {
                     scout = self.chars.clone();
                 }
@@ -180,8 +191,8 @@ impl<'a> ParseFunctions for Lexer<'a> {
         self.log_event(ParseEvent::StartLambda);
 
         let mut vec: Vec<String> = vec![];
-        let mut alias = None;
-        let mut is_prefix = false;
+        let mut alias = String::new();
+        let mut lamtype = LamType::None;
 
         self.skip_whitespace();
 
@@ -201,62 +212,77 @@ impl<'a> ParseFunctions for Lexer<'a> {
 
                 if let Some(&'@') = self.chars.peek() {
                     self.chars.next();
-                    alias = Some(temp_alias);
-                    is_prefix = true;
+                    alias = temp_alias;
+                    lamtype = LamType::Prefix;
                     self.skip_whitespace();
+                } else if let Some(&':') = self.chars.peek() {
+                    alias = temp_alias;
+                    lamtype = LamType::Single;
                 }
+
             }
         }
 
-        if let Some(&'{') = self.chars.peek() {
-            self.chars.next();
-        } else {
-            return Err(format!("Syntax-Fehler: Erwartet '{{' für ein Lambda \nDatei: {} \nErwartet: Lambda", self.path));
-        }
-
-        loop {
-            self.skip_whitespace();
-            if let Some(&'}') = self.chars.peek() {
-                self.chars.next();
-                break;
-            }
-            let mut key = String::new();
-            while let Some(&c) = self.chars.peek() {
-                if c.is_whitespace() || c == ',' || c == '}' {
-                    break;
+        match lamtype {
+            LamType::None | LamType::Prefix => {
+                if let Some(&'{') = self.chars.peek() {
+                    self.chars.next();
+                } else {
+                    return Err(format!("Syntax-Fehler: Erwartet '{{' für ein Lambda \nDatei: {} \nErwartet: Lambda", self.path));
                 }
-                key.push(c);
-                self.chars.next();
-            }
-            if !key.is_empty() {
-                vec.push(key);
-            }
 
-            self.skip_whitespace();
+                loop {
+                    self.skip_whitespace();
+                    if let Some(&'}') = self.chars.peek() {
+                        self.chars.next();
+                        break;
+                    }
+                    let mut key = String::new();
+                    while let Some(&c) = self.chars.peek() {
+                        if c.is_whitespace() || c == ',' || c == '}' {
+                            break;
+                        }
+                        key.push(c);
+                        self.chars.next();
+                    }
+                    if !key.is_empty() {
+                        vec.push(key);
+                    }
 
-            if let Some(&',') = self.chars.peek() {
-                self.chars.next();
+                    self.skip_whitespace();
+
+                    if let Some(&',') = self.chars.peek() {
+                        self.chars.next();
+                    }
+                }
             }
+            _ => { },
         }
 
         self.skip_whitespace();
 
-        if !is_prefix {
-            if let Some(&'@') = self.chars.peek() {
-                self.chars.next();
-                self.skip_whitespace();
-                match self.parse_identifier()? {
-                    NixValue::Identifier(name) => {
-                        alias = Some(name);
+        match lamtype {
+            LamType::None => {
+                if let Some(&'@') = self.chars.peek() {
+                    self.chars.next();
+                    self.skip_whitespace();
+                    lamtype = LamType::Suffix;
+                    match self.parse_identifier()? {
+                        NixValue::Identifier(name) => {
+                            alias = name;
+                        }
+                        _ => {
+                            return Err(format!(
+                                "Syntax-Fehler: Gültiger Variablename nach '@' erwartet \nDatei: {} \nErwartet: Lambda \nAttribute:    Attr: {:#?}",
+                                self.path, vec
+                            ));
+                        }
                     }
-                    _ => {
-                        return Err(format!(
-                            "Syntax-Fehler: Gültiger Variablename nach '@' erwartet \nDatei: {} \nErwartet: Lambda",
-                            self.path
-                        ));
-                    }
+                } else {
+                    lamtype = LamType::Nofix;
                 }
             }
+            _ => { },
         }
 
         self.skip_whitespace();
@@ -265,23 +291,20 @@ impl<'a> ParseFunctions for Lexer<'a> {
             self.chars.next();
         } else {
             return Err(format!(
-                "Syntax-Fehler: Erwartetes ':' nach den Funktions-Argumenten \nDatei: {} \nErwartet: Lambda",
-                self.path
+                "Syntax-Fehler: Erwartetes ':' nach den Funktions-Argumenten \nDatei: {} \nErwartet: Lambda \nAttribute: \n    Attr: {:#?} \n    Alias: {}",
+                self.path, vec, alias
             ));
         }
         self.skip_whitespace();
         let body = self.parse_value()?;
         self.log_event(ParseEvent::EndLambda);
-        let parsed_alias = match alias {
-            Some(al) => {
-                match is_prefix {
-                    true => LambdaTypes::Prefix(al.to_string()),
-                    false => LambdaTypes::Suffix(al.to_string()),
-                }
-            }
-            None => LambdaTypes::Nofix,
-        };
-        Ok(NixValue::Lambda(vec, parsed_alias, Box::new(body)))
+        match lamtype {
+            LamType::Nofix => Ok(NixValue::Lambda(LambdaTypes::Nofix(vec, Box::new(body)))),
+            LamType::Suffix => Ok(NixValue::Lambda(LambdaTypes::Suffix(vec, alias, Box::new(body)))),
+            LamType::Prefix => Ok(NixValue::Lambda(LambdaTypes::Prefix(vec, alias, Box::new(body)))),
+            LamType::Single => Ok(NixValue::Lambda(LambdaTypes::Single(alias, Box::new(body)))),
+            _ => return Err(format!("Syntax-Fehler: Konnte Lambda nicht kategorisieren \nDatei: {} \nErwartet: Lambda \nAttribute: \n    Attr: {:#?} \n    Aias: {}", self.path, vec, alias )),
+        }
     }
 }
 
@@ -340,54 +363,74 @@ mod tests {
     }
 
     #[test]
-    fn test_engine_lexer_functions_is_lambda_ahead() {
+    fn test_engine_lexer_functions_is_lambda_ahead_nofix() {
         let content1 = "{test, }:";
-        let content2 = "{test, } @ inputs:";
-        let content3 = "{test, } @ inputs :";
-        let content4 = "inputs @ {test, } :";
-        let content5 = "}";
-
         let data1 = Lexer::new(content1, String::from("path.nix"));
-        let data2 = Lexer::new(content2, String::from("path.nix"));
-        let data3 = Lexer::new(content3, String::from("path.nix"));
-        let data4 = Lexer::new(content4, String::from("path.nix"));
-        let data5 = Lexer::new(content5, String::from("path.nix"));
-
         let result1 = data1.is_lambda_ahead();
-        let result2 = data2.is_lambda_ahead();
-        let result3 = data3.is_lambda_ahead();
-        let result4 = data4.is_lambda_ahead();
-        let result5 = data5.is_lambda_ahead();
-
         assert_eq!(result1, true);
-        assert_eq!(result2, true);
-        assert_eq!(result3, true);
-        assert_eq!(result4, true);
-        assert_eq!(result5, false);
     }
 
     #[test]
-    fn test_engine_lexer_functions_parse_lambda() {
+    fn test_engine_lexer_functions_parse_lambda_nofix() {
         let content1 = "{test, }: test";
-        let content2 = "{test, } @ test: test";
-        let content3 = "{test, } @ test test";
-
         let mut data1 = Lexer::new(content1, String::from("path.nix"));
-        let mut data2 = Lexer::new(content2, String::from("path.nix"));
-        let mut data3 = Lexer::new(content3, String::from("path.nix"));
-
         let result1 = data1.parse_lambda();
-        let result2 = data2.parse_lambda();
-        let result3 = data3.parse_lambda();
 
         assert!(result1.is_ok());
-        assert!(result2.is_ok());
-        assert!(result3.is_err());
+        assert!(matches!(result1, Ok(NixValue::Lambda(LambdaTypes::Nofix(..)))));
+    }
 
-        assert!(matches!(result1, Ok(NixValue::Lambda(..))));
-        assert!(matches!(result2, Ok(NixValue::Lambda(..))));
+    #[test]
+    fn test_engine_lexer_functions_is_lambda_ahead_suffix() {
+        let content1 = "{test, } @ inputs:";
+        let data1 = Lexer::new(content1, String::from("path.nix"));
+        let result1 = data1.is_lambda_ahead();
+        assert_eq!(result1, true);
+    }
 
-        assert!(!matches!(result1, Ok(NixValue::AttrSet(..))));
-        assert!(!matches!(result2, Ok(NixValue::AttrSet(..))));
+    #[test]
+    fn test_engine_lexer_functions_parse_lambda_suffix() {
+        let content1 = "{test, } @ inputs: test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let result1 = data1.parse_lambda();
+
+        assert!(result1.is_ok());
+        assert!(matches!(result1, Ok(NixValue::Lambda(LambdaTypes::Suffix(..)))));
+    }
+
+    #[test]
+    fn test_engine_lexer_functions_is_lambda_ahead_prefix() {
+        let content1 = "inputs @ {test, }:";
+        let data1 = Lexer::new(content1, String::from("path.nix"));
+        let result1 = data1.is_lambda_ahead();
+        assert_eq!(result1, true);
+    }
+
+    #[test]
+    fn test_engine_lexer_functions_parse_lambda_prefix() {
+        let content1 = "inputs @ {test, }: test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let result1 = data1.parse_lambda();
+
+        assert!(result1.is_ok());
+        assert!(matches!(result1, Ok(NixValue::Lambda(LambdaTypes::Prefix(..)))));
+    }
+
+    #[test]
+    fn test_engine_lexer_functions_is_lambda_ahead_single() {
+        let content1 = "test:";
+        let data1 = Lexer::new(content1, String::from("path.nix"));
+        let result1 = data1.is_lambda_ahead();
+        assert_eq!(result1, true);
+    }
+
+    #[test]
+    fn test_engine_lexer_functions_parse_lambda_single() {
+        let content1 = "test: test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let result1 = data1.parse_lambda();
+
+        assert!(result1.is_ok());
+        assert!(matches!(result1, Ok(NixValue::Lambda(LambdaTypes::Single(..)))));
     }
 }

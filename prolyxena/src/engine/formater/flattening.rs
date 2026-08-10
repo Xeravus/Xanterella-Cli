@@ -174,8 +174,12 @@ impl Flattening for NixValue {
                 lb.expand();
                 rb.expand();
             }
-            NixValue::Lambda(_, _, body) => {
-                body.expand();
+            NixValue::Lambda(lambdatype) => {
+                match lambdatype {
+                    LambdaTypes::Nofix(_, body) | LambdaTypes::Suffix(_, _, body) | LambdaTypes::Prefix(_, _, body) | LambdaTypes::Single(_, body) => {
+                        body.expand();
+                    }
+                }
             }
             NixValue::BinaryOp { left, operator: _, right } => {
                 left.expand();
@@ -258,8 +262,12 @@ impl Flattening for NixValue {
                 lb.flatten();
                 rb.flatten();
             }
-            NixValue::Lambda(_, _, body) => {
-                body.flatten();
+            NixValue::Lambda(lambdatype) => {
+                match lambdatype {
+                    LambdaTypes::Nofix(_, body) | LambdaTypes::Suffix(_, _, body) | LambdaTypes::Prefix(_, _, body) | LambdaTypes::Single(_, body) => {
+                        body.flatten();
+                    }
+                }
             }
             NixValue::BinaryOp { left, operator: _, right } => {
                 left.flatten();
