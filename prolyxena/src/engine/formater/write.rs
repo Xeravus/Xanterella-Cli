@@ -32,9 +32,6 @@ impl Write for FsData {
             .filter_map(|p| p.canonicalize().ok())
             .collect();
 
-        println!("written_files. \n{:#?}", canonical_written);
-
-
         if canonical_written.len() < self.files.len() {
             eprintln!(
                 "NOTFALL-ABBRUCH: Es wurden nur {} Dateien generiert, aber {} alte Dateien gefunden! Der Cleaner wird blockiert, um Datenverlust zu verhindern.", 

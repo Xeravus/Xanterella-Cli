@@ -42,7 +42,7 @@ impl Format for NixValue {
                     return "'' ''".to_string();
                 }
 
-                let mut out = String::from("''");
+                let mut out = String::from("''\n");
                 out.push_str(&inner_indent);
                 for i in vec {
                     match i {
@@ -50,8 +50,11 @@ impl Format for NixValue {
                         StringFragment::Antiquotation(s) => out.push_str(&s.format_nix(0)),
                     }
                 }
-                out.push('\'');
-                out.push('\'');
+                let len = out.len();
+                if out[len - 3..len] != *"\n" {
+                    out.push_str("\n");
+                }
+                out.push_str(&format!("{}''", indent));
                 out
             }
             NixValue::Int(i) => i.to_string(),
@@ -237,5 +240,226 @@ mod tests {
         let expected_content = "[\n  a\n  b\n]";
 
         assert_eq!(inital_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_str() {
+        let initial_content = NixValue::Str(String::from("hello world"));
+        let expected_content = "\"hello world\"";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_ind_str_empty() {
+        let initial_content = NixValue::IndStr(Vec::new());
+        let expected_content = "'' ''";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_ind_str_normal() {
+        let initial_content = NixValue::IndStr(vec![
+            StringFragment::Text(String::from("line 1\n")),
+            StringFragment::Text(String::from("line 2\n")),
+        ]);
+        let expected_content = "''\n  line 1\nline 2\n\n''";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_ind_str_antiquotation() {
+        let initial_content = NixValue::IndStr(vec![
+            StringFragment::Text(String::from("value is ")),
+            StringFragment::Antiquotation(Box::new(NixValue::Identifier(String::from("var")))),
+            StringFragment::Text(String::from("\n")),
+        ]);
+        let expected_content = "''\n  value is ${var}\n''";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    // --- Primitive Tests ---
+    #[test]
+    fn test_engine_formater_core_int() {
+        let initial_content = NixValue::Int(42);
+        let expected_content = "42";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_float() {
+        let initial_content = NixValue::Float(3.14);
+        let expected_content = "3.14";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_bool_true() {
+        let initial_content = NixValue::Bool(true);
+        let expected_content = "true";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_bool_false() {
+        let initial_content = NixValue::Bool(false);
+        let expected_content = "false";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_identifier() {
+        let initial_content = NixValue::Identifier(String::from("myVar"));
+        let expected_content = "myVar";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_path() {
+        let initial_content = NixValue::Path(String::from("./config.nix"));
+        let expected_content = "./config.nix";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    // --- Struktur-Tests ---
+    #[test]
+    fn test_engine_formater_core_group() {
+        let initial_content = NixValue::Group(Box::new(NixValue::Identifier(String::from("inner"))));
+        let expected_content = "(inner)";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_let_in() {
+        let initial_content = NixValue::LetIn(
+            IndexMap::from([(String::from("a"), NixValue::Int(1))]),
+            Box::new(NixValue::Identifier(String::from("a")))
+        );
+        let expected_content = "let\n  a = 1;\nin a";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_with() {
+        let initial_content = NixValue::With(
+            Box::new(NixValue::Identifier(String::from("pkgs"))),
+            Box::new(NixValue::List(vec![NixValue::Identifier(String::from("git"))]))
+        );
+        let expected_content = "with pkgs; [\n  git\n]";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_antiquotation() {
+        let initial_content = NixValue::Antiquotation(Box::new(NixValue::Identifier(String::from("var"))));
+        let expected_content = "${var}";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_apply() {
+        let initial_content = NixValue::Apply(
+            Box::new(NixValue::Identifier(String::from("lib.mkIf"))),
+            Box::new(NixValue::Identifier(String::from("true")))
+        );
+        let expected_content = "lib.mkIf true";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    // --- Lambda Tests ---
+    #[test]
+    fn test_engine_formater_core_lambda_nofix_empty() {
+        let initial_content = NixValue::Lambda(LambdaTypes::Nofix(
+            Vec::new(),
+            Box::new(NixValue::AttrSet(IndexMap::new()))
+        ));
+        let expected_content = "{ }:"; 
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_lambda_nofix_args() {
+        let initial_content = NixValue::Lambda(LambdaTypes::Nofix(
+            vec![String::from("pkgs"), String::from("lib")],
+            Box::new(NixValue::AttrSet(IndexMap::new()))
+        ));
+        let expected_content = "{\n  pkgs,\n  lib,\n  ...\n}: { }";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_lambda_single() {
+        let initial_content = NixValue::Lambda(LambdaTypes::Single(
+            String::from("config"),
+            Box::new(NixValue::AttrSet(IndexMap::new()))
+        ));
+        let expected_content = "config: { }";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+    
+    #[test]
+    fn test_engine_formater_core_lambda_suffix() {
+        let initial_content = NixValue::Lambda(LambdaTypes::Suffix(
+            vec![String::from("pkgs")],
+            String::from("inputs"),
+            Box::new(NixValue::AttrSet(IndexMap::new()))
+        ));
+        let expected_content = "{\n  pkgs,\n  ...\n} @ inputs : { }";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_lambda_prefix() {
+        let initial_content = NixValue::Lambda(LambdaTypes::Prefix(
+            vec![String::from("pkgs")],
+            String::from("inputs"),
+            Box::new(NixValue::AttrSet(IndexMap::new()))
+        ));
+        let expected_content = "inputs @ {\n  pkgs,\n  ...\n}: { }";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    // --- BinaryOp Tests ---
+    #[test]
+    fn test_engine_formater_core_binaryop_concat() {
+        let initial_content = NixValue::BinaryOp {
+            left: Box::new(NixValue::Identifier(String::from("list1"))),
+            operator: Operator::Concat,
+            right: Box::new(NixValue::Identifier(String::from("list2"))),
+        };
+        let expected_content = "list1 ++ list2";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
+    }
+
+    #[test]
+    fn test_engine_formater_core_binaryop_merge() {
+        let initial_content = NixValue::BinaryOp {
+            left: Box::new(NixValue::Identifier(String::from("set1"))),
+            operator: Operator::Merge,
+            right: Box::new(NixValue::Identifier(String::from("set2"))),
+        };
+        let expected_content = "set1 // set2";
+
+        assert_eq!(initial_content.format_nix(0), expected_content);
     }
 }

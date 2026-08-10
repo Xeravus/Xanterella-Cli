@@ -19,7 +19,6 @@ in {
       };
     };
   };
-
   config = lib.mkMerge [
     (lib.mkIf config.xanterella.tailscale.enable {
       environment = {
