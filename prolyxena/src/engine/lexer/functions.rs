@@ -96,6 +96,8 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 while let Some(&ch) = scout.peek() {
                     if ch.is_alphanumeric() || c == '-' || c == '_' {
                         scout.next();
+                    } else {
+                        break;
                     }
                 }
 
@@ -128,7 +130,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
             return false;
         }
 
-        let mut depth = 0;
+        let mut depth = 1;
         for c in scout.by_ref() {
             if c == '{' {
                 depth += 1;
@@ -142,6 +144,14 @@ impl<'a> ParseFunctions for Lexer<'a> {
 
         if depth != 0 {
             return false;
+        }
+
+        while let Some(&c) = scout.peek() {
+            if c.is_whitespace() {
+                scout.next();
+            } else { 
+                break;
+            }
         }
 
         if let Some(&'@') = scout.peek() {
@@ -276,5 +286,108 @@ impl<'a> ParseFunctions for Lexer<'a> {
 }
 
 #[cfg(test)]
-#[path = "functions_test.rs"]
-mod tests;
+mod tests {
+    use super::*;
+    #[test]
+    fn test_engine_lexer_functions_parse_let_in() {
+        let content1 = "in test";
+        let content2 = "n test";
+        let content3 = " test";
+        let content4 = "in test; test";
+        let content5 = "test test";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
+        let mut data4 = Lexer::new(content4, String::from("path.nix"));
+        let mut data5 = Lexer::new(content5, String::from("path.nix"));
+
+        let result1 = data1.parse_let_in();
+        let result2 = data2.parse_let_in();
+        let result3 = data3.parse_let_in();
+        let result4 = data4.parse_let_in();
+        let result5 = data5.parse_let_in();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+        assert!(result3.is_err());
+        assert!(result4.is_ok());
+        assert!(result5.is_err());
+
+        assert!(matches!(result1, Ok(NixValue::LetIn(..))));
+        assert!(matches!(result3, Err(_)));
+
+        assert!(!matches!(result1, Ok(NixValue::AttrSet(_))));
+    }
+
+    #[test]
+    fn test_engine_lexer_functions_parse_with() {
+        let content1 = "test; test";
+        let content2 = "test";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+
+        let result1 = data1.parse_with();
+        let result2 = data2.parse_with();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+
+        assert!(matches!(result1, Ok(NixValue::With(..))));
+
+        assert!(!matches!(result1, Ok(NixValue::AttrSet(_))));
+    }
+
+    #[test]
+    fn test_engine_lexer_functions_is_lambda_ahead() {
+        let content1 = "{test, }:";
+        let content2 = "{test, } @ inputs:";
+        let content3 = "{test, } @ inputs :";
+        let content4 = "inputs @ {test, } :";
+        let content5 = "}";
+
+        let data1 = Lexer::new(content1, String::from("path.nix"));
+        let data2 = Lexer::new(content2, String::from("path.nix"));
+        let data3 = Lexer::new(content3, String::from("path.nix"));
+        let data4 = Lexer::new(content4, String::from("path.nix"));
+        let data5 = Lexer::new(content5, String::from("path.nix"));
+
+        let result1 = data1.is_lambda_ahead();
+        let result2 = data2.is_lambda_ahead();
+        let result3 = data3.is_lambda_ahead();
+        let result4 = data4.is_lambda_ahead();
+        let result5 = data5.is_lambda_ahead();
+
+        assert_eq!(result1, true);
+        assert_eq!(result2, true);
+        assert_eq!(result3, true);
+        assert_eq!(result4, true);
+        assert_eq!(result5, false);
+    }
+
+    #[test]
+    fn test_engine_lexer_functions_parse_lambda() {
+        let content1 = "{test, }: test";
+        let content2 = "{test, } @ test: test";
+        let content3 = "{test, } @ test test";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
+
+        let result1 = data1.parse_lambda();
+        let result2 = data2.parse_lambda();
+        let result3 = data3.parse_lambda();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_ok());
+        assert!(result3.is_err());
+
+        assert!(matches!(result1, Ok(NixValue::Lambda(..))));
+        assert!(matches!(result2, Ok(NixValue::Lambda(..))));
+
+        assert!(!matches!(result1, Ok(NixValue::AttrSet(..))));
+        assert!(!matches!(result2, Ok(NixValue::AttrSet(..))));
+    }
+}

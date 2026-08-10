@@ -78,7 +78,9 @@ impl FsData {
     pub fn load(&mut self) {
         let start = Instant::now();
         self.get_files();
-        self.gen_tree();
+        if let Err(err) = self.gen_tree() {
+            eprintln!("Fehler: \n{}", err);
+        }
         self.time = start.elapsed().as_secs_f64();
         if let Some(tx) = &self.trans {
             tx.send(ParseEvent::Finished(self.get_time())).ok();
@@ -113,7 +115,7 @@ impl FsData {
         self.files = files;
     }
 
-    pub fn gen_tree(&mut self) {
+    pub fn gen_tree(&mut self) -> Result<(), String> {
         if let Some(tx) = &self.trans {
             let _ = tx.send(ParseEvent::StartGen);
         }
@@ -133,11 +135,15 @@ impl FsData {
                 if let FsNodes::Dir(map) = pointer {
                     pointer = map.entry(folder.to_string()).or_insert_with(|| FsNodes::Dir(IndexMap::new()));
                 } else {
-                    eprintln!("Fehler: Versucht einen Ordner in einer Datei zu erstellen");
-                    break;
+                    return Err("Fehler: Versucht einen Ordner in einer Datei zu erstellen".to_string());
                 }
             }
-            let file_name = parts.last().unwrap();
+            let file_name = match parts.last() {
+                Some(name) => name,
+                None => {
+                    return Err("Fehler: Konnte den letzten Namen nicht extrahieren: hat letztes segment schon extrahiert".to_string())
+                },
+            };
             if let FsNodes::Dir(map) = pointer {
                 let content = fs::read_to_string(&i).unwrap();
                 if let Some(tx) = &self.trans {
@@ -181,8 +187,7 @@ impl FsData {
                         parsed_ast
                     }
                     Err(e) => {
-                        eprintln!("Fehler beim Parsen: \n{}", e);
-                        process::exit(1);
+                        return Err(format!("Fehler beim Parsen/generating des Trees: \n{}", e));
                     }
                 };
                 if let Some(tx) = &self.trans {
@@ -194,6 +199,7 @@ impl FsData {
         if let Some(tx) = &self.trans {
             let _ = tx.send(ParseEvent::EndGen);
         }
+        Ok(())
     }
 
     pub fn get_time(&self) -> String {
@@ -221,5 +227,66 @@ impl FsNodes {
 }
 
 #[cfg(test)]
-#[path = "vfs_test.rs"]
-mod tests;
+mod tests {
+    use std::env;
+    use std::fs::{self, File};
+    use std::io::Write;
+
+    use super::*;
+
+    #[test]
+    fn test_engine_lexer_vfs_fsdata_initialization() {
+        let vfs = FsData::new("/dummy/path");
+
+        assert_eq!(vfs.path, "/dummy/path");
+        assert!(vfs.files.is_empty());
+        if let FsNodes::Dir(map) = vfs.fsnodes {
+            assert!(map.is_empty());
+        } else {
+            panic!("Der Root-Knoten muss ein Dir sein!");
+        }
+    }
+    #[test]
+    fn test_engine_lexer_vfs_get_files_single_nix_file() {
+        let mut vfs = FsData::new("einzelne_datei.nix");
+        vfs.get_files();
+
+        assert_eq!(vfs.files.len(), 1);
+        assert_eq!(vfs.files[0], "einzelne_datei.nix");
+    }
+    #[test]
+    fn test_engine_lexer_vfs_gen_tree_with_real_files() {
+        let temp_dir = env::temp_dir().join("prolyxena_test_vfs");
+        let sub_dir = temp_dir.join("hosts").join("node1");
+        fs::create_dir_all(&sub_dir).unwrap();
+        let file_path = sub_dir.join("config.nix");
+        let mut file = File::create(&file_path).unwrap();
+        file.write_all(b"true").unwrap();
+        let mut vfs = FsData::new(temp_dir.to_str().unwrap());
+        vfs.load();
+        fs::remove_dir_all(&temp_dir).unwrap();
+        assert_eq!(vfs.files.len(), 1);
+        if let FsNodes::Dir(root_map) = &vfs.fsnodes {
+            let hosts_node = root_map.get("hosts").expect("Ordner 'hosts' fehlt im Baum");
+
+            if let FsNodes::Dir(hosts_map) = hosts_node {
+                let node1_node = hosts_map.get("node1").expect("Ordner 'node1' fehlt im Baum");
+
+                if let FsNodes::Dir(node1_map) = node1_node {
+                    let config_file = node1_map.get("config.nix").expect("Datei 'config.nix' fehlt");
+                    if let FsNodes::File { name, ast: _ } = config_file {
+                        assert_eq!(name, "config.nix");
+                    } else {
+                        panic!("config.nix wurde nicht als FsNodes::File gespeichert!");
+                    }
+                } else {
+                    panic!("node1 ist kein Ordner!");
+                }
+            } else {
+                panic!("hosts ist kein Ordner!");
+            }
+        } else {
+            panic!("Wurzel ist kein Ordner!");
+        }
+    }
+}

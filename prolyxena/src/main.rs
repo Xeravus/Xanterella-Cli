@@ -1,4 +1,5 @@
-use prolyxena::cli::commands::*;
+#[allow(unused)]
+use prolyxena::cli::commands::cli_parse;
 
 fn main() {
     #[cfg(not(test))]

@@ -26,13 +26,33 @@ impl Write for FsData {
 
         let mut written_files: Vec<PathBuf> = Vec::new();
         self.write_node(&self.fsnodes, &base_path, &mut written_files)?;
+
+        let canonical_written: Vec<PathBuf> = written_files
+            .into_iter()
+            .filter_map(|p| p.canonicalize().ok())
+            .collect();
+
+        println!("written_files. \n{:#?}", canonical_written);
+
+
+        if canonical_written.len() < self.files.len() {
+            eprintln!(
+                "NOTFALL-ABBRUCH: Es wurden nur {} Dateien generiert, aber {} alte Dateien gefunden! Der Cleaner wird blockiert, um Datenverlust zu verhindern.", 
+                canonical_written.len(), 
+                self.files.len()
+            );
+            return Err("Rebuild aus Sicherheitsgründen abgebrochen".to_string());
+        }
+
         for old_file_str in &self.files {
             let old_path = PathBuf::from(old_file_str);
-            if !written_files.contains(&old_path) {
-                if let Err(e) = fs::remove_file(&old_path) {
-                    eprintln!("Warnung: Konnte veraltete Datei({:?}) nicht löschen: {}", old_path, e);
-                } else {
-                    println!("Deleted => {:?}", old_path);
+            if let Ok(canon) = old_path.canonicalize() {
+                if !canonical_written.contains(&canon) {
+                    if let Err(e) = fs::remove_file(&old_path) {
+                        eprintln!("Warnung: Konnte veraltete Datei({:?}) nicht löschen: {}", old_path, e);
+                    } else {
+                        println!("Deleted => {:?}", old_path);
+                    }
                 }
             }
         }

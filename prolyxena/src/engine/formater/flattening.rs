@@ -414,7 +414,7 @@ mod tests {
     #[test]
     fn test_engine_formater_flattening_expand_lambda() {
         let initial_content = "{}: { a.b.c = true; }";
-        let expectet_content = "{}: { a = { b = { c = true; }; }; }";
+        let expectet_content = "{ }: { a = { b = { c = true; }; }; }";
         expand_assert(initial_content, expectet_content);
     }
 
@@ -538,7 +538,7 @@ mod tests {
 
     #[test]
     fn test_engine_formater_flattening_flatten_lambda() {
-        let expectet_content = "{}: { a.b.c = true; }";
+        let expectet_content = "{ }: { a.b.c = true; }";
         let initial_content = "{}: { a = { b = { c = true; }; }; }";
         flatten_assert(initial_content, expectet_content);
     }
