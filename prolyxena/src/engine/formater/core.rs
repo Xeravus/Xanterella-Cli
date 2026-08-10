@@ -104,7 +104,7 @@ impl Format for NixValue {
                                 }
                             }
                             out.push_str(&format!("{}...\n", inner_indent));
-                            out.push_str("}: ");
+                            out.push_str(&format!("{}}}: ", indent));
                             out.push_str(&body.format_nix(depth));
                             out
                         }
@@ -121,7 +121,7 @@ impl Format for NixValue {
                                 }
                             }
                             out.push_str(&format!("{}...\n", inner_indent));
-                            out.push_str(&format!("{}}} ", inner_indent));
+                            out.push_str(&format!("{}}} ", indent));
                         }
                         out.push_str(&format!("@ {} : ", alias));
                         out.push_str(&body.format_nix(depth));
@@ -141,7 +141,7 @@ impl Format for NixValue {
                                 }
                             }
                             out.push_str(&format!("{}...\n", inner_indent));
-                            out.push_str(&format!("{}}}: ", inner_indent));
+                            out.push_str(&format!("{}}}: ", indent));
                             out.push_str(&body.format_nix(depth));
                             out
                         }
