@@ -47,11 +47,11 @@ impl Format for NixValue {
                 for i in vec {
                     match i {
                         StringFragment::Text(s) => out.push_str(s),
-                        StringFragment::Antiquotation(s) => out.push_str(&s.format_nix(0)),
+                        StringFragment::Antiquotation(s) => out.push_str(&format!("${{{}}}", s.format_nix(0))),
                     }
                 }
                 let len = out.len();
-                if out[len - 3..len] != *"\n" {
+                if !out[len - 3..len].contains("\n") {
                     out.push_str("\n");
                 }
                 out.push_str(&format!("{}''", indent));
@@ -264,7 +264,7 @@ mod tests {
             StringFragment::Text(String::from("line 1\n")),
             StringFragment::Text(String::from("line 2\n")),
         ]);
-        let expected_content = "''\n  line 1\nline 2\n\n''";
+        let expected_content = "''\n  line 1\nline 2\n''";
 
         assert_eq!(initial_content.format_nix(0), expected_content);
     }
