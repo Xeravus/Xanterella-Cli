@@ -29,7 +29,7 @@ jobs:
       - name: Cargo Check
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check"
 
-xanterella2:
+  xanterella2:
     name: Xanterella Test (Staging)
     runs-on: [self-hosted, xanterella]
     needs: 
@@ -42,7 +42,7 @@ xanterella2:
       - name: Cargo Tests
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test"
 
-xanterella3:
+  xanterella3:
     name: Xanterella Build (Staging)
     runs-on: [self-hosted, xanterella]
     needs: 
@@ -69,7 +69,7 @@ xanterella3:
       - name: Cargo Check
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo check"
 
-prolyxena2:
+  prolyxena2:
     name: Prolyxena Test (Staging)
     runs-on: [self-hosted, xanterella]
     needs: 
@@ -82,7 +82,7 @@ prolyxena2:
       - name: Cargo Tests
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo test"
 
-prolyxena3:
+  prolyxena3:
     name: Prolyxena Build (Staging)
     runs-on: [self-hosted, xanterella]
     needs: 
