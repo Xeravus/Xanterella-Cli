@@ -212,7 +212,7 @@ impl FsNodes {
         match self {
             FsNodes::Dir(map) => {
                 for (_, value) in map {
-                    value.reorder_tree(&mode);
+                    value.reorder_tree(mode);
                 }
             }
             FsNodes::File { ast, .. } => {

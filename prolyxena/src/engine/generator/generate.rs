@@ -48,8 +48,6 @@ impl Modify for FsData {
     fn generate_file(&mut self, name: &str, input: Option<NixValue>) -> Result<(), String> {
         let clean_path = name.trim_start_matches('/');
         let parts: Vec<&str> = clean_path.split('/').collect();
-        if parts.is_empty() {
-        }
 
         let mut pointer = &mut self.fsnodes;
         #[allow(clippy::needless_range_loop)]

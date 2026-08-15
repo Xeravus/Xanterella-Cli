@@ -100,16 +100,25 @@ impl<'a> ParseFunctions for Lexer<'a> {
     fn is_lambda_ahead(&self) -> bool {
         let mut scout = self.chars.clone();
 
-        if let Some(&c) = scout.peek() {
-            if c.is_alphanumeric() || c == '_' {
-                while let Some(&ch) = scout.peek() {
-                    if ch.is_alphanumeric() || c == '-' || c == '_' {
-                        scout.next();
-                    } else {
-                        break;
-                    }
+        if let Some(&c) = scout.peek() && (c.is_alphanumeric() || c == '_') {
+            while let Some(&ch) = scout.peek() {
+                if ch.is_alphanumeric() || c == '-' || c == '_' {
+                    scout.next();
+                } else {
+                    break;
                 }
+            }
 
+            while let Some(&ch) = scout.peek() {
+                if ch.is_whitespace() {
+                    scout.next();
+                } else {
+                    break;
+                }
+            }
+
+            if let Some(&'@') = scout.peek() {
+                scout.next();
                 while let Some(&ch) = scout.peek() {
                     if ch.is_whitespace() {
                         scout.next();
@@ -117,21 +126,10 @@ impl<'a> ParseFunctions for Lexer<'a> {
                         break;
                     }
                 }
-
-                if let Some(&'@') = scout.peek() {
-                    scout.next();
-                    while let Some(&ch) = scout.peek() {
-                        if ch.is_whitespace() {
-                            scout.next();
-                        } else {
-                            break;
-                        }
-                    }
-                } else if let Some(':') = scout.peek() {
-                    return true;
-                } else {
-                    scout = self.chars.clone();
-                }
+            } else if let Some(':') = scout.peek() {
+                return true;
+            } else {
+                scout = self.chars.clone();
             }
         }
 
@@ -196,31 +194,29 @@ impl<'a> ParseFunctions for Lexer<'a> {
 
         self.skip_whitespace();
 
-        if let Some(&c) = self.chars.peek() {
-            if c.is_alphanumeric() || c == '_' {
-                let mut temp_alias = String::new();
-                while let Some(&ch) = self.chars.peek() {
-                    if ch.is_alphanumeric() || ch == '-' || ch == '_' {
-                        temp_alias.push(ch);
-                        self.chars.next();
-                    } else {
-                        break;
-                    }
-                }
-
-                self.skip_whitespace();
-
-                if let Some(&'@') = self.chars.peek() {
+        if let Some(&c) = self.chars.peek() && (c.is_alphanumeric() || c == '_') {
+            let mut temp_alias = String::new();
+            while let Some(&ch) = self.chars.peek() {
+                if ch.is_alphanumeric() || ch == '-' || ch == '_' {
+                    temp_alias.push(ch);
                     self.chars.next();
-                    alias = temp_alias;
-                    lamtype = LamType::Prefix;
-                    self.skip_whitespace();
-                } else if let Some(&':') = self.chars.peek() {
-                    alias = temp_alias;
-                    lamtype = LamType::Single;
+                } else {
+                    break;
                 }
-
             }
+
+            self.skip_whitespace();
+
+            if let Some(&'@') = self.chars.peek() {
+                self.chars.next();
+                alias = temp_alias;
+                lamtype = LamType::Prefix;
+                self.skip_whitespace();
+            } else if let Some(&':') = self.chars.peek() {
+                alias = temp_alias;
+                lamtype = LamType::Single;
+            }
+
         }
 
         match lamtype {
@@ -261,28 +257,25 @@ impl<'a> ParseFunctions for Lexer<'a> {
 
         self.skip_whitespace();
 
-        match lamtype {
-            LamType::None => {
-                if let Some(&'@') = self.chars.peek() {
-                    self.chars.next();
-                    self.skip_whitespace();
-                    lamtype = LamType::Suffix;
-                    match self.parse_identifier()? {
-                        NixValue::Identifier(name) => {
-                            alias = name;
-                        }
-                        _ => {
-                            return Err(format!(
-                                "Syntax-Fehler: Gültiger Variablename nach '@' erwartet \nDatei: {} \nErwartet: Lambda \nAttribute:    Attr: {:#?}",
-                                self.path, vec
-                            ));
-                        }
+        if lamtype == LamType::None {
+            if let Some(&'@') = self.chars.peek() {
+                self.chars.next();
+                self.skip_whitespace();
+                lamtype = LamType::Suffix;
+                match self.parse_identifier()? {
+                    NixValue::Identifier(name) => {
+                        alias = name;
                     }
-                } else {
-                    lamtype = LamType::Nofix;
+                    _ => {
+                        return Err(format!(
+                            "Syntax-Fehler: Gültiger Variablename nach '@' erwartet \nDatei: {} \nErwartet: Lambda \nAttribute:    Attr: {:#?}",
+                            self.path, vec
+                        ));
+                    }
                 }
+            } else {
+                lamtype = LamType::Nofix;
             }
-            _ => { },
         }
 
         self.skip_whitespace();
@@ -303,7 +296,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
             LamType::Suffix => Ok(NixValue::Lambda(LambdaTypes::Suffix(vec, alias, Box::new(body)))),
             LamType::Prefix => Ok(NixValue::Lambda(LambdaTypes::Prefix(vec, alias, Box::new(body)))),
             LamType::Single => Ok(NixValue::Lambda(LambdaTypes::Single(alias, Box::new(body)))),
-            _ => return Err(format!("Syntax-Fehler: Konnte Lambda nicht kategorisieren \nDatei: {} \nErwartet: Lambda \nAttribute: \n    Attr: {:#?} \n    Aias: {}", self.path, vec, alias )),
+            _ => Err(format!("Syntax-Fehler: Konnte Lambda nicht kategorisieren \nDatei: {} \nErwartet: Lambda \nAttribute: \n    Attr: {:#?} \n    Aias: {}", self.path, vec, alias )),
         }
     }
 }

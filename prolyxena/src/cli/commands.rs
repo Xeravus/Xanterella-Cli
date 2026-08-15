@@ -91,6 +91,7 @@ pub fn cli_parse() {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn prolyxena_parse(
     writer: &mut impl StdOut, file: String, expand: bool, flatten: bool, sort: bool, animation: bool, output: bool,
     time: bool, debug: bool,
@@ -117,6 +118,7 @@ pub fn prolyxena_parse(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn prolyxena_format(
     writer: &mut impl StdOut, file: String, expand: bool, flatten: bool, sort: bool, animation: bool, output: bool,
     time: bool, debug: bool,

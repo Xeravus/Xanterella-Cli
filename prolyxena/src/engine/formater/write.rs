@@ -20,8 +20,9 @@ impl Write for FsData {
                         .map_err(|err| format!("Konnte Datei {:?} nicht beschreiben: {}", base_path, err))?;
                     return Ok(());
                 }
+            } else {
+                return Err("Konnte die einzelne Datei nicht im AST finden".to_string());
             }
-            return Err("Konnte die einzelne Datei nicht im AST finden".to_string());
         }
 
         let mut written_files: Vec<PathBuf> = Vec::new();
@@ -43,13 +44,11 @@ impl Write for FsData {
 
         for old_file_str in &self.files {
             let old_path = PathBuf::from(old_file_str);
-            if let Ok(canon) = old_path.canonicalize() {
-                if !canonical_written.contains(&canon) {
-                    if let Err(e) = fs::remove_file(&old_path) {
-                        eprintln!("Warnung: Konnte veraltete Datei({:?}) nicht löschen: {}", old_path, e);
-                    } else {
-                        println!("Deleted => {:?}", old_path);
-                    }
+            if let Ok(canon) = old_path.canonicalize() && !canonical_written.contains(&canon) {
+                if let Err(e) = fs::remove_file(&old_path) {
+                    eprintln!("Warnung: Konnte veraltete Datei({:?}) nicht löschen: {}", old_path, e);
+                } else {
+                    println!("Deleted => {:?}", old_path);
                 }
             }
         }

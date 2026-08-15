@@ -41,7 +41,7 @@ impl Sort for NixValue {
                 box2.sort_ast();
             }
             NixValue::List(vec) => {
-                vec.sort_by(|a, b| a.format_nix(0).cmp(&b.format_nix(0)));
+                vec.sort_by_key(|a| a.format_nix(0));
                 for value in vec.iter_mut() {
                     value.sort_ast();
                 }

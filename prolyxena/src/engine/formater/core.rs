@@ -54,7 +54,7 @@ impl Format for NixValue {
                         },
                     }
                 }
-                out.push_str(&format!("''"));
+                out.push_str("''");
                 out
             }
             NixValue::Int(i) => i.to_string(),
@@ -97,7 +97,7 @@ impl Format for NixValue {
                     LambdaTypes::Nofix(vec, body) => {
                         if vec.is_empty() {
                             out.push_str("{ }:");
-                            return out;
+                            out
                         } else {
                             out.push_str("{\n");
 
@@ -134,7 +134,7 @@ impl Format for NixValue {
                         out.push_str(&format!("{} @ ", alias));
                         if vec.is_empty() {
                             out.push_str(" { }: ");
-                            return out;
+                            out
                         } else {
                             out.push_str("{\n");
 
