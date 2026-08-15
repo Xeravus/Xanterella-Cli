@@ -9,94 +9,289 @@ jobs:
     name: Check Guard
     uses: ./.github/workflows/branchguard.yml
 
-  xanterella:
-    name: Xanterella (Stable)
-    needs: check-guard
-    if: needs.check-guard.outputs.proceed == 'true'
+  flake:
+    name: Flake Check (Stable)
     runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with: 
-          clean: false
-          ref: ${{ github.head_ref }}
+        uses: actions/checkout@v6
 
-      - name: Nix Flake Check
-        run: nix flake check
+      - name: Nix Flake Check 
+        run: nix flake check 
+
+  xanterella-start:
+    name: Xanterella Start (Stable)
+    if: needs.check-guard.outputs.proceed == 'true'
+    runs-on: [self-hosted, xanterella]
+    needs: 
+      - flake
+
+  xanterella-start-test:
+    name: Xanterella Start Tests (Stable)
+    runs-on: [self-hosted, xanterella]
+    needs: 
+      - xanterella-start
+      - xanterella-machete
+      - xanterella-audit
+      - xanterella-check
+      - xanterella-clippy
+      - xanterella-format
+
+  xanterella-machete:
+    name: Xanterella Machete (Stable)
+    needs: 
+      - xanterella-start
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Cargo Machete
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo machete"
 
-      - name: Cargo Audit
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo audit"
-
-      - name: Cargo Tarpaulin
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo tarpaulin --fail-under 20"
-
-      - name: Cargo Format
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo fmt --check"
-
-      - name: Cargo Check
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check --release"
-
-      - name: Cargo Clippy
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo clippy -- -D warnings"
-
-      - name: Cargo Test
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test -- --include-ignored"
-
-      - name: Cargo Doc (Documentation Check)
-        run: nix develop .#xanterella --command bash -c "cd xanterella && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --document-private-items"
-
-      - name: Cargo Build
-        run: nix build .#xanterella
-
-      - name: Cleanup
-        uses: Swatinem/rust-cache@v2
-
-  prolyxena:
-    name: Prolyxena (Stable)
-    needs: check-guard
-    if: needs.check-guard.outputs.proceed == 'true'
+  xanterella-audit:
+    name: Xanterella Audit (Stable)
+    needs:
+      - xanterella-start
     runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with: 
-          clean: false
-          ref: ${{ github.head_ref }}
+        uses: actions/checkout@v6
 
-      - name: Nix Flake Check
-        run: nix flake check
+      - name: Cargo Audit
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo audit"
+
+  xanterella-format:
+    name: Xanterella Format (Stable)
+    needs:
+      - xanterella-start
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Cargo Format
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo fmt --check"
+
+  xanterella-check:
+    name: Xanterella Check (Stable)
+    needs:
+      - xanterella-start
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Cargo Check
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check --release"
+
+  xanterella-clippy:
+    name: Xanterella Clippy (Stable)
+    needs:
+      - xanterella-tarpaulin
+      - xanterella-test
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Cargo Clippy
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo clippy -- -D warnings"
+
+  xanterella-test:
+    name: Xanterella Test (Stable)
+    needs:
+      - xanterella-start-test
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Cargo Test
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test -- --include-ignored"
+
+  xanterella-tarpaulin:
+    name: Xanterella Tarpaulin (Stable)
+    needs:
+      - xanterella-start-test
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Cargo Tarpaulin
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo tarpaulin --fail-under 60"
+
+  xanterella-doc:
+    name: Xanterella Doc Check (Stable)
+    needs:
+      - xanterella-start-test
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Cargo Doc (Documentation Check)
+        run: nix develop .#xanterella --command bash -c "cd xanterella && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --document-private-items"
+
+  xanterella-build:
+    name: Xanterella Build (Stable)
+    needs:
+      - xanterella-doc
+      - xanterella-tarpaulin
+      - xanterella-test
+    runs-on: [self-hosted, xanterella]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Cargo Build
+        run: nix build .#xanterella
+
+  prolyxena-start:
+    name: Prolyxena Start (Stable)
+    if: needs.check-guard.outputs.proceed == 'true'
+    runs-on: [self-hosted, prolyxena]
+    needs: 
+      - flake
+
+  prolyxena-start-test:
+    name: Prolyxena Start Tests (Stable)
+    runs-on: [self-hosted, prolyxena]
+    needs: 
+      - prolyxena-start
+      - prolyxena-machete
+      - prolyxena-audit
+      - prolyxena-check
+      - prolyxena-clippy
+      - prolyxena-format
+
+  prolyxena-machete:
+    name: Prolyxena Machete (Stable)
+    needs: 
+      - prolyxena-start
+    runs-on: [self-hosted, prolyxena]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Cargo Machete
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo machete"
 
+  prolyxena-audit:
+    name: Prolyxena Audit (Stable)
+    needs:
+      - prolyxena-start
+    runs-on: [self-hosted, prolyxena]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Cargo Audit
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo audit"
 
-      - name: Cargo Tarpaulin
-        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo tarpaulin --fail-under 50"
+  prolyxena-format:
+    name: Prolyxena Format (Stable)
+    needs:
+      - prolyxena-start
+    runs-on: [self-hosted, prolyxena]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Cargo Format
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo fmt --check"
 
+  prolyxena-check:
+    name: Prolyxena Check (Stable)
+    needs:
+      - prolyxena-start
+    runs-on: [self-hosted, prolyxena]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Cargo Check
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo check --release"
+
+  prolyxena-clippy:
+    name: Prolyxena Clippy (Stable)
+    needs:
+      - prolyxena-tarpaulin
+      - prolyxena-test
+    runs-on: [self-hosted, prolyxena]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Cargo Clippy
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo clippy -- -D warnings"
 
+  prolyxena-test:
+    name: Prolyxena Test (Stable)
+    needs:
+      - prolyxena-start-test
+    runs-on: [self-hosted, prolyxena]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Cargo Test
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo test -- --include-ignored"
+
+  prolyxena-tarpaulin:
+    name: Prolyxena Tarpaulin (Stable)
+    needs:
+      - prolyxena-start-test
+    runs-on: [self-hosted, prolyxena]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Cargo Tarpaulin
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo tarpaulin --fail-under 60"
+
+  prolyxena-doc:
+    name: Prolyxena Doc Check (Stable)
+    needs:
+      - prolyxena-start-test
+    runs-on: [self-hosted, prolyxena]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Cargo Doc (Documentation Check)
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --document-private-items"
 
+  prolyxena-build:
+    name: Prolyxena Build (Stable)
+    needs:
+      - prolyxena-doc
+      - prolyxena-tarpaulin
+      - prolyxena-test
+    runs-on: [self-hosted, prolyxena]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Cargo Build
         run: nix build .#prolyxena
-
-      - name: Cleanup
-        uses: Swatinem/rust-cache@v2
