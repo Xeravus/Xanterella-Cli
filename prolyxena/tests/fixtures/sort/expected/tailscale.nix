@@ -8,32 +8,6 @@
   secrets = import "/home/cato/xanterella/config/modules/agenix/usb-secrets.nix";
 in {
     config = lib.mkMerge [
-      (lib.mkIf config.xanterella.tailscale.enable {
-        environment = {
-          systemPackages = with pkgs-bleeding; [
-            tailscale
-          ];
-        };
-        networking = {
-          nameservers = [
-            "100.100.100.100"
-            "1.1.1.1"
-            "1.0.0.1"
-            "8.8.8.8"
-          ];
-          search = [
-            "gute-nessie.ts.net"
-          ];
-        };
-        services = {
-          resolved = {
-            enable = true;
-          };
-          tailscale = {
-            enable = true;
-          };
-        };
-      })
       (lib.mkIf config.xanterella.tailscale-crylia.enable {
         environment = {
           systemPackages = with inputs.pkgs-bleeding; [
@@ -42,9 +16,9 @@ in {
         };
         networking = {
           nameservers = [
-            "100.100.100.100"
-            "1.1.1.1"
             "1.0.0.1"
+            "1.1.1.1"
+            "100.100.100.100"
             "8.8.8.8"
           ];
           search = [
@@ -85,6 +59,32 @@ in {
               "--hostname=installer"
               "--reset"
             ];
+          };
+        };
+      })
+      (lib.mkIf config.xanterella.tailscale.enable {
+        environment = {
+          systemPackages = with pkgs-bleeding; [
+            tailscale
+          ];
+        };
+        networking = {
+          nameservers = [
+            "1.0.0.1"
+            "1.1.1.1"
+            "100.100.100.100"
+            "8.8.8.8"
+          ];
+          search = [
+            "gute-nessie.ts.net"
+          ];
+        };
+        services = {
+          resolved = {
+            enable = true;
+          };
+          tailscale = {
+            enable = true;
           };
         };
       })

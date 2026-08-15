@@ -19,9 +19,9 @@ in {
             enable = true;
             extraLabels = runnerCfg.labels;
             extraPackages = with pkgs; [
+              bash
               git
               nodejs
-              bash
             ];
             name = "${config.networking.hostName}-${runnerName}";
             replace = true;

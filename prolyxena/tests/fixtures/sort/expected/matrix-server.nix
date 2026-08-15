@@ -118,8 +118,8 @@
         enable = true;
         ensureDatabases = [
           "matrix-synapse"
-          "mautrix-whatsapp"
           "mautrix-discord"
+          "mautrix-whatsapp"
         ];
         ensureUsers = [
           {
@@ -128,11 +128,11 @@
           }
           {
             ensureDBOwnership = true;
-            name = "mautrix-whatsapp";
+            name = "mautrix-discord";
           }
           {
             ensureDBOwnership = true;
-            name = "mautrix-discord";
+            name = "mautrix-whatsapp";
           }
         ];
       };

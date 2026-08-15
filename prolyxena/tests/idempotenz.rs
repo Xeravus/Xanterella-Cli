@@ -162,7 +162,6 @@ fn int_idempotenz_expand_flake() {
 }
 
 #[test]
-#[ignore]
 fn int_idempotenz_expand_github_runner() {
     idempotenz_expand_assert("github-runner");
 }
@@ -235,7 +234,6 @@ fn int_idempotenz_sort_flake() {
 }
 
 #[test]
-#[ignore]
 fn int_idempotenz_sort_github_runner() {
     idempotenz_sort_assert("github-runner");
 }
@@ -248,12 +246,6 @@ fn int_idempotenz_sort_hardware_configuration() {
 #[test]
 fn int_idempotenz_sort_matrix_server() {
     idempotenz_sort_assert("matrix-server");
-}
-
-#[test]
-#[ignore]
-fn int_idempotenz_sort_monitoring() {
-    idempotenz_sort_assert("monitoring");
 }
 
 #[test]

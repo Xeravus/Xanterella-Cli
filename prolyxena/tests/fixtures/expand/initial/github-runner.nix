@@ -23,6 +23,7 @@ in {
         }) cfg;
     };
     options.xanterella.github-runner = lib.mkOption {
+      default = { };
       type = lib.types.attrsOf (lib.types.submodule {
         options.labels = lib.mkOption {
           default = [ ];

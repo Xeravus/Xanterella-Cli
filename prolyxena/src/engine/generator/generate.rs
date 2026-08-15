@@ -75,3 +75,7 @@ impl Modify for FsData {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+}

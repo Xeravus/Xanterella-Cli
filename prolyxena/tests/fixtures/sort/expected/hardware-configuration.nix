@@ -9,12 +9,12 @@
     extraModulePackages = [ ];
     initrd = {
       availableKernelModules = [
-        "xhci_pci"
         "ahci"
         "nvme"
-        "usb_storage"
-        "uas"
         "sd_mod"
+        "uas"
+        "usb_storage"
+        "xhci_pci"
       ];
       kernelModules = [ ];
     };
@@ -31,8 +31,8 @@
       device = "/dev/disk/by-uuid/7548-41A2";
       fsType = "vfat";
       options = [
-        "fmask=0022"
         "dmask=0022"
+        "fmask=0022"
       ];
     };
   };

@@ -209,9 +209,13 @@ impl Flattening for NixValue {
                         value.flatten();
 
                         if let NixValue::AttrSet(inner_map) = value {
-                            changed = true;
-                            for (inner_key, inner_value) in inner_map {
-                                new_map.insert(format!("{}.{}", key, inner_key), inner_value);
+                            if inner_map.is_empty() {
+                                new_map.insert(key, NixValue::AttrSet(inner_map));
+                            } else {
+                                changed = true;
+                                for (inner_key, inner_value) in inner_map {
+                                    new_map.insert(format!("{}.{}", key, inner_key), inner_value);
+                                }
                             }
                         } else {
                             new_map.insert(key, value);
@@ -231,9 +235,13 @@ impl Flattening for NixValue {
                         value.flatten();
 
                         if let NixValue::AttrSet(inner_map) = value {
-                            changed = true;
-                            for (inner_key, inner_value) in inner_map {
-                                new_map.insert(format!("{}.{}", key, inner_key), inner_value);
+                            if inner_map.is_empty() {
+                                new_map.insert(key, NixValue::AttrSet(inner_map));
+                            } else {
+                                changed = true;
+                                for (inner_key, inner_value) in inner_map {
+                                    new_map.insert(format!("{}.{}", key, inner_key), inner_value);
+                                }
                             }
                         } else {
                             new_map.insert(key, value);

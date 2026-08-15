@@ -31,11 +31,40 @@
   '';
 in {
     config = lib.mkMerge [
+      (lib.mkIf config.xanterella.bash.enable {
+        programs = {
+          bash = {
+            completion = {
+              enable = true;
+            };
+            shellAliases = {
+              cl = "clear";
+              f = "fastfetch";
+              l = "ls -lha";
+              nix-pr = "nixpkgs-review pr --print-result";
+              sv = "sudo nvim";
+              v = "nvim";
+              vim = "nvim";
+              za = "yazi";
+            };
+          };
+        };
+        users = {
+          users = {
+            cato = {
+              shell = pkgs.bash;
+            };
+            root = {
+              shell = pkgs.bash;
+            };
+          };
+        };
+      })
       (lib.mkIf config.xanterella.zsh.enable {
         environment = {
           systemPackages = with pkgs; [
-            zsh-powerlevel10k
             bat
+            zsh-powerlevel10k
           ];
         };
         programs = {
@@ -96,35 +125,6 @@ in {
             };
             root = {
               shell = pkgs.zsh;
-            };
-          };
-        };
-      })
-      (lib.mkIf config.xanterella.bash.enable {
-        programs = {
-          bash = {
-            completion = {
-              enable = true;
-            };
-            shellAliases = {
-              cl = "clear";
-              f = "fastfetch";
-              l = "ls -lha";
-              nix-pr = "nixpkgs-review pr --print-result";
-              sv = "sudo nvim";
-              v = "nvim";
-              vim = "nvim";
-              za = "yazi";
-            };
-          };
-        };
-        users = {
-          users = {
-            cato = {
-              shell = pkgs.bash;
-            };
-            root = {
-              shell = pkgs.bash;
             };
           };
         };

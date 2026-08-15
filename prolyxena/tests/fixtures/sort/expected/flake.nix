@@ -121,9 +121,9 @@
         inputs = inputs;
       } {
       imports = [
-        ./flake-modules/hosts.nix
         ./flake-modules/colmena.nix
         ./flake-modules/dev-shells.nix
+        ./flake-modules/hosts.nix
       ];
       perSystem = {
         pkgs,
@@ -131,8 +131,8 @@
         ...
       }: { };
       systems = [
-        "x86_64-linux"
         "aarch64-linux"
+        "x86_64-linux"
       ];
     };
 }
