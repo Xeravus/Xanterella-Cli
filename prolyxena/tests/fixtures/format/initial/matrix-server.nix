@@ -16,6 +16,7 @@
       };
     };
   };
+
   config = lib.mkIf config.xanterella.matrix-server.enable {
     age = {
       secrets = {
@@ -39,7 +40,6 @@
     services = {
       postgresql = {
         enable = true;
-
         ensureDatabases = [
           "matrix-synapse"
           "mautrix-whatsapp"
@@ -75,8 +75,11 @@
             };
           };
         };
-        extraConfigFiles = [config.age.secrets.matrix-password.path];
+        extraConfigFiles = [
+          config.age.secrets.matrix-password.path
+        ];
       };
+
       mautrix-whatsapp = {
         enable = true;
         package = pkgs-unstable.mautrix-whatsapp;
@@ -101,6 +104,7 @@
           };
         };
       };
+
       mautrix-discord = {
         enable = true;
         environmentFile = config.age.secrets.discord_secrets.path;
@@ -124,23 +128,30 @@
           };
         };
       };
+
       tailscale = {
         permitCertUid = "caddy";
       };
       caddy = {
         enable = true;
-
         virtualHosts = {
-          "https://${config.xanterella.matrix-server.domain}" = {extraConfig = ''handle /_matrix* { reverse_proxy 127.0.0.1:8008 } handle /_synapse/client* { reverse_proxy 127.0.0.1:8008 } '';};
+          "https://${config.xanterella.matrix-server.domain}" = {
+            extraConfig = ''
+              handle /_matrix* {
+              reverse_proxy 127.0.0.1:8008
+              }
+              handle /_synapse/client* {
+              reverse_proxy 127.0.0.1:8008
+              }
+            '';
+          };
         };
       };
     };
     users = {
       users = {
         caddy = {
-          extraGroups = [
-            "tailscale"
-          ];
+          extraGroups = ["tailscale"];
         };
       };
     };

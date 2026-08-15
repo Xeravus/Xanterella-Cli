@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  inputs,
   lib,
   ...
 }: {
@@ -83,6 +84,18 @@
               ];
             };
           };
+          dashboards = {
+            settings = {
+              providers = [
+                {
+                  name = "GitHub Dashboard";
+                  options = {
+                    path = "${inputs.xanterella-etc}";
+                  };
+                }
+              ];
+            };
+          };
         };
       };
       tailscale = {
@@ -99,7 +112,7 @@
           "https://${config.xanterella.monitoring.domain}" = {
             extraConfig = ''
               handle /grafana* {
-                       reverse_proxy config.services.grafana.settings.server.http_addr}:toString config.services.grafana.settings.server.http_port}
+                       reverse_proxy ${config.services.grafana.settings.server.http_addr}:${toString config.services.grafana.settings.server.http_port}
                 }
             '';
           };
@@ -119,6 +132,15 @@
           extraGroups = [
             "tailscale"
           ];
+        };
+      };
+    };
+    systemd = {
+      services = {
+        grafana = {
+          environment = {
+            GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH = "${inputs.xanterella-etc}/grafana/monitoring.json";
+          };
         };
       };
     };

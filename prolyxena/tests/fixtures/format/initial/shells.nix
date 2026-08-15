@@ -17,16 +17,17 @@
     }
   '';
   zshInit = ''
-    ZSH_CACHE_DIR="$HOME/.cache/zsh"
-    if [[ ! -d "$ZSH_CACHE_DIR" ]]; then
-      mkdir -p "$ZSH_CACHE_DIR"
-    fi
-    export ZSH_COMPDUMP="$ZSH_CACHE_DIR/zcompdump-$HOST-$ZSH_VERSION"
-    export DIRENV_LOG_FORMAT=""
+    unsetopt prompt_cr prompt_sp
+        ZSH_CACHE_DIR="$HOME/.cache/zsh"
+        if [[ ! -d "$ZSH_CACHE_DIR" ]]; then
+          mkdir -p "$ZSH_CACHE_DIR"
+        fi
+        export ZSH_COMPDUMP="$ZSH_CACHE_DIR/zcompdump-$HOST-$ZSH_VERSION"
+        export DIRENV_LOG_FORMAT=""
 
-    if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
-      source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
-    fi
+        if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
+          source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
+        fi
   '';
 in {
   options = {
@@ -39,6 +40,7 @@ in {
       };
     };
   };
+
   config = lib.mkMerge [
     (lib.mkIf config.xanterella.zsh.enable {
       environment = {
@@ -47,15 +49,17 @@ in {
           bat
         ];
       };
-      users = {
-        users = {
-          cato = {
-            shell = pkgs.zsh;
-          };
-          root = {
-            shell = pkgs.zsh;
+      systemd = {
+        user = {
+          tmpfiles = {
+            rules = [
+              "f %h/.zshrc 0644 - - - #"
+            ];
           };
         };
+      };
+      users = {
+        defaultUserShell = pkgs.zsh;
       };
       programs = {
         zsh = {
@@ -84,15 +88,29 @@ in {
             nix-pr = "nixpkgs-review pr --print-result";
             b = "btop";
             carrun = "cargo c && cargo t && cargo b";
+            pclear = "pyroclear";
+            pcl = "pyroclear";
+            plc = "pyroclear";
           };
           interactiveShellInit = ''
-                   zshInit}
-                   source inputs.p10k-src}/powerlevel10k.zsh-theme
-                   source p10kConf}
-                   yaziFunc}
+            unsetopt prompt_cr
+                            ${zshInit}
+                            source ${inputs.p10k-src}/powerlevel10k.zsh-theme
+                            source ${p10kConf}
+                            ${yaziFunc}
 
-            (( ! ''${+functions[p10k]} )) || p10k finalize
+                     (( ! ''${+functions[p10k]} )) || p10k finalize
           '';
+        };
+      };
+      users = {
+        users = {
+          cato = {
+            shell = pkgs.zsh;
+          };
+          root = {
+            shell = pkgs.zsh;
+          };
         };
       };
     })

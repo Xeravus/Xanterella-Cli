@@ -1,11 +1,94 @@
 {
   config,
-  pkgs-unstable,
+  inputs,
   lib,
+  pkgs-bleeding,
   ...
 }: let
   secrets = import "/home/cato/xanterella/config/modules/agenix/usb-secrets.nix";
 in {
+    config = lib.mkMerge [
+      (lib.mkIf config.xanterella.tailscale.enable {
+        environment = {
+          systemPackages = with pkgs-bleeding; [
+            tailscale
+          ];
+        };
+        networking = {
+          nameservers = [
+            "100.100.100.100"
+            "1.1.1.1"
+            "1.0.0.1"
+            "8.8.8.8"
+          ];
+          search = [
+            "gute-nessie.ts.net"
+          ];
+        };
+        services = {
+          resolved = {
+            enable = true;
+          };
+          tailscale = {
+            enable = true;
+          };
+        };
+      })
+      (lib.mkIf config.xanterella.tailscale-crylia.enable {
+        environment = {
+          systemPackages = with inputs.pkgs-bleeding; [
+            tailscale
+          ];
+        };
+        networking = {
+          nameservers = [
+            "100.100.100.100"
+            "1.1.1.1"
+            "1.0.0.1"
+            "8.8.8.8"
+          ];
+          search = [
+            "gute-nessie.ts.net"
+          ];
+        };
+        services = {
+          resolved = {
+            enable = true;
+          };
+          tailscale = {
+            authKeyFile = "/etc/tailscale_key";
+            enable = true;
+            extraUpFlags = [
+              "--hostname=crylia"
+              "--reset"
+            ];
+          };
+        };
+      })
+      (lib.mkIf config.xanterella.tailscale-installer.enable {
+        environment = {
+          etc = {
+            "tailscale.key" = {
+              mode = "0400";
+              text = secrets.tailscalekey;
+            };
+          };
+          systemPackages = with inputs.pkgs-bleeding; [
+            tailscale
+          ];
+        };
+        services = {
+          tailscale = {
+            authKeyFile = "/etc/tailscale.key";
+            enable = true;
+            extraUpFlags = [
+              "--hostname=installer"
+              "--reset"
+            ];
+          };
+        };
+      })
+    ];
     options = {
       xanterella = {
         tailscale = {
@@ -19,86 +102,4 @@ in {
         };
       };
     };
-    config = lib.mkMerge [
-      (lib.mkIf config.xanterella.tailscale.enable {
-        environment = {
-          systemPackages = with pkgs-unstable; [
-            tailscale
-          ];
-        };
-        services = {
-          tailscale = {
-            enable = true;
-          };
-          resolved = {
-            enable = true;
-          };
-        };
-        networking = {
-          nameservers = [
-            "100.100.100.100"
-            "1.1.1.1"
-            "1.0.0.1"
-            "8.8.8.8"
-          ];
-          search = [
-            "gute-nessie.ts.net"
-          ];
-        };
-      })
-      (lib.mkIf config.xanterella.tailscale-crylia.enable {
-        environment = {
-          systemPackages = with pkgs-unstable; [
-            tailscale
-          ];
-        };
-        services = {
-          tailscale = {
-            enable = true;
-            authKeyFile = "/etc/tailscale_key";
-            extraUpFlags = [
-              "--hostname=crylia"
-              "--reset"
-            ];
-          };
-          resolved = {
-            enable = true;
-          };
-        };
-        networking = {
-          nameservers = [
-            "100.100.100.100"
-            "1.1.1.1"
-            "1.0.0.1"
-            "8.8.8.8"
-          ];
-          search = [
-            "gute-nessie.ts.net"
-          ];
-        };
-      })
-      (lib.mkIf config.xanterella.tailscale-installer.enable {
-        environment = {
-          systemPackages = with pkgs-unstable; [
-            tailscale
-          ];
-          etc = {
-            "tailscale.key" = {
-              text = secrets.tailscalekey;
-              mode = "0400";
-            };
-          };
-        };
-        services = {
-          tailscale = {
-            enable = true;
-            authKeyFile = "/etc/tailscale.key";
-            extraUpFlags = [
-              "--hostname=installer"
-              "--reset"
-            ];
-          };
-        };
-      })
-    ];
   }

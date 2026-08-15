@@ -1,12 +1,25 @@
-{ description = "Meine NixOs Systeme"; inputs = { nixpkgs = {
-      url = "github:nixos/nixpkgs/nixos-25.11"; flake = true; }; nixpkgs-new = { url = "github:nixos/nixpkgs/nixos-26.05"; flake = true; }; nixpkgs-unstable = { url = "github:nixos/nixpkgs/nixpkgs-unstable"; flake = true; };
+{
+  description = "Meine NixOs Systeme";
 
-
-
-
-
+  inputs = {
+    nixpkgs = {
+      url = "github:nixos/nixpkgs/nixos-25.11";
+      flake = true;
+    };
+    nixpkgs-new = {
+      url = "github:nixos/nixpkgs/nixos-26.05";
+      flake = true;
+    };
+    nixpkgs-unstable = {
+      url = "github:nixos/nixpkgs/nixpkgs-unstable";
+      flake = true;
+    };
+    nixpkgs-bleeding-edge = {
+      url = "github:nixos/nixpkgs/nixpkgs-unstable";
+      flake = true;
+    };
     nixos-hardware = {
-url = "github:NixOS/nixos-hardware/master";
+      url = "github:NixOS/nixos-hardware/master";
       flake = true;
     };
     nix-programs = {
@@ -50,7 +63,7 @@ url = "github:NixOS/nixos-hardware/master";
     agenix = {
       url = "github:ryantm/agenix";
       flake = true;
-					};
+    };
     colmena = {
       url = "github:zhaofengli/colmena";
       flake = true;
@@ -59,15 +72,20 @@ url = "github:NixOS/nixos-hardware/master";
       url = "github:romkatv/powerlevel10k";
       flake = false;
     };
-    wallpaper = {
+    xanterella-etc = {
       url = "github:Xeravus/Xanterella-Etc";
       flake = false;
+    };
+    pyroclear = {
+      url = "github:shreyanth-sureshkrishnaa/pyroclear";
+      flake = true;
     };
     pomo-src = {
       url = "github:Bahaaio/pomo";
       flake = false;
     };
   };
+
   outputs = inputs @ {flake-parts, ...}: let
     systemarch = "x86_64-linux";
     taruser = "root";
@@ -87,16 +105,19 @@ url = "github:NixOS/nixos-hardware/master";
       };
     };
   in
-    flake-parts.lib.mkFlake {
-      inputs = inputs;
-    } {
+    flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [
         "x86_64-linux"
         "aarch64-linux"
       ];
       imports = [
         ./flake-modules/hosts.nix
-        ./flake-modules/colmena.nix ./flake-modules/dev-shells.nix ]; perSystem = { pkgs, system,
+        ./flake-modules/colmena.nix
+        ./flake-modules/dev-shells.nix
+      ];
+      perSystem = {
+        pkgs,
+        system,
         ...
       }: {};
     };

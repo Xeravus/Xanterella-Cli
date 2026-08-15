@@ -1,6 +1,7 @@
 {
   config,
-  pkgs-unstable,
+  inputs,
+  pkgs-bleeding,
   lib,
   ...
 }: let
@@ -19,10 +20,11 @@ in {
       };
     };
   };
+
   config = lib.mkMerge [
     (lib.mkIf config.xanterella.tailscale.enable {
       environment = {
-        systemPackages = with pkgs-unstable; [
+        systemPackages = with pkgs-bleeding; [
           tailscale
         ];
       };
@@ -48,7 +50,7 @@ in {
     })
     (lib.mkIf config.xanterella.tailscale-crylia.enable {
       environment = {
-        systemPackages = with pkgs-unstable; [
+        systemPackages = with inputs.pkgs-bleeding; [
           tailscale
         ];
       };
@@ -79,7 +81,7 @@ in {
     })
     (lib.mkIf config.xanterella.tailscale-installer.enable {
       environment = {
-        systemPackages = with pkgs-unstable; [
+        systemPackages = with inputs.pkgs-bleeding; [
           tailscale
         ];
         etc = {

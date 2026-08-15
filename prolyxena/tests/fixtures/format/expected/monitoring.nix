@@ -1,37 +1,91 @@
 {
   config,
-  pkgs,
+  inputs,
   lib,
+  pkgs,
   ...
 }: {
-  options = {
-    xanterella = {
-      monitoring = {
-        enable = lib.mkEnableOption "Aktiviert Monitoring";
-        domain = lib.mkOption {
-          type = lib.types.str;
-          default = "xanterella.de/monitoring";
-        };
+  config = lib.mkIf config.xanterella.monitoring.enable {
+    networking = {
+      firewall = {
+        allowedTCPPorts = [
+          config.services.grafana.settings.server.http_port
+        ];
       };
     };
-  };
-  config = lib.mkIf config.xanterella.monitoring.enable {
     services = {
+      caddy = {
+        enable = true;
+        globalConfig = ''
+          servers {
+            metrics
+          }
+        '';
+        virtualHosts = {
+          "https://${config.xanterella.monitoring.domain}" = {
+            extraConfig = ''
+              handle /grafana* {
+                       reverse_proxy ${config.services.grafana.settings.server.http_addr}:${toString config.services.grafana.settings.server.http_port}
+                }
+            '';
+          };
+        };
+      };
+      grafana = {
+        enable = true;
+        provision = {
+          dashboards = {
+            settings = {
+              providers = [
+                {
+                  name = "GitHub Dashboard";
+                  options = {
+                    path = "${inputs.xanterella-etc}";
+                  };
+                }
+              ];
+            };
+          };
+          datasources = {
+            settings = {
+              datasources = [
+                {
+                  access = "proxy";
+                  isDefault = true;
+                  name = "Prometheus";
+                  type = "prometheus";
+                  url = "http://127.0.0.1:${toString config.services.prometheus.port}";
+                }
+              ];
+            };
+          };
+          enable = true;
+        };
+        settings = {
+          server = {
+            domain = config.xanterella.monitoring.domain;
+            http_addr = "127.0.0.1";
+            http_port = 9000;
+            root_url = "%(protocol)s://%(domain)s/grafana/";
+            serve_from_sub_path = true;
+          };
+        };
+      };
       prometheus = {
         enable = true;
-        port = 9090;
-        listenAddress = "127.0.0.1";
-        retentionTime = "15d";
         exporters = {
           node = {
             enable = true;
             enabledCollectors = [
               "systemd"
             ];
-            port = 9100;
             listenAddress = "127.0.0.1";
+            port = 9100;
           };
         };
+        listenAddress = "127.0.0.1";
+        port = 9090;
+        retentionTime = "15d";
         scrapeConfigs = [
           {
             job_name = "nixos-laptop";
@@ -57,60 +111,17 @@
           }
         ];
       };
-      grafana = {
-        enable = true;
-        settings = {
-          server = {
-            http_addr = "127.0.0.1";
-            http_port = 9000;
-            domain = config.xanterella.monitoring.domain;
-            root_url = "%(protocol)s://%(domain)s/grafana/";
-            serve_from_sub_path = true;
-          };
-        };
-        provision = {
-          enable = true;
-          datasources = {
-            settings = {
-              datasources = [
-                {
-                  name = "Prometheus";
-                  type = "prometheus";
-                  access = "proxy";
-                  url = "http://127.0.0.1:${toString config.services.prometheus.port}";
-                  isDefault = true;
-                }
-              ];
-            };
-          };
-        };
-      };
       tailscale = {
         permitCertUid = "caddy";
       };
-      caddy = {
-        enable = true;
-        globalConfig = ''          
-          servers {
-            metrics
-          }
-        '';
-        virtualHosts = {
-          "https://${config.xanterella.monitoring.domain}" = {
-            extraConfig = ''              
-              handle /grafana* {
-                reverse_proxy ${config.services.grafana.settings.server.http_addr}:${toString config.services.grafana.settings.server.http_port}
-              }
-            '';
+    };
+    systemd = {
+      services = {
+        grafana = {
+          environment = {
+            GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH = "${inputs.xanterella-etc}/grafana/monitoring.json";
           };
         };
-      };
-    };
-    networking = {
-      firewall = {
-        allowedTCPPorts = [
-          config.services.grafana.settings.server.http_port
-        ];
       };
     };
     users = {
@@ -120,6 +131,17 @@
             "tailscale"
           ];
         };
+      };
+    };
+  };
+  options = {
+    xanterella = {
+      monitoring = {
+        domain = lib.mkOption {
+          default = "xanterella.de/monitoring";
+          type = lib.types.str;
+        };
+        enable = lib.mkEnableOption "Aktiviert Monitoring";
       };
     };
   };

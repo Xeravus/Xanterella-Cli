@@ -42,19 +42,19 @@ impl Format for NixValue {
                     return "'' ''".to_string();
                 }
 
-                let mut out = String::from("''\n");
-                out.push_str(&inner_indent);
+                let mut out = String::from("''");
                 for i in vec {
                     match i {
                         StringFragment::Text(s) => out.push_str(s),
-                        StringFragment::Antiquotation(s) => out.push_str(&format!("${{{}}}", s.format_nix(0))),
+                        StringFragment::Antiquotation(s) => {
+                            out.push('$');
+                            out.push('{');
+                            out.push_str(&s.format_nix(0));
+                            out.push('}');
+                        },
                     }
                 }
-                let len = out.len();
-                if !out[len - 3..len].contains("\n") {
-                    out.push_str("\n");
-                }
-                out.push_str(&format!("{}''", indent));
+                out.push_str(&format!("''"));
                 out
             }
             NixValue::Int(i) => i.to_string(),
@@ -264,7 +264,7 @@ mod tests {
             StringFragment::Text(String::from("line 1\n")),
             StringFragment::Text(String::from("line 2\n")),
         ]);
-        let expected_content = "''\n  line 1\nline 2\n''";
+        let expected_content = "''line 1\nline 2\n''";
 
         assert_eq!(initial_content.format_nix(0), expected_content);
     }
@@ -276,7 +276,7 @@ mod tests {
             StringFragment::Antiquotation(Box::new(NixValue::Identifier(String::from("var")))),
             StringFragment::Text(String::from("\n")),
         ]);
-        let expected_content = "''\n  value is ${var}\n''";
+        let expected_content = "''value is ${var}\n''";
 
         assert_eq!(initial_content.format_nix(0), expected_content);
     }
