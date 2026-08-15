@@ -413,7 +413,9 @@ mod tests {
         assert!(tui.time_rx.is_some());
     }
 
-    fn assert_events(event1: ParseEvent, event2: Option<ParseEvent>, len1: usize, len2: usize, ind1: usize, ind2: usize) {
+    fn assert_events(
+        event1: ParseEvent, event2: Option<ParseEvent>, len1: usize, len2: usize, ind1: usize, ind2: usize,
+    ) {
         let mut tui = Tui::new();
         let mut indent = 0;
         let (tx, rx) = mpsc::channel();
@@ -497,7 +499,7 @@ mod tests {
     fn test_tui_core_parse_events_whitespace() {
         assert_events(ParseEvent::StartWhitespace, Some(ParseEvent::EndWhitespace), 1, 0, 1, 0);
     }
-    
+
     #[test]
     fn test_tui_core_parse_events_value() {
         assert_events(ParseEvent::StartValue, Some(ParseEvent::EndValue), 1, 0, 1, 0);
@@ -535,16 +537,37 @@ mod tests {
 
     #[test]
     fn test_tui_core_parse_events_sorting_files() {
-        assert_events(ParseEvent::StartSortingFile("test".to_string()), Some(ParseEvent::EndSortingFile("test".to_string())), 1, 0, 1, 0);
+        assert_events(
+            ParseEvent::StartSortingFile("test".to_string()),
+            Some(ParseEvent::EndSortingFile("test".to_string())),
+            1,
+            0,
+            1,
+            0,
+        );
     }
 
     #[test]
     fn test_tui_core_parse_events_expanding_file() {
-        assert_events(ParseEvent::StartExpandingFile("test".to_string()), Some(ParseEvent::EndExpandingFile("test".to_string())), 1, 0, 1, 0);
+        assert_events(
+            ParseEvent::StartExpandingFile("test".to_string()),
+            Some(ParseEvent::EndExpandingFile("test".to_string())),
+            1,
+            0,
+            1,
+            0,
+        );
     }
 
     #[test]
     fn test_tui_core_parse_events_flattening_file() {
-        assert_events(ParseEvent::StartFlatteningFile("test".to_string()), Some(ParseEvent::EndFlatteningFile("test".to_string())), 1, 0, 1, 0);
+        assert_events(
+            ParseEvent::StartFlatteningFile("test".to_string()),
+            Some(ParseEvent::EndFlatteningFile("test".to_string())),
+            1,
+            0,
+            1,
+            0,
+        );
     }
 }

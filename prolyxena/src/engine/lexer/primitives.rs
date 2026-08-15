@@ -93,7 +93,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 } else {
                     self.parse_identifier()
                 }
-            },
+            }
             None => {
                 Err(format!("Syntax-Fehler: Unerwaretes Ende der Datei \nDatei: {} \nErwartet: Unknown", self.path))
             }
@@ -342,7 +342,10 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                         if let Some(&'}') = self.chars.peek() {
                             self.chars.next();
                         } else {
-                            return Err(format!("Syntax-Fehler: Erwartet '}}' am Ende der Antiquotation im Indented String: '{:#?}' \nDatei: {} \nErwartet: Indented String(Antiquotation)", output, self.path));
+                            return Err(format!(
+                                "Syntax-Fehler: Erwartet '}}' am Ende der Antiquotation im Indented String: '{:#?}' \nDatei: {} \nErwartet: Indented String(Antiquotation)",
+                                output, self.path
+                            ));
                         }
                     } else {
                         string.push('$');

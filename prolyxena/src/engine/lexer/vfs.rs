@@ -141,8 +141,11 @@ impl FsData {
             let file_name = match parts.last() {
                 Some(name) => name,
                 None => {
-                    return Err("Fehler: Konnte den letzten Namen nicht extrahieren: hat letztes segment schon extrahiert".to_string())
-                },
+                    return Err(
+                        "Fehler: Konnte den letzten Namen nicht extrahieren: hat letztes segment schon extrahiert"
+                            .to_string(),
+                    );
+                }
             };
             if let FsNodes::Dir(map) = pointer {
                 let content = fs::read_to_string(&i).unwrap();
@@ -215,13 +218,11 @@ impl FsNodes {
                     value.reorder_tree(mode);
                 }
             }
-            FsNodes::File { ast, .. } => {
-                match mode {
-                    ReOderMode::Expand => ast.expand(),
-                    ReOderMode::Flatten => ast.flatten(),
-                    ReOderMode::Sort => ast.sort_ast(),
-                }
-            }
+            FsNodes::File { ast, .. } => match mode {
+                ReOderMode::Expand => ast.expand(),
+                ReOderMode::Flatten => ast.flatten(),
+                ReOderMode::Sort => ast.sort_ast(),
+            },
         }
     }
 }

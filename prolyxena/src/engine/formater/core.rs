@@ -51,7 +51,7 @@ impl Format for NixValue {
                             out.push('{');
                             out.push_str(&s.format_nix(0));
                             out.push('}');
-                        },
+                        }
                     }
                 }
                 out.push_str("''");
@@ -117,7 +117,7 @@ impl Format for NixValue {
                             out.push_str("{ }: ");
                         } else {
                             out.push_str("{\n");
-                            
+
                             for i in vec {
                                 if i != "..." {
                                     out.push_str(&format!("{}{},\n", inner_indent, i));
@@ -207,8 +207,9 @@ impl Format for NixValue {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use indexmap::IndexMap;
+
+    use super::*;
 
     #[test]
     fn test_engine_formater_core_attr_set_empty() {
@@ -220,7 +221,8 @@ mod tests {
 
     #[test]
     fn test_engine_formater_core_attr_set_normal() {
-        let inital_content = NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("a")))]));
+        let inital_content =
+            NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("a")))]));
         let expected_content = "{\n  a = a;\n}";
 
         assert_eq!(inital_content.format_nix(0), expected_content);
@@ -236,7 +238,8 @@ mod tests {
 
     #[test]
     fn test_engine_formater_core_list_normal() {
-        let inital_content = NixValue::List(vec![NixValue::Identifier(String::from("a")), NixValue::Identifier(String::from("b"))]);
+        let inital_content =
+            NixValue::List(vec![NixValue::Identifier(String::from("a")), NixValue::Identifier(String::from("b"))]);
         let expected_content = "[\n  a\n  b\n]";
 
         assert_eq!(inital_content.format_nix(0), expected_content);
@@ -343,7 +346,7 @@ mod tests {
     fn test_engine_formater_core_let_in() {
         let initial_content = NixValue::LetIn(
             IndexMap::from([(String::from("a"), NixValue::Int(1))]),
-            Box::new(NixValue::Identifier(String::from("a")))
+            Box::new(NixValue::Identifier(String::from("a"))),
         );
         let expected_content = "let\n  a = 1;\nin a";
 
@@ -354,7 +357,7 @@ mod tests {
     fn test_engine_formater_core_with() {
         let initial_content = NixValue::With(
             Box::new(NixValue::Identifier(String::from("pkgs"))),
-            Box::new(NixValue::List(vec![NixValue::Identifier(String::from("git"))]))
+            Box::new(NixValue::List(vec![NixValue::Identifier(String::from("git"))])),
         );
         let expected_content = "with pkgs; [\n  git\n]";
 
@@ -373,7 +376,7 @@ mod tests {
     fn test_engine_formater_core_apply() {
         let initial_content = NixValue::Apply(
             Box::new(NixValue::Identifier(String::from("lib.mkIf"))),
-            Box::new(NixValue::Identifier(String::from("true")))
+            Box::new(NixValue::Identifier(String::from("true"))),
         );
         let expected_content = "lib.mkIf true";
 
@@ -383,11 +386,9 @@ mod tests {
     // --- Lambda Tests ---
     #[test]
     fn test_engine_formater_core_lambda_nofix_empty() {
-        let initial_content = NixValue::Lambda(LambdaTypes::Nofix(
-            Vec::new(),
-            Box::new(NixValue::AttrSet(IndexMap::new()))
-        ));
-        let expected_content = "{ }:"; 
+        let initial_content =
+            NixValue::Lambda(LambdaTypes::Nofix(Vec::new(), Box::new(NixValue::AttrSet(IndexMap::new()))));
+        let expected_content = "{ }:";
 
         assert_eq!(initial_content.format_nix(0), expected_content);
     }
@@ -396,7 +397,7 @@ mod tests {
     fn test_engine_formater_core_lambda_nofix_args() {
         let initial_content = NixValue::Lambda(LambdaTypes::Nofix(
             vec![String::from("pkgs"), String::from("lib")],
-            Box::new(NixValue::AttrSet(IndexMap::new()))
+            Box::new(NixValue::AttrSet(IndexMap::new())),
         ));
         let expected_content = "{\n  pkgs,\n  lib,\n  ...\n}: { }";
 
@@ -405,21 +406,19 @@ mod tests {
 
     #[test]
     fn test_engine_formater_core_lambda_single() {
-        let initial_content = NixValue::Lambda(LambdaTypes::Single(
-            String::from("config"),
-            Box::new(NixValue::AttrSet(IndexMap::new()))
-        ));
+        let initial_content =
+            NixValue::Lambda(LambdaTypes::Single(String::from("config"), Box::new(NixValue::AttrSet(IndexMap::new()))));
         let expected_content = "config: { }";
 
         assert_eq!(initial_content.format_nix(0), expected_content);
     }
-    
+
     #[test]
     fn test_engine_formater_core_lambda_suffix() {
         let initial_content = NixValue::Lambda(LambdaTypes::Suffix(
             vec![String::from("pkgs")],
             String::from("inputs"),
-            Box::new(NixValue::AttrSet(IndexMap::new()))
+            Box::new(NixValue::AttrSet(IndexMap::new())),
         ));
         let expected_content = "{\n  pkgs,\n  ...\n} @ inputs : { }";
 
@@ -431,7 +430,7 @@ mod tests {
         let initial_content = NixValue::Lambda(LambdaTypes::Prefix(
             vec![String::from("pkgs")],
             String::from("inputs"),
-            Box::new(NixValue::AttrSet(IndexMap::new()))
+            Box::new(NixValue::AttrSet(IndexMap::new())),
         ));
         let expected_content = "inputs @ {\n  pkgs,\n  ...\n}: { }";
 

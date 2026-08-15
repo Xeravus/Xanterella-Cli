@@ -100,7 +100,9 @@ impl<'a> ParseFunctions for Lexer<'a> {
     fn is_lambda_ahead(&self) -> bool {
         let mut scout = self.chars.clone();
 
-        if let Some(&c) = scout.peek() && (c.is_alphanumeric() || c == '_') {
+        if let Some(&c) = scout.peek()
+            && (c.is_alphanumeric() || c == '_')
+        {
             while let Some(&ch) = scout.peek() {
                 if ch.is_alphanumeric() || c == '-' || c == '_' {
                     scout.next();
@@ -158,7 +160,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
         while let Some(&c) = scout.peek() {
             if c.is_whitespace() {
                 scout.next();
-            } else { 
+            } else {
                 break;
             }
         }
@@ -166,7 +168,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
         if let Some(&'@') = scout.peek() {
             scout.next();
             while let Some(&c) = scout.peek() {
-                if c.is_whitespace() || c.is_alphanumeric() || c == '-' || c =='_' {
+                if c.is_whitespace() || c.is_alphanumeric() || c == '-' || c == '_' {
                     scout.next();
                 } else {
                     break;
@@ -194,7 +196,9 @@ impl<'a> ParseFunctions for Lexer<'a> {
 
         self.skip_whitespace();
 
-        if let Some(&c) = self.chars.peek() && (c.is_alphanumeric() || c == '_') {
+        if let Some(&c) = self.chars.peek()
+            && (c.is_alphanumeric() || c == '_')
+        {
             let mut temp_alias = String::new();
             while let Some(&ch) = self.chars.peek() {
                 if ch.is_alphanumeric() || ch == '-' || ch == '_' {
@@ -216,7 +220,6 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 alias = temp_alias;
                 lamtype = LamType::Single;
             }
-
         }
 
         match lamtype {
@@ -224,7 +227,10 @@ impl<'a> ParseFunctions for Lexer<'a> {
                 if let Some(&'{') = self.chars.peek() {
                     self.chars.next();
                 } else {
-                    return Err(format!("Syntax-Fehler: Erwartet '{{' für ein Lambda \nDatei: {} \nErwartet: Lambda", self.path));
+                    return Err(format!(
+                        "Syntax-Fehler: Erwartet '{{' für ein Lambda \nDatei: {} \nErwartet: Lambda",
+                        self.path
+                    ));
                 }
 
                 loop {
@@ -252,7 +258,7 @@ impl<'a> ParseFunctions for Lexer<'a> {
                     }
                 }
             }
-            _ => { },
+            _ => {}
         }
 
         self.skip_whitespace();
@@ -296,7 +302,10 @@ impl<'a> ParseFunctions for Lexer<'a> {
             LamType::Suffix => Ok(NixValue::Lambda(LambdaTypes::Suffix(vec, alias, Box::new(body)))),
             LamType::Prefix => Ok(NixValue::Lambda(LambdaTypes::Prefix(vec, alias, Box::new(body)))),
             LamType::Single => Ok(NixValue::Lambda(LambdaTypes::Single(alias, Box::new(body)))),
-            _ => Err(format!("Syntax-Fehler: Konnte Lambda nicht kategorisieren \nDatei: {} \nErwartet: Lambda \nAttribute: \n    Attr: {:#?} \n    Aias: {}", self.path, vec, alias )),
+            _ => Err(format!(
+                "Syntax-Fehler: Konnte Lambda nicht kategorisieren \nDatei: {} \nErwartet: Lambda \nAttribute: \n    Attr: {:#?} \n    Aias: {}",
+                self.path, vec, alias
+            )),
         }
     }
 }

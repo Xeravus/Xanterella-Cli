@@ -1,4 +1,4 @@
-use crate::engine::core::{NixValue, StringFragment, LambdaTypes};
+use crate::engine::core::{LambdaTypes, NixValue, StringFragment};
 use crate::engine::formater::core::Format;
 
 pub trait Sort {
@@ -14,17 +14,17 @@ impl Sort for NixValue {
                     value.sort_ast();
                 }
             }
-            NixValue::Lambda(lambdatype) => {
-                match lambdatype {
-                    LambdaTypes::Nofix(vec, body)| LambdaTypes::Suffix(vec, _, body) | LambdaTypes::Prefix(vec, _, body) => {
-                        vec.sort();
-                        body.sort_ast();
-                    }
-                    LambdaTypes::Single(_, body) => {
-                        body.sort_ast();
-                    }
+            NixValue::Lambda(lambdatype) => match lambdatype {
+                LambdaTypes::Nofix(vec, body)
+                | LambdaTypes::Suffix(vec, _, body)
+                | LambdaTypes::Prefix(vec, _, body) => {
+                    vec.sort();
+                    body.sort_ast();
                 }
-            }
+                LambdaTypes::Single(_, body) => {
+                    body.sort_ast();
+                }
+            },
             NixValue::LetIn(map, body) => {
                 map.sort_keys();
                 for (_, value) in map.iter_mut() {

@@ -1,9 +1,9 @@
-use crate::engine::core::*;
-use crate::engine::lexer::vfs::*;
-use crate::engine::lexer::primitives::*;
-use crate::engine::formater::flattening::*;
-
 use indexmap::IndexMap;
+
+use crate::engine::core::*;
+use crate::engine::formater::flattening::*;
+use crate::engine::lexer::primitives::*;
+use crate::engine::lexer::vfs::*;
 
 pub trait Generate {
     fn insert_from_string(&mut self, insert: &str) -> Result<(), String>;
@@ -75,5 +75,4 @@ impl Modify for FsData {
 }
 
 #[cfg(test)]
-mod tests {
-}
+mod tests {}

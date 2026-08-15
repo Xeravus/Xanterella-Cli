@@ -91,7 +91,7 @@ impl Query for NixValue {
             NixValue::Group(inner) | NixValue::Antiquotation(inner) => {
                 inner.query_fuzzy_inner(term, result);
             }
-            NixValue::Apply(left, right) | NixValue::With(left, right) | NixValue::BinaryOp {left, right, ..} => {
+            NixValue::Apply(left, right) | NixValue::With(left, right) | NixValue::BinaryOp { left, right, .. } => {
                 left.query_fuzzy_inner(term, result);
                 right.query_fuzzy_inner(term, result);
             }
