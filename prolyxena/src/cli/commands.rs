@@ -19,24 +19,40 @@ pub struct Cli {
 pub enum Commands {
     Show {
         path: String,
+
+        #[arg(short, long, conflicts_with = "flatten")]
+        expand: bool,
+        #[arg(short, long, conflicts_with = "expand")]
+        flatten: bool,
+        #[arg(short, long)]
+        sort: bool,
+
         #[arg(short, long, conflicts_with = "output")]
         animation: bool,
         #[arg(short, long, conflicts_with = "animation")]
         output: bool,
         #[arg(short, long, conflicts_with = "animation")]
         time: bool,
-        #[arg(short, long)]
+        #[arg(short, long, requires = "animation")]
         debug: bool,
     },
     Format {
         path: String,
+
+        #[arg(short, long, conflicts_with = "flatten")]
+        expand: bool,
+        #[arg(short, long, conflicts_with = "expand")]
+        flatten: bool,
+        #[arg(short, long)]
+        sort: bool,
+
         #[arg(short, long, conflicts_with = "output")]
         animation: bool,
         #[arg(short, long, conflicts_with = "animation")]
         output: bool,
         #[arg(short, long, conflicts_with = "animation")]
         time: bool,
-        #[arg(short, long)]
+        #[arg(short, long, requires = "animation")]
         debug: bool,
     },
 }
@@ -44,23 +60,54 @@ pub enum Commands {
 pub fn cli_parse() {
     let cli = Cli::parse();
     match &cli.command {
-        Commands::Show { path, animation, output, time, debug } => {
+        Commands::Show { path, expand, flatten, sort, animation, output, time, debug } => {
             let mut stdout = stdout();
-            prolyxena_parse(&mut stdout, path.to_string(), *animation, *output, *time, *debug);
+            prolyxena_parse(
+                &mut stdout,
+                path.to_string(),
+                *expand,
+                *flatten,
+                *sort,
+                *animation,
+                *output,
+                *time,
+                *debug,
+            );
         }
-        Commands::Format { path, animation, output, time, debug } => {
+        Commands::Format { path, expand, flatten, sort, animation, output, time, debug } => {
             let mut stdout = stdout();
-            prolyxena_format(&mut stdout, path.to_string(), *animation, *output, *time, *debug);
+            prolyxena_format(
+                &mut stdout,
+                path.to_string(),
+                *expand,
+                *flatten,
+                *sort,
+                *animation,
+                *output,
+                *time,
+                *debug,
+            );
         }
     }
 }
 
-pub fn prolyxena_parse(writer: &mut impl StdOut, file: String, animation: bool, output: bool, time: bool, debug: bool) {
+#[allow(clippy::too_many_arguments)]
+pub fn prolyxena_parse(
+    writer: &mut impl StdOut, file: String, expand: bool, flatten: bool, sort: bool, animation: bool, output: bool,
+    time: bool, debug: bool,
+) {
     if animation {
-        let mut tui = Tui::new(false, debug);
+        let mut tui = Tui::new();
+        tui.set_debug(debug);
+        tui.set_sort(sort);
+        tui.set_expand(expand);
+        tui.set_flatten(flatten);
         tui.load(&file);
     } else {
         let mut data = FsData::new(&file);
+        data.set_sort(sort);
+        data.set_expand(expand);
+        data.set_flatten(flatten);
         data.load();
         if output {
             let _ = writeln!(writer, "{:#?}", data.fsnodes);
@@ -71,15 +118,23 @@ pub fn prolyxena_parse(writer: &mut impl StdOut, file: String, animation: bool, 
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn prolyxena_format(
-    writer: &mut impl StdOut, file: String, animation: bool, output: bool, time: bool, debug: bool,
+    writer: &mut impl StdOut, file: String, expand: bool, flatten: bool, sort: bool, animation: bool, output: bool,
+    time: bool, debug: bool,
 ) {
     if animation {
-        let mut tui = Tui::new(true, debug);
+        let mut tui = Tui::new();
+        tui.set_debug(debug);
+        tui.set_sort(sort);
+        tui.set_expand(expand);
+        tui.set_flatten(flatten);
         tui.load(&file);
     } else {
         let mut data = FsData::new(&file);
-        data.sort(true);
+        data.set_sort(sort);
+        data.set_expand(expand);
+        data.set_flatten(flatten);
         data.load();
         let _ = data.walk_tree();
         if output {

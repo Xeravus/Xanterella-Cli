@@ -1,6 +1,6 @@
 use std::iter::Peekable;
 use std::str::Chars;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc;
 
 use indexmap::IndexMap;
 
@@ -17,11 +17,19 @@ pub enum NixValue {
     Group(Box<NixValue>),
     LetIn(IndexMap<String, NixValue>, Box<NixValue>),
     With(Box<NixValue>, Box<NixValue>),
-    Lambda(Vec<String>, Option<String>, Box<NixValue>),
+    Lambda(LambdaTypes),
     Apply(Box<NixValue>, Box<NixValue>),
     Path(String),
     Antiquotation(Box<NixValue>),
     BinaryOp { left: Box<NixValue>, operator: Operator, right: Box<NixValue> },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum LambdaTypes {
+    Nofix(Vec<String>, Box<NixValue>),
+    Prefix(Vec<String>, String, Box<NixValue>),
+    Suffix(Vec<String>, String, Box<NixValue>),
+    Single(String, Box<NixValue>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -30,6 +38,7 @@ pub enum Operator {
     Sub,
     Concat,
     Equal,
+    Unequal,
     Merge,
     Divide,
 }
@@ -52,6 +61,10 @@ pub enum ParseEvent {
     EndParsingFile(String),
     StartSortingFile(String),
     EndSortingFile(String),
+    StartExpandingFile(String),
+    EndExpandingFile(String),
+    StartFlatteningFile(String),
+    EndFlatteningFile(String),
     // Error(Err),
     // Start
     StartAttrSet,
@@ -92,14 +105,14 @@ pub enum ParseEvent {
 pub struct Lexer<'a> {
     pub chars: Peekable<Chars<'a>>,
     pub path: String,
-    pub trans: Option<Sender<ParseEvent>>,
+    pub trans: Option<mpsc::Sender<ParseEvent>>,
 }
 
 impl<'a> Lexer<'a> {
     pub fn new(content: &'a str, path: String) -> Self {
         Lexer { chars: content.chars().peekable(), path, trans: None }
     }
-    pub fn new_trans(content: &'a str, path: String, sender: Sender<ParseEvent>) -> Self {
+    pub fn new_trans(content: &'a str, path: String, sender: mpsc::Sender<ParseEvent>) -> Self {
         Lexer { chars: content.chars().peekable(), path, trans: Some(sender) }
     }
 
@@ -111,5 +124,24 @@ impl<'a> Lexer<'a> {
 }
 
 #[cfg(test)]
-#[path = "core_test.rs"]
-mod tests;
+mod tests {
+    use super::*;
+    #[test]
+    fn test_engine_core_new() {
+        let lexer = Lexer::new("", String::from("path.nix"));
+
+        assert!(!lexer.path.is_empty());
+
+        assert_eq!(lexer.path, String::from("path.nix"));
+    }
+
+    #[test]
+    fn test_engine_core_new_trans() {
+        let (tx, _rx) = mpsc::channel();
+        let lexer = Lexer::new_trans("", String::from("path.nix"), tx);
+
+        assert!(!lexer.path.is_empty());
+
+        assert_eq!(lexer.path, String::from("path.nix"));
+    }
+}
