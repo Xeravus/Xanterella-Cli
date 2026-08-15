@@ -1,5 +1,6 @@
 use crate::engine::core::{LambdaTypes, NixValue, StringFragment};
 use crate::engine::formater::core::Format;
+use crate::engine::core::{NixValue, StringFragment};
 
 pub trait Sort {
     fn sort_ast(&mut self);
@@ -25,6 +26,10 @@ impl Sort for NixValue {
                     body.sort_ast();
                 }
             },
+            NixValue::Lambda(vec, _, body) => {
+                vec.sort();
+                body.sort_ast();
+            }
             NixValue::LetIn(map, body) => {
                 map.sort_keys();
                 for (_, value) in map.iter_mut() {
@@ -42,6 +47,7 @@ impl Sort for NixValue {
             }
             NixValue::List(vec) => {
                 vec.sort_by_key(|a| a.format_nix(0));
+                // vec.sort();
                 for value in vec.iter_mut() {
                     value.sort_ast();
                 }
@@ -107,3 +113,5 @@ mod tests {
         );
     }
 }
+#[path = "sort_test.rs"]
+mod tests;

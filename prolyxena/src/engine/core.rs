@@ -4,6 +4,8 @@ use std::sync::mpsc;
 
 use indexmap::IndexMap;
 
+use indexmap::IndexMap;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum NixValue {
     AttrSet(IndexMap<String, NixValue>),

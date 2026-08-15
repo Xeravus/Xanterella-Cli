@@ -1,6 +1,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+
+use crate::engine::core::*;
 use crate::engine::formater::core::Format;
 use crate::engine::lexer::vfs::*;
 
@@ -72,8 +74,34 @@ impl Write for FsData {
                 fs::write(path, content)
                     .map_err(|err| format!("Konnte Datei({:?}) nicht beschreiben: {}", path, err))?;
                 written_files.push(path.to_path_buf());
+        for i in self.files.clone() {
+            let rel_path = i.strip_prefix(&self.path).unwrap_or(&i);
+            let clean_path = rel_path.trim_start_matches('/');
+            let parts: Vec<&str> = clean_path.split('/').collect();
+            let mut pointer = &mut self.fsnodes;
+            #[allow(clippy::needless_range_loop)]
+            for j in 0..parts.len() - 1 {
+                let folder = parts[j];
+                if let FsNodes::Dir(map) = pointer {
+                    pointer = map.get_mut(folder).ok_or("Cant Extract Values out of IndexMap".to_string())?;
+                } else {
+                    return Err("Tree is Corrupt".to_string());
+                }
+            }
+            let file_name = parts.last().unwrap().to_string();
+            if let FsNodes::Dir(map) = pointer {
+                let file = map.get(&file_name).unwrap();
+
+                if let FsNodes::File { name: _, ast } = file {
+                    write(ast, &i);
+                }
             }
         }
         Ok(())
     }
+}
+
+pub fn write(ast: &NixValue, path: &String) {
+    println!("{}", ast.format_nix(0));
+    let _ = fs::write(path, ast.format_nix(0));
 }
