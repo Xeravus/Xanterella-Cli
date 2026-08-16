@@ -53,6 +53,9 @@ pub enum EventsFailed {
     /// installer/Inject.rs
     InjectTailscale(String),
     InjectWifi(String),
+
+    /// Prolyxena
+    Prolyxena(String),
 }
 
 pub enum Events {
