@@ -29,6 +29,7 @@ jobs:
 
     steps:
       - name: Start 
+        run: echo "Starte"
 
   xanterella-start-test:
     name: Xanterella Start Tests (Cleanup)
@@ -43,6 +44,7 @@ jobs:
 
     steps:
       - name: Start 
+        run: echo "Starte"
 
   xanterella-machete:
     name: Xanterella Machete (Cleanup)
@@ -172,6 +174,7 @@ jobs:
 
     steps:
       - name: Start 
+        run: echo "Starte"
 
   prolyxena-start-test:
     name: Prolyxena Start Tests (Cleanup)
@@ -186,6 +189,7 @@ jobs:
 
     steps:
       - name: Start 
+        run: echo "Starte"
 
   prolyxena-machete:
     name: Prolyxena Machete (Cleanup)
