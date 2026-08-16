@@ -93,8 +93,7 @@ jobs:
   xanterella-clippy:
     name: Xanterella Clippy (Stable)
     needs:
-      - xanterella-tarpaulin
-      - xanterella-test
+      - xanterella-start
     runs-on: [self-hosted, xanterella]
 
     steps:
@@ -231,8 +230,7 @@ jobs:
   prolyxena-clippy:
     name: Prolyxena Clippy (Stable)
     needs:
-      - prolyxena-tarpaulin
-      - prolyxena-test
+      - prolyxena-start
     runs-on: [self-hosted, prolyxena]
 
     steps:
