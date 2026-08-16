@@ -27,6 +27,9 @@ jobs:
     needs: 
       - flake
 
+    steps:
+      - name: Start 
+
   xanterella-start-test:
     name: Xanterella Start Tests (Cleanup)
     runs-on: [self-hosted, xanterella]
@@ -37,6 +40,9 @@ jobs:
       - xanterella-check
       - xanterella-clippy
       - xanterella-format
+
+    steps:
+      - name: Start 
 
   xanterella-machete:
     name: Xanterella Machete (Cleanup)
@@ -93,8 +99,7 @@ jobs:
   xanterella-clippy:
     name: Xanterella Clippy (Cleanup)
     needs:
-      - xanterella-tarpaulin
-      - xanterella-test
+      - xanterella-start
     runs-on: [self-hosted, xanterella]
 
     steps:
@@ -165,6 +170,9 @@ jobs:
     needs: 
       - flake
 
+    steps:
+      - name: Start 
+
   prolyxena-start-test:
     name: Prolyxena Start Tests (Cleanup)
     runs-on: [self-hosted, prolyxena]
@@ -175,6 +183,9 @@ jobs:
       - prolyxena-check
       - prolyxena-clippy
       - prolyxena-format
+
+    steps:
+      - name: Start 
 
   prolyxena-machete:
     name: Prolyxena Machete (Cleanup)
@@ -231,8 +242,7 @@ jobs:
   prolyxena-clippy:
     name: Prolyxena Clippy (Cleanup)
     needs:
-      - prolyxena-tarpaulin
-      - prolyxena-test
+      - prolyxena-start
     runs-on: [self-hosted, prolyxena]
 
     steps:
