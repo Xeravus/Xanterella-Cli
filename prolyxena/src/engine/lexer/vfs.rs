@@ -75,16 +75,15 @@ impl FsData {
         self.flatten = flatten;
     }
 
-    pub fn load(&mut self) {
+    pub fn load(&mut self) -> Result<(), String> {
         let start = Instant::now();
         self.get_files();
-        if let Err(err) = self.gen_tree() {
-            eprintln!("Fehler: \n{}", err);
-        }
+        self.gen_tree()?;
         self.time = start.elapsed().as_secs_f64();
         if let Some(tx) = &self.trans {
             tx.send(ParseEvent::Finished(self.get_time())).ok();
         }
+        Ok(())
     }
 
     pub fn get_files(&mut self) {
@@ -264,7 +263,7 @@ mod tests {
         let mut file = File::create(&file_path).unwrap();
         file.write_all(b"true").unwrap();
         let mut vfs = FsData::new(temp_dir.to_str().unwrap());
-        vfs.load();
+        let _ = vfs.load();
         fs::remove_dir_all(&temp_dir).unwrap();
         assert_eq!(vfs.files.len(), 1);
         if let FsNodes::Dir(root_map) = &vfs.fsnodes {
