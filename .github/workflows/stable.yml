@@ -45,7 +45,6 @@ jobs:
     steps:
       - name: Start Tests 
         run: echo "Starte"
-      - name: Start Tests
 
   xanterella-machete:
     name: Xanterella Machete (Stable)
@@ -191,7 +190,6 @@ jobs:
     steps:
       - name: Start  
         run: echo "Starte"
-      - name: Start 
 
   prolyxena-machete:
     name: Prolyxena Machete (Stable)
