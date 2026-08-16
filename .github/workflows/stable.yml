@@ -29,6 +29,7 @@ jobs:
 
     steps:
       - name: Start 
+        run: echo "Starte"
 
   xanterella-start-test:
     name: Xanterella Start Tests (Stable)
@@ -42,6 +43,8 @@ jobs:
       - xanterella-format
 
     steps:
+      - name: Start Tests 
+        run: echo "Starte"
       - name: Start Tests
 
   xanterella-machete:
@@ -172,6 +175,7 @@ jobs:
 
     steps:
       - name: Start 
+        run: echo "Starte" 
 
   prolyxena-start-test:
     name: Prolyxena Start Tests (Stable)
@@ -185,6 +189,8 @@ jobs:
       - prolyxena-format
 
     steps:
+      - name: Start  
+        run: echo "Starte"
       - name: Start 
 
   prolyxena-machete:
