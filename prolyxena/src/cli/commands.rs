@@ -102,13 +102,17 @@ pub fn prolyxena_parse(
         tui.set_sort(sort);
         tui.set_expand(expand);
         tui.set_flatten(flatten);
-        tui.load(&file);
+        if let Err(err) = tui.load(&file) {
+            let _ = writeln!(writer, "{}", err);
+        }
     } else {
         let mut data = FsData::new(&file);
         data.set_sort(sort);
         data.set_expand(expand);
         data.set_flatten(flatten);
-        data.load();
+        if let Err(err) = data.load() {
+            let _ = writeln!(writer, "{}", err);
+        }
         if output {
             let _ = writeln!(writer, "{:#?}", data.fsnodes);
         }
@@ -129,13 +133,17 @@ pub fn prolyxena_format(
         tui.set_sort(sort);
         tui.set_expand(expand);
         tui.set_flatten(flatten);
-        tui.load(&file);
+        if let Err(err) = tui.load(&file) {
+            let _ = writeln!(writer, "{}", err);
+        }
     } else {
         let mut data = FsData::new(&file);
         data.set_sort(sort);
         data.set_expand(expand);
         data.set_flatten(flatten);
-        data.load();
+        if let Err(err) = data.load() {
+            let _ = writeln!(writer, "{}", err);
+        }
         let _ = data.walk_tree();
         if output {
             let _ = writeln!(writer, "{:#?}", data.fsnodes);

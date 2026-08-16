@@ -87,7 +87,7 @@ impl Tui {
         self.debug = debug;
     }
 
-    pub fn load(&mut self, path: &str) {
+    pub fn load(&mut self, path: &str) -> Result<(), String> {
         self.path = path.to_string();
         let (tx, rx) = mpsc::channel::<ParseEvent>();
         #[allow(unused)]
@@ -101,13 +101,17 @@ impl Tui {
 
         #[cfg(not(test))]
         thread::spawn(move || {
-            prolyxena.load();
+            if let Err(err) = prolyxena.load() {
+                return Err(err);
+            }
             let _ = time_tx.send(prolyxena.get_time());
+            Ok(())
         });
         if var("PROLYXENA_TEST").is_err() {
             #[cfg(not(test))]
             let _ = self.start_tui();
         }
+        Ok(())
     }
 
     pub fn start_tui(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -407,7 +411,7 @@ mod tests {
     #[test]
     fn test_tui_core_load() {
         let mut tui = Tui::new();
-        tui.load("/testestestestest");
+        let _ = tui.load("/testestestestest");
         assert_eq!(tui.path, String::from("/testestestestest"));
         assert!(tui.trans.is_some());
         assert!(tui.time_rx.is_some());
