@@ -9,7 +9,7 @@ use crate::engine::lexer::vfs::*;
 use std::path::PathBuf;
 
 pub trait Generate {
-    fn insert_from_string(&mut self, insert: &str) -> Result<(), String>;
+    fn insert<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String>;
 }
 
 pub trait Modify {
@@ -17,26 +17,22 @@ pub trait Modify {
 }
 
 impl Generate for NixValue {
-    fn insert_from_string(&mut self, insert: &str) -> Result<(), String> {
-        let parts: Vec<&str> = insert.splitn(2, '=').collect();
-        if parts.len() != 2 {
-            return Err("Syntax-Fehler: Zuweisung muss ein '=' enthalten".to_string());
-        }
-
-        let key = parts[0].trim().to_string();
-        let value = parts[1].trim().trim_end_matches(';');
-
-        let mut lexer = Lexer::new(value, String::from("insert.nix"));
-        let parsed_value = lexer.parse_single_value()?;
-
+    fn insert<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String> {
+        let parsed_value = match value.into_nix()? {
+            Some(v) => v,
+            None => return Err("Fehler: Leerer Wert kann nicht eingefügt werden".to_string()),
+        };
         self.flatten();
 
         match self {
             NixValue::AttrSet(map) => {
-                map.insert(key, parsed_value);
+                map.insert(key.to_string(), parsed_value);
             }
             NixValue::LetIn(map, _body) => {
-                map.insert(key, parsed_value);
+                map.insert(key.to_string(), parsed_value);
+            }
+            NixValue::List(vec) => {
+                vec.push(parsed_value);
             }
             _ => {
                 return Err("Fehler: Der Zeil-Knoten muss ein Attribute Set oder Let In Statment sein".to_string());
@@ -115,6 +111,118 @@ impl Modify for FsData {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_engine_generator_insert_attrset_with_nixvalue() {
+        let mut ast = NixValue::AttrSet(IndexMap::new());
+        let result = ast.insert("enable", NixValue::Bool(true));
+        
+        assert!(result.is_ok());
+        assert_eq!(
+            ast,
+            NixValue::AttrSet(IndexMap::from([("enable".to_string(), NixValue::Bool(true))]))
+        );
+    }
+
+    #[test]
+    fn test_engine_generator_insert_attrset_with_string() {
+        let mut ast = NixValue::AttrSet(IndexMap::new());
+        let result = ast.insert("port", "8080");
+        
+        assert!(result.is_ok());
+        assert_eq!(
+            ast,
+            NixValue::AttrSet(IndexMap::from([("port".to_string(), NixValue::Int(8080))]))
+        );
+    }
+
+    #[test]
+    fn test_engine_generator_insert_nested_key_triggers_flatten_expand() {
+        let mut ast = NixValue::AttrSet(IndexMap::new());
+        let result = ast.insert("services.caddy.enable", "true");
+        
+        assert!(result.is_ok());
+        
+        let expected_ast = NixValue::AttrSet(IndexMap::from([(
+            "services".to_string(),
+            NixValue::AttrSet(IndexMap::from([(
+                "caddy".to_string(),
+                NixValue::AttrSet(IndexMap::from([(
+                    "enable".to_string(),
+                    NixValue::Bool(true),
+                )])),
+            )])),
+        )]));
+        
+        assert_eq!(ast, expected_ast);
+    }
+
+    #[test]
+    fn test_engine_generator_insert_into_list() {
+        let mut ast = NixValue::List(vec![NixValue::Identifier("git".to_string())]);
+        let result = ast.insert("", "\"nodejs\"");
+        
+        assert!(result.is_ok());
+        assert_eq!(
+            ast,
+            NixValue::List(vec![
+                NixValue::Identifier("git".to_string()),
+                NixValue::Str("nodejs".to_string()),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_engine_generator_insert_into_let_in() {
+        let mut ast = NixValue::LetIn(
+            IndexMap::new(),
+            Box::new(NixValue::Identifier("body".to_string()))
+        );
+        let result = ast.insert("var", "42");
+        
+        assert!(result.is_ok());
+        assert_eq!(
+            ast,
+            NixValue::LetIn(
+                IndexMap::from([("var".to_string(), NixValue::Int(42))]),
+                Box::new(NixValue::Identifier("body".to_string()))
+            )
+        );
+    }
+
+    #[test]
+    fn test_engine_generator_insert_invalid_target_node() {
+        // Ein String ist kein valider Ziel-Knoten für ein Insert
+        let mut ast = NixValue::Str("hello".to_string());
+        let result = ast.insert("key", "true");
+        
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            "Fehler: Der Zeil-Knoten muss ein Attribute Set oder Let In Statment sein"
+        );
+    }
+
+    #[test]
+    fn test_engine_generator_insert_invalid_string_syntax() {
+        let mut ast = NixValue::AttrSet(IndexMap::new());
+        let result = ast.insert("key", "{ kaputt");
+        
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Syntax-Fehler"));
+    }
+
+    #[test]
+    fn test_engine_generator_insert_empty_string() {
+        let mut ast = NixValue::AttrSet(IndexMap::new());
+        let result = ast.insert("key", "   ");
+        
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            "Fehler: Leerer Wert kann nicht eingefügt werden"
+        );
+    }
 
     #[test]
     fn test_engine_generator_generate_generate_file_empty_tree() {
