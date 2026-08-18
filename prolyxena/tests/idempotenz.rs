@@ -271,7 +271,6 @@ fn int_idempotenz_sort_matrix_server() {
 }
 
 #[test]
-#[ignore]
 fn int_idempotenz_sort_shells() {
     idempotenz_sort_assert("shells");
 }

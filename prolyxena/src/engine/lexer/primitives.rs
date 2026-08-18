@@ -303,6 +303,17 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                     None
                 }
             }
+            '&' => {
+                if let Some(&'&') = scout.peek() {
+                    self.chars.next();
+                    self.chars.next();
+                    self.log_event(ParseEvent::StartOperator);
+                    self.log_event(ParseEvent::EndOperator);
+                    Some(Operator::And)
+                } else {
+                    None
+                }
+            }
             '/' => {
                 if let Some(&'/') = scout.peek() {
                     self.chars.next();
@@ -417,6 +428,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
                 Some(&'>') => break,
                 Some(&'$') => break,
                 Some(&'!') => break,
+                Some(&'&') => break,
                 _ => {
                     let arg = self.parse_single_value()?;
                     expr = NixValue::Apply(Box::new(expr), Box::new(arg));
@@ -865,6 +877,25 @@ mod tests {
         let result1 = data1.parse_expression();
         assert!(result1.is_ok());
         assert!(matches!(result1, Ok(NixValue::BinaryOp { left: _, operator: Operator::Unequal, right: _ })));
+    }
+
+    #[test]
+    fn test_engine_lexer_primitives_parse_operator_and() {
+        let content1 = "&&";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let result1 = data1.parse_operator();
+
+        assert!(result1.is_some());
+        assert_eq!(result1, Some(Operator::And));
+    }
+
+    #[test]
+    fn test_engine_lexer_primitves_parse_expression_and() {
+        let content1 = "test && test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let result1 = data1.parse_expression();
+        assert!(result1.is_ok());
+        assert!(matches!(result1, Ok(NixValue::BinaryOp { left: _, operator: Operator::And, right: _ })));
     }
 
     #[test]
