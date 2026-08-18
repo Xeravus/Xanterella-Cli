@@ -3,10 +3,34 @@
   inputs,
   lib,
   pkgs,
-  zsh-src,
   ...
 }: let
   p10kConf = ./p10k.zsh;
+  userZshrc = pkgs.writeText "zshrc" ''
+    # 1. Cache & Instant Prompt (prompt_cr ist hier bereits durch NixOS deaktiviert!)
+    ZSH_CACHE_DIR="$HOME/.cache/zsh"
+    if [[ ! -d "$ZSH_CACHE_DIR" ]]; then
+      mkdir -p "$ZSH_CACHE_DIR"
+    fi
+    export ZSH_COMPDUMP="$ZSH_CACHE_DIR/zcompdump-$HOST-$ZSH_VERSION"
+    export DIRENV_LOG_FORMAT=""
+
+    if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
+      source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
+    fi
+
+    # 2. Theme laden (direkt aus den Flake Inputs)
+    source ${inputs.p10k-src}/powerlevel10k.zsh-theme
+
+    # 3. Config laden
+    source ${p10kConf}
+
+    # 4. Yazi anhängen
+    ${yaziFunc}
+
+    # 5. Sauberer Abschluss (Exakt am Ende der Datei, genau wie P10k es verlangt!)
+    (( ! ''${+functions[p10k]} )) || p10k finalize
+  '';
   yaziFunc = ''
     function y() {
       local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
@@ -15,19 +39,6 @@
       [ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
       rm -f -- "$tmp"
     }
-  '';
-  zshInit = ''
-    unsetopt prompt_cr prompt_sp
-        ZSH_CACHE_DIR="$HOME/.cache/zsh"
-        if [[ ! -d "$ZSH_CACHE_DIR" ]]; then
-          mkdir -p "$ZSH_CACHE_DIR"
-        fi
-        export ZSH_COMPDUMP="$ZSH_CACHE_DIR/zcompdump-$HOST-$ZSH_VERSION"
-        export DIRENV_LOG_FORMAT=""
-
-        if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
-          source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
-        fi
   '';
 in {
     config = lib.mkMerge [
@@ -76,15 +87,8 @@ in {
             enableBashCompletion = true;
             enableCompletion = true;
             enableLsColors = true;
-            interactiveShellInit = ''
-            unsetopt prompt_cr
-                            ${zshInit}
-                            source ${inputs.p10k-src}/powerlevel10k.zsh-theme
-                            source ${p10kConf}
-                            ${yaziFunc}
-
-                     (( ! ''${+functions[p10k]} )) || p10k finalize
-          '';
+            interactiveShellInit = "";
+            promptInit = "";
             setOptions = [
               "NO_NOMATCH"
               "NO_PROMPT_CR"
@@ -96,8 +100,8 @@ in {
               f = "fastfetch";
               l = "ls -lha";
               nix-pr = "nixpkgs-review pr --print-result";
+              p = "pyroclear";
               pcl = "pyroclear";
-              pclear = "pyroclear";
               plc = "pyroclear";
               sv = "sudo nvim";
               v = "nvim";
@@ -113,7 +117,7 @@ in {
           user = {
             tmpfiles = {
               rules = [
-                "f %h/.zshrc 0644 - - - #"
+                "L+ %h/.zshrc - - - - ${userZshrc}"
               ];
             };
           };
