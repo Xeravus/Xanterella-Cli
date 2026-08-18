@@ -39,6 +39,7 @@ pub enum Operator {
     Concat,
     Equal,
     Unequal,
+    And,
     Merge,
     Divide,
 }

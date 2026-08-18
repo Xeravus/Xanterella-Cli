@@ -190,6 +190,9 @@ impl Format for NixValue {
                     Operator::Unequal => {
                         out.push_str(" != ");
                     }
+                    Operator::And => {
+                        out.push_str(" && ");
+                    }
                     Operator::Merge => {
                         out.push_str(" // ");
                     }
