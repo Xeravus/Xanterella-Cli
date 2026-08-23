@@ -123,13 +123,13 @@ impl Search for FsData {
                     return Err(format!("Query-Fehler: Ordner '{}' nicht gefunden", folder));
                 }
             } else {
-                return Err("Query-Fehler: Versucht einen Ordner in einer Datei zu erstellen".to_string());
+                return Err("Query-Fehler: Versucht einen Ordner in einer Datei zu finden".to_string());
             }
         }
         let file_name = match parts.last() {
             Some(name) => name,
             None => {
-                return Err("Query-Fehler: Konnte den Dateinamen nicht extrahieren: jat letztes Segment schon extrahiert".to_string())
+                return Err("Query-Fehler: Konnte den Dateinamen nicht extrahieren: hat letztes Segment schon extrahiert".to_string())
             }
         };
         if let FsNodes::Dir(map) = pointer {

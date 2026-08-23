@@ -9,6 +9,7 @@ use std::path::PathBuf;
 
 pub trait Generate {
     fn insert<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String>;
+    fn insert_into_let_in<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String>;
 }
 
 pub trait Modify {
@@ -17,6 +18,39 @@ pub trait Modify {
 
 impl Generate for NixValue {
     fn insert<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String> {
+        let parsed_value = match value.into_nix()? {
+            Some(v) => v,
+            None => return Err("Fehler: Leerer Wert kann nicht eingefügt werden".to_string()),
+        };
+        self.flatten();
+
+        match self {
+            NixValue::AttrSet(map) => {
+                map.insert(key.to_string(), parsed_value);
+            }
+            NixValue::LetIn(_map, body) => {
+                match &mut **body {
+                    NixValue::AttrSet(map) => {
+                        map.insert(key.to_string(), parsed_value);
+                    }
+                    NixValue::List(vec) => {
+                        vec.push(parsed_value);
+                    }
+                    _ => { },
+                }
+            }
+            NixValue::List(vec) => {
+                vec.push(parsed_value);
+            }
+            _ => {
+                return Err("Fehler: Der Zeil-Knoten muss ein Attribute Set oder Let In Statment sein".to_string());
+            }
+        }
+        self.expand();
+        Ok(())
+    }
+
+    fn insert_into_let_in<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String> {
         let parsed_value = match value.into_nix()? {
             Some(v) => v,
             None => return Err("Fehler: Leerer Wert kann nicht eingefügt werden".to_string()),
@@ -177,7 +211,7 @@ mod tests {
             IndexMap::new(),
             Box::new(NixValue::Identifier("body".to_string()))
         );
-        let result = ast.insert("var", "42");
+        let result = ast.insert_into_let_in("var", "42");
         
         assert!(result.is_ok());
         assert_eq!(
