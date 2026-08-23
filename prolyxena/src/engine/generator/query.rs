@@ -1,4 +1,5 @@
 use crate::engine::core::*;
+use crate::engine::lexer::vfs::*;
 
 pub trait Query {
     fn query_exact_mut<'a>(&'a mut self, path: &[&str]) -> Vec<&'a mut NixValue>;
@@ -6,6 +7,10 @@ pub trait Query {
 
     fn query_fuzzy_mut<'a>(&'a mut self, term: &str) -> Vec<&'a mut NixValue>;
     fn query_fuzzy_inner<'a>(&'a mut self, term: &str, result: &mut Vec<&'a mut NixValue>);
+}
+
+pub trait Search {
+    fn search_tree<'a>(&'a mut self, name: &str) -> Result<&'a mut NixValue, String>;
 }
 
 impl Query for NixValue {
@@ -96,6 +101,45 @@ impl Query for NixValue {
                 right.query_fuzzy_inner(term, result);
             }
             _ => {}
+        }
+    }
+}
+
+impl Search for FsData {
+    fn search_tree<'a>(&'a mut self, name: &str) -> Result<&'a mut NixValue, String> {
+        let parts: Vec<&str> = name.trim_start_matches('/').split('/').collect();
+        if parts.is_empty() {
+            return Err("Query-Fehler: Leere Treequery".to_string());
+        }
+
+        let mut pointer = &mut self.fsnodes;
+        #[allow(clippy::needless_range_loop)]
+        for i in 0..parts.len() - 1 {
+            let folder = parts[i];
+            if let FsNodes::Dir(map) = pointer {
+                if let Some(child) = map.get_mut(folder) {
+                    pointer = child;
+                } else {
+                    return Err(format!("Query-Fehler: Ordner '{}' nicht gefunden", folder));
+                }
+            } else {
+                return Err("Query-Fehler: Versucht einen Ordner in einer Datei zu erstellen".to_string());
+            }
+        }
+        let file_name = match parts.last() {
+            Some(name) => name,
+            None => {
+                return Err("Query-Fehler: Konnte den Dateinamen nicht extrahieren: jat letztes Segment schon extrahiert".to_string())
+            }
+        };
+        if let FsNodes::Dir(map) = pointer {
+            match map.get_mut(*file_name) {
+                Some(FsNodes::File { ast, .. }) => Ok(ast),
+                Some(FsNodes::Dir(_)) => Err("Query-Fehler: Gesuchte Datei stellt sich als Ordner heraus".to_string()),
+                None => Err("Query-Fehler: Ordner enthält die Datei nicht".to_string()),
+            }
+        } else {
+            Err("Query-Fehler: Letzter Ordner nicht vorhanden".to_string())
         }
     }
 }

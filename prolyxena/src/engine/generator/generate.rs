@@ -3,7 +3,6 @@ use indexmap::IndexMap;
 use crate::engine::core::*;
 use crate::engine::lexer::core::*;
 use crate::engine::formater::flattening::*;
-use crate::engine::lexer::primitives::*;
 use crate::engine::lexer::vfs::*;
 
 use std::path::PathBuf;
@@ -192,7 +191,6 @@ mod tests {
 
     #[test]
     fn test_engine_generator_insert_invalid_target_node() {
-        // Ein String ist kein valider Ziel-Knoten für ein Insert
         let mut ast = NixValue::Str("hello".to_string());
         let result = ast.insert("key", "true");
         

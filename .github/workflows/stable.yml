@@ -11,7 +11,7 @@ jobs:
 
   flake:
     name: Flake Check (Stable)
-    runs-on: [self-hosted, xanterella]
+    runs-on: [self-hosted, xanterella, fast]
 
     steps:
       - name: Checkout
