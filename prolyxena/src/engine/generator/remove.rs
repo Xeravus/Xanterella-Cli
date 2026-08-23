@@ -1,11 +1,16 @@
+use std::path::PathBuf;
+
 use crate::engine::generator::generate::IntoNixValue;
 use crate::engine::core::*;
-use crate::engine::lexer::core::*;
 use crate::engine::formater::flattening::*;
 use crate::engine::lexer::vfs::*;
 
 pub trait Remove {
     fn remove<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String>;
+}
+
+pub trait Delete {
+    fn delete_file(&mut self, name: &str) -> Result<(), String>;
 }
 
 impl Remove for NixValue {
@@ -62,5 +67,42 @@ impl Remove for NixValue {
 
         self.expand();
         Ok(())
+    }
+}
+
+impl Delete for FsData {
+    fn delete_file(&mut self, name: &str) -> Result<(), String> {
+        let full_path = PathBuf::from(&self.path).join(name.trim_start_matches('/')).display().to_string();
+        let clean_path = full_path.trim_start_matches('/');
+        let parts: Vec<&str> = clean_path.split('/').collect();
+
+        let mut pointer = &mut self.fsnodes;
+        #[allow(clippy::needless_range_loop)]
+        for j in 0..parts.len() - 1 {
+            let folder = parts[j];
+            if let FsNodes::Dir(map) = pointer {
+                if let Some(child) = map.get_mut(folder) {
+                    pointer = child;
+                } else {
+                    return Err(format!("Query-Fehler: Ordner '{}' nicht gefunden", folder));
+                }
+            } else {
+                return Err("Query-Fehler: Versucht eine Ordner in einer Datei zu finden".to_string());
+            }
+        }
+        let file_name = match parts.last() {
+            Some(name) => name,
+            None => {
+                return Err("Query-Fehler: Konnte den Dateinamen nicht extrahieren: hat letztes Segment schon extrahiert".to_string())
+            }
+        };
+        if let FsNodes::Dir(map) = pointer {
+            match map.shift_remove(*file_name) {
+                Some(_) => Ok(()),
+                None => return Err("Remove-Fehler: Ordner enthält die Datei nicht".to_string()),
+            }
+        } else {
+            Err("Query-Fehler: Letzter Ordner nicht vorhanden".to_string())
+        }
     }
 }
