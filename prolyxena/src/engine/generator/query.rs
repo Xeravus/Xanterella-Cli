@@ -129,7 +129,10 @@ impl Search for FsData {
         let file_name = match parts.last() {
             Some(name) => name,
             None => {
-                return Err("Query-Fehler: Konnte den Dateinamen nicht extrahieren: hat letztes Segment schon extrahiert".to_string())
+                return Err(
+                    "Query-Fehler: Konnte den Dateinamen nicht extrahieren: hat letztes Segment schon extrahiert"
+                        .to_string(),
+                );
             }
         };
         if let FsNodes::Dir(map) = pointer {
@@ -146,8 +149,9 @@ impl Search for FsData {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use indexmap::IndexMap;
+
+    use super::*;
 
     #[test]
     fn test_engine_generator_query_query_exact_attrset() {
@@ -163,10 +167,13 @@ mod tests {
 
     #[test]
     fn test_engine_generator_query_query_exact_let_in() {
-        let mut ast = NixValue::LetIn(IndexMap::new(), Box::from(NixValue::AttrSet(IndexMap::from([(
-            "server".to_string(),
-            NixValue::AttrSet(IndexMap::from([("port".to_string(), NixValue::Int(8080))])),
-        )]))));
+        let mut ast = NixValue::LetIn(
+            IndexMap::new(),
+            Box::from(NixValue::AttrSet(IndexMap::from([(
+                "server".to_string(),
+                NixValue::AttrSet(IndexMap::from([("port".to_string(), NixValue::Int(8080))])),
+            )]))),
+        );
 
         let result = ast.query_exact_mut(&["server", "port"]);
         assert_eq!(result.len(), 1);
@@ -175,10 +182,7 @@ mod tests {
 
     #[test]
     fn test_engine_generator_query_query_exact_not_found() {
-        let mut ast = NixValue::AttrSet(IndexMap::from([(
-            "server".to_string(),
-            NixValue::Int(8080),
-        )]));
+        let mut ast = NixValue::AttrSet(IndexMap::from([("server".to_string(), NixValue::Int(8080))]));
 
         let result = ast.query_exact_mut(&["server", "ip"]);
         assert!(result.is_empty());
@@ -204,15 +208,10 @@ mod tests {
         let mut fs_data = FsData::new("/fake/root");
         let ast = NixValue::Bool(true);
 
-        let file_map = IndexMap::from([(
-            "config.nix".to_string(),
-            FsNodes::File { name: "config.nix".to_string(), ast },
-        )]);
-        
-        let folder_map = IndexMap::from([(
-            "node1".to_string(),
-            FsNodes::Dir(file_map),
-        )]);
+        let file_map =
+            IndexMap::from([("config.nix".to_string(), FsNodes::File { name: "config.nix".to_string(), ast })]);
+
+        let folder_map = IndexMap::from([("node1".to_string(), FsNodes::Dir(file_map))]);
 
         fs_data.fsnodes = FsNodes::Dir(folder_map);
 
@@ -224,7 +223,7 @@ mod tests {
     #[test]
     fn test_engine_generator_query_search_tree_folder_not_found() {
         let mut fs_data = FsData::new("/fake/root");
-        
+
         let result = fs_data.search_tree("node1/config.nix");
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "Query-Fehler: Ordner 'node1' nicht gefunden");
@@ -233,11 +232,8 @@ mod tests {
     #[test]
     fn test_engine_generator_query_search_tree_file_not_found() {
         let mut fs_data = FsData::new("/fake/root");
-        
-        let folder_map = IndexMap::from([(
-            "node1".to_string(),
-            FsNodes::Dir(IndexMap::new()),
-        )]);
+
+        let folder_map = IndexMap::from([("node1".to_string(), FsNodes::Dir(IndexMap::new()))]);
 
         fs_data.fsnodes = FsNodes::Dir(folder_map);
 
@@ -271,10 +267,7 @@ mod tests {
     fn test_engine_generator_query_query_exact_apply_and_group() {
         let mut ast = NixValue::Group(Box::new(NixValue::Apply(
             Box::new(NixValue::Identifier("func".to_string())),
-            Box::new(NixValue::AttrSet(IndexMap::from([(
-                "target".to_string(),
-                NixValue::Int(99),
-            )]))),
+            Box::new(NixValue::AttrSet(IndexMap::from([("target".to_string(), NixValue::Int(99))]))),
         )));
         let result = ast.query_exact_mut(&["target"]);
         assert_eq!(result.len(), 1);
@@ -290,10 +283,7 @@ mod tests {
 
     #[test]
     fn test_engine_generator_query_query_fuzzy_attrset_key_match() {
-        let mut ast = NixValue::AttrSet(IndexMap::from([(
-            "my-target-key".to_string(),
-            NixValue::Int(100),
-        )]));
+        let mut ast = NixValue::AttrSet(IndexMap::from([("my-target-key".to_string(), NixValue::Int(100))]));
         let result = ast.query_fuzzy_mut("target");
         assert_eq!(result.len(), 1);
         assert_eq!(*result[0], NixValue::Int(100));
@@ -311,9 +301,9 @@ mod tests {
 
     #[test]
     fn test_engine_generator_query_query_fuzzy_group_and_antiquotation() {
-        let mut ast = NixValue::Group(Box::new(NixValue::Antiquotation(Box::new(
-            NixValue::Identifier("fuzzy-target".to_string()),
-        ))));
+        let mut ast = NixValue::Group(Box::new(NixValue::Antiquotation(Box::new(NixValue::Identifier(
+            "fuzzy-target".to_string(),
+        )))));
         let result = ast.query_fuzzy_mut("fuzzy");
         assert_eq!(result.len(), 1);
     }

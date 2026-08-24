@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use crate::engine::generator::generate::IntoNixValue;
 use crate::engine::core::*;
 use crate::engine::formater::flattening::*;
+use crate::engine::generator::generate::IntoNixValue;
 use crate::engine::lexer::vfs::*;
 
 pub trait Remove {
@@ -20,49 +20,46 @@ impl Remove for NixValue {
         match self {
             NixValue::AttrSet(map) => {
                 match map.shift_remove(key) {
-                    Some(_) => { },
-                    None => return Err("Remove-Fehler: Option ist nicht in Datei enthalten".to_string())
+                    Some(_) => {}
+                    None => return Err("Remove-Fehler: Option ist nicht in Datei enthalten".to_string()),
                 };
             }
             NixValue::LetIn(map, body) => {
                 match map.shift_remove(key) {
-                    Some(_) => { },
-                    None => return Err("Remove-Fehler: Option ist nicht in Datei enthalten".to_string())
+                    Some(_) => {}
+                    None => return Err("Remove-Fehler: Option ist nicht in Datei enthalten".to_string()),
                 };
                 match &mut **body {
-                    NixValue::AttrSet(map) => {
-                        match map.shift_remove(key) {
-                            Some(_) => { },
-                            None => return Err("Remove-Fehler: Option ist nicht in Datei enthalten".to_string())
+                    NixValue::AttrSet(map) => match map.shift_remove(key) {
+                        Some(_) => {}
+                        None => return Err("Remove-Fehler: Option ist nicht in Datei enthalten".to_string()),
+                    },
+                    NixValue::List(vec) => match value.into_nix()? {
+                        Some(v) => {
+                            vec.retain(|e| *e != v);
                         }
-                    }
-                    NixValue::List(vec) => {
-                        match value.into_nix()? {
-                            Some(v) => {
-                                vec.retain(|e| *e != v);
-                            }
-                            None => {
-                                return Err("Remove-Fehler: Kann kein Element aus einer Liste entfernen, ohne Wert".to_string());
-                            }
+                        None => {
+                            return Err(
+                                "Remove-Fehler: Kann kein Element aus einer Liste entfernen, ohne Wert".to_string()
+                            );
                         }
-                    }
+                    },
                     _ => {
-                        return Err("Fehler: Der Zeil-Knoten muss ein Attribute Set oder Let In Statment sein".to_string());
-                    }
-                }
-
-            }
-            NixValue::List(vec) => {
-                match value.into_nix()? {
-                    Some(v) => {
-                        vec.retain(|e| *e != v);
-                    }
-                    None => {
-                        return Err("Remove-Fehler: Kann kein Element aus einer Liste entfernen, ohne Wert".to_string());
+                        return Err(
+                            "Fehler: Der Zeil-Knoten muss ein Attribute Set oder Let In Statment sein".to_string()
+                        );
                     }
                 }
             }
-            _ => { }
+            NixValue::List(vec) => match value.into_nix()? {
+                Some(v) => {
+                    vec.retain(|e| *e != v);
+                }
+                None => {
+                    return Err("Remove-Fehler: Kann kein Element aus einer Liste entfernen, ohne Wert".to_string());
+                }
+            },
+            _ => {}
         }
 
         self.expand();
@@ -93,7 +90,10 @@ impl Delete for FsData {
         let file_name = match parts.last() {
             Some(name) => name,
             None => {
-                return Err("Query-Fehler: Konnte den Dateinamen nicht extrahieren: hat letztes Segment schon extrahiert".to_string())
+                return Err(
+                    "Query-Fehler: Konnte den Dateinamen nicht extrahieren: hat letztes Segment schon extrahiert"
+                        .to_string(),
+                );
             }
         };
         if let FsNodes::Dir(map) = pointer {
@@ -109,18 +109,16 @@ impl Delete for FsData {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use indexmap::IndexMap;
+
+    use super::*;
 
     #[test]
     fn test_remove_attrset_success() {
-        let mut ast = NixValue::AttrSet(IndexMap::from([(
-            "remove_me".to_string(),
-            NixValue::Bool(true),
-        )]));
-        
+        let mut ast = NixValue::AttrSet(IndexMap::from([("remove_me".to_string(), NixValue::Bool(true))]));
+
         let result = ast.remove("remove_me", None);
-        
+
         assert!(result.is_ok());
         if let NixValue::AttrSet(map) = ast {
             assert!(map.is_empty());
@@ -133,19 +131,17 @@ mod tests {
     fn test_remove_attrset_not_found() {
         let mut ast = NixValue::AttrSet(IndexMap::new());
         let result = ast.remove("missing_key", None);
-        
+
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "Remove-Fehler: Option ist nicht in Datei enthalten");
     }
 
     #[test]
     fn test_remove_list_success() {
-        let mut ast = NixValue::List(vec![
-            NixValue::Identifier("keep".to_string()),
-            NixValue::Identifier("drop".to_string()),
-        ]);
+        let mut ast =
+            NixValue::List(vec![NixValue::Identifier("keep".to_string()), NixValue::Identifier("drop".to_string())]);
         let result = ast.remove("", "drop");
-        
+
         assert!(result.is_ok());
         if let NixValue::List(vec) = ast {
             assert_eq!(vec.len(), 1);
@@ -159,7 +155,7 @@ mod tests {
     fn test_remove_list_empty_value_error() {
         let mut ast = NixValue::List(vec![NixValue::Identifier("keep".to_string())]);
         let result = ast.remove("", None);
-        
+
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "Remove-Fehler: Kann kein Element aus einer Liste entfernen, ohne Wert");
     }
@@ -169,7 +165,7 @@ mod tests {
         let map = IndexMap::from([("target".to_string(), NixValue::Int(1))]);
         let body = NixValue::AttrSet(IndexMap::from([("target".to_string(), NixValue::Int(2))]));
         let mut ast = NixValue::LetIn(map, Box::new(body));
-        
+
         let result = ast.remove("target", None);
         assert!(result.is_ok());
     }
@@ -177,16 +173,13 @@ mod tests {
     #[test]
     fn test_delete_file_success() {
         let mut fs_data = FsData::new("/fake/root");
-        
+
         let file_map = IndexMap::from([(
             "config.nix".to_string(),
             FsNodes::File { name: "config.nix".to_string(), ast: NixValue::Bool(true) },
         )]);
-        
-        let folder_map = IndexMap::from([(
-            "node1".to_string(),
-            FsNodes::Dir(file_map),
-        )]);
+
+        let folder_map = IndexMap::from([("node1".to_string(), FsNodes::Dir(file_map))]);
 
         fs_data.fsnodes = FsNodes::Dir(folder_map);
 
@@ -206,10 +199,7 @@ mod tests {
     #[test]
     fn test_delete_file_not_found() {
         let mut fs_data = FsData::new("/fake/root");
-        fs_data.fsnodes = FsNodes::Dir(IndexMap::from([(
-            "node1".to_string(),
-            FsNodes::Dir(IndexMap::new()),
-        )]));
+        fs_data.fsnodes = FsNodes::Dir(IndexMap::from([("node1".to_string(), FsNodes::Dir(IndexMap::new()))]));
 
         let result = fs_data.delete_file("node1/missing.nix");
         assert!(result.is_err());
@@ -239,10 +229,10 @@ mod tests {
         let mut ast = NixValue::LetIn(map, Box::new(body));
 
         let result = ast.remove("target_key", "drop_me");
-        
+
         assert!(result.is_ok());
         if let NixValue::LetIn(new_map, new_body) = ast {
-            assert!(new_map.is_empty()); 
+            assert!(new_map.is_empty());
             if let NixValue::List(vec) = *new_body {
                 assert_eq!(vec.len(), 1);
                 assert_eq!(vec[0], NixValue::Identifier("keep_me".to_string()));
@@ -260,12 +250,9 @@ mod tests {
         let body = NixValue::List(vec![NixValue::Identifier("keep_me".to_string())]);
         let mut ast = NixValue::LetIn(map, Box::new(body));
         let result = ast.remove("target_key", None);
-        
+
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err(), 
-            "Remove-Fehler: Kann kein Element aus einer Liste entfernen, ohne Wert"
-        );
+        assert_eq!(result.unwrap_err(), "Remove-Fehler: Kann kein Element aus einer Liste entfernen, ohne Wert");
     }
 
     #[test]
@@ -275,12 +262,9 @@ mod tests {
         let mut ast = NixValue::LetIn(map, Box::new(body));
 
         let result = ast.remove("target_key", None);
-        
+
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err(), 
-            "Fehler: Der Zeil-Knoten muss ein Attribute Set oder Let In Statment sein"
-        );
+        assert_eq!(result.unwrap_err(), "Fehler: Der Zeil-Knoten muss ein Attribute Set oder Let In Statment sein");
     }
 
     #[test]
@@ -288,9 +272,9 @@ mod tests {
         let map = IndexMap::from([("target_key".to_string(), NixValue::Int(1))]);
         let body = NixValue::AttrSet(IndexMap::from([("target_key".to_string(), NixValue::Int(2))]));
         let mut ast = NixValue::LetIn(map, Box::new(body));
-        
+
         let result = ast.remove("target_key", None);
-        
+
         assert!(result.is_ok());
         if let NixValue::LetIn(new_map, new_body) = ast {
             assert!(new_map.is_empty());

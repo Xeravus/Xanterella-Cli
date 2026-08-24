@@ -259,11 +259,11 @@ mod tests {
         let temp_dir = tempfile::tempdir().unwrap();
         let sub_dir = temp_dir.path().join("hosts").join("node1");
         fs::create_dir_all(&sub_dir).unwrap();
-        
+
         let file_path = sub_dir.join("config.nix");
         let mut file = File::create(&file_path).unwrap();
         file.write_all(b"true").unwrap();
-        
+
         let mut vfs = FsData::new(temp_dir.path().to_str().unwrap());
         let _ = vfs.load();
         assert_eq!(vfs.files.len(), 1);
