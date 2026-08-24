@@ -266,15 +266,6 @@ mod tests {
 
         let mut vfs = FsData::new(temp_dir.path().to_str().unwrap());
         let _ = vfs.load();
-        let temp_dir = env::temp_dir().join("prolyxena_test_vfs");
-        let sub_dir = temp_dir.join("hosts").join("node1");
-        fs::create_dir_all(&sub_dir).unwrap();
-        let file_path = sub_dir.join("config.nix");
-        let mut file = File::create(&file_path).unwrap();
-        file.write_all(b"true").unwrap();
-        let mut vfs = FsData::new(temp_dir.to_str().unwrap());
-        let _ = vfs.load();
-        fs::remove_dir_all(&temp_dir).unwrap();
         assert_eq!(vfs.files.len(), 1);
         if let FsNodes::Dir(root_map) = &vfs.fsnodes {
             let hosts_node = root_map.get("hosts").expect("Ordner 'hosts' fehlt im Baum");

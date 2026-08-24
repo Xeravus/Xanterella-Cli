@@ -38,8 +38,6 @@ impl<'a> XanterellaInstall<'a> {
         self.ping_ssh()?;
         self.xanterella.git_merge()?;
         self.crylia_edit_start()?;
-        // crylia_edit_start(self.get_hardware()?);
-        // self.crylia_edit_start()?;
         self.xanterella.git_commit("Xanterella: Remote-Install")?;
         if !&self.xanterella.fast {
             self.xanterella.check_nix_flake()?;

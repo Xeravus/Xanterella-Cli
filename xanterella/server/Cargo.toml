@@ -9,6 +9,3 @@ xanterella-core = { path = "../core" }
 axum = "0.7"
 tokio = { version = "1", features = ["full"] }
 serde_json = "1.0.149"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.149"
-tower = "0.5.3"

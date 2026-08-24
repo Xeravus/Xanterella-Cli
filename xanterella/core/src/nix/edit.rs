@@ -8,12 +8,6 @@ use prolyxena::engine::lexer::vfs::FsData;
 
 use crate::XanterellaInstall;
 use crate::install::helper::Helper;
-use crate::XanterellaInstall;
-use crate::install::helper::Helper;
-use prolyxena::engine::lexer::vfs::FsData;
-use prolyxena::engine::generator::generate::Modify;
-use prolyxena::engine::formater::write::Write;
-
 use crate::prelude::*;
 
 pub trait Edit {
@@ -80,10 +74,6 @@ impl<'a> Edit for XanterellaInstall<'a> {
             file.remove("imports", "./hardware-configuration.nix")
                 .map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
         }
-        config.load().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
-        let hardware = self.get_hardware()?;
-        config.generate_file("/hosts/crylia/hardware-configuration.nix", hardware).map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
-        config.walk_tree().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
         Ok(())
     }
 }
