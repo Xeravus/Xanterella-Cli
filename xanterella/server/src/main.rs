@@ -5,6 +5,7 @@ mod app;
 
 use crate::app::*;
 
+#[allow(unused)]
 #[derive(Debug)]
 enum ApiError {
     NotFound,

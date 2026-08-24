@@ -4,6 +4,7 @@ use crate::install::drives::Drives;
 use crate::install::inject::Inject;
 use crate::install::ping::Ping;
 use crate::nix::check::Check;
+use crate::nix::edit::Edit;
 use crate::prelude::*;
 
 pub struct XanterellaInstall<'a> {
@@ -36,8 +37,7 @@ impl<'a> XanterellaInstall<'a> {
         self.ping()?;
         self.ping_ssh()?;
         self.xanterella.git_merge()?;
-        // crylia_edit_start(self.get_hardware()?);
-        // self.crylia_edit_start()?;
+        self.crylia_edit_start()?;
         self.xanterella.git_commit("Xanterella: Remote-Install")?;
         if !&self.xanterella.fast {
             self.xanterella.check_nix_flake()?;
@@ -84,7 +84,7 @@ impl<'a> XanterellaInstall<'a> {
     pub fn remote_install_cleanup(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunRemoteInstallCleanup);
 
-        // crylia_edit_finish();
+        self.crylia_edit_finish()?;
         self.xanterella.git_commit("Xanterella: Cleanup")?;
 
         self.xanterella.log_event(Events::OkRemoteInstallCleanup);
