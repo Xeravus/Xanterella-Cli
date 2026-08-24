@@ -1,13 +1,11 @@
-use crate::ApiError;
-
-use serde_json::{Value, json};
 use axum::{Json, Router, extract::Path, response::IntoResponse, routing::get};
+use serde_json::{Value, json};
 use xanterella_core::{Ping, Xanterella, XanterellaInstall};
 
+use crate::ApiError;
+
 pub fn create_app() -> Router {
-    Router::new()
-        .route("/health", get(health_check))
-        .route("/ping/:ip", get(get_ping))
+    Router::new().route("/health", get(health_check)).route("/ping/:ip", get(get_ping))
 }
 
 pub async fn health_check() -> impl IntoResponse {
@@ -40,12 +38,10 @@ pub async fn get_ping(Path(ip): Path<String>) -> Result<Json<Value>, ApiError> {
     let result = install.ping();
 
     match result {
-        Ok(_) => {
-            Ok(Json(json!({
-                "status": "ok",
-                "ip": ip,
-            })))
-        },
+        Ok(_) => Ok(Json(json!({
+            "status": "ok",
+            "ip": ip,
+        }))),
         Err(_) => Err(ApiError::InternalError),
     }
 }
