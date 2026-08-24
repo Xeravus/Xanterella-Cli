@@ -12,6 +12,9 @@ jobs:
   flake:
     name: Flake Check (Cleanup)
     runs-on: [self-hosted, xanterella, fast]
+    if: needs.check-guard.outputs.proceed == 'true'
+    needs:
+      - check-guard
 
     steps:
       - name: Checkout
@@ -22,7 +25,6 @@ jobs:
 
   xanterella-start:
     name: Xanterella Start (Cleanup)
-    if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, xanterella]
     needs: 
       - flake
@@ -167,7 +169,6 @@ jobs:
 
   prolyxena-start:
     name: Prolyxena Start (Cleanup)
-    if: needs.check-guard.outputs.proceed == 'true'
     runs-on: [self-hosted, prolyxena]
     needs: 
       - flake
