@@ -99,7 +99,7 @@ impl Delete for FsData {
         if let FsNodes::Dir(map) = pointer {
             match map.shift_remove(*file_name) {
                 Some(_) => Ok(()),
-                None => return Err("Remove-Fehler: Ordner enthält die Datei nicht".to_string()),
+                None => Err("Remove-Fehler: Ordner enthält die Datei nicht".to_string()),
             }
         } else {
             Err("Query-Fehler: Letzter Ordner nicht vorhanden".to_string())
