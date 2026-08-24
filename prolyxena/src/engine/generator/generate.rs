@@ -1,15 +1,15 @@
+use std::path::PathBuf;
+
 use indexmap::IndexMap;
 
 use crate::engine::core::*;
-use crate::engine::lexer::core::*;
 use crate::engine::formater::flattening::*;
-use crate::engine::lexer::primitives::*;
+use crate::engine::lexer::core::*;
 use crate::engine::lexer::vfs::*;
 
-use std::path::PathBuf;
-
 pub trait Generate {
-    fn insert_from_string(&mut self, insert: &str) -> Result<(), String>;
+    fn insert<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String>;
+    fn insert_into_let_in<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String>;
 }
 
 pub trait Modify {
@@ -17,26 +17,53 @@ pub trait Modify {
 }
 
 impl Generate for NixValue {
-    fn insert_from_string(&mut self, insert: &str) -> Result<(), String> {
-        let parts: Vec<&str> = insert.splitn(2, '=').collect();
-        if parts.len() != 2 {
-            return Err("Syntax-Fehler: Zuweisung muss ein '=' enthalten".to_string());
-        }
-
-        let key = parts[0].trim().to_string();
-        let value = parts[1].trim().trim_end_matches(';');
-
-        let mut lexer = Lexer::new(value, String::from("insert.nix"));
-        let parsed_value = lexer.parse_single_value()?;
-
+    fn insert<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String> {
+        let parsed_value = match value.into_nix()? {
+            Some(v) => v,
+            None => return Err("Fehler: Leerer Wert kann nicht eingefügt werden".to_string()),
+        };
         self.flatten();
 
         match self {
             NixValue::AttrSet(map) => {
-                map.insert(key, parsed_value);
+                map.insert(key.to_string(), parsed_value);
+            }
+            NixValue::LetIn(_map, body) => match &mut **body {
+                NixValue::AttrSet(map) => {
+                    map.insert(key.to_string(), parsed_value);
+                }
+                NixValue::List(vec) => {
+                    vec.push(parsed_value);
+                }
+                _ => {}
+            },
+            NixValue::List(vec) => {
+                vec.push(parsed_value);
+            }
+            _ => {
+                return Err("Fehler: Der Zeil-Knoten muss ein Attribute Set oder Let In Statment sein".to_string());
+            }
+        }
+        self.expand();
+        Ok(())
+    }
+
+    fn insert_into_let_in<I: IntoNixValue>(&mut self, key: &str, value: I) -> Result<(), String> {
+        let parsed_value = match value.into_nix()? {
+            Some(v) => v,
+            None => return Err("Fehler: Leerer Wert kann nicht eingefügt werden".to_string()),
+        };
+        self.flatten();
+
+        match self {
+            NixValue::AttrSet(map) => {
+                map.insert(key.to_string(), parsed_value);
             }
             NixValue::LetIn(map, _body) => {
-                map.insert(key, parsed_value);
+                map.insert(key.to_string(), parsed_value);
+            }
+            NixValue::List(vec) => {
+                vec.push(parsed_value);
             }
             _ => {
                 return Err("Fehler: Der Zeil-Knoten muss ein Attribute Set oder Let In Statment sein".to_string());
@@ -117,15 +144,113 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_engine_generator_insert_attrset_with_nixvalue() {
+        let mut ast = NixValue::AttrSet(IndexMap::new());
+        let result = ast.insert("enable", NixValue::Bool(true));
+
+        assert!(result.is_ok());
+        assert_eq!(ast, NixValue::AttrSet(IndexMap::from([("enable".to_string(), NixValue::Bool(true))])));
+    }
+
+    #[test]
+    fn test_engine_generator_insert_attrset_with_string() {
+        let mut ast = NixValue::AttrSet(IndexMap::new());
+        let result = ast.insert("port", "8080");
+
+        assert!(result.is_ok());
+        assert_eq!(ast, NixValue::AttrSet(IndexMap::from([("port".to_string(), NixValue::Int(8080))])));
+    }
+
+    #[test]
+    fn test_engine_generator_insert_nested_key_triggers_flatten_expand() {
+        let mut ast = NixValue::AttrSet(IndexMap::new());
+        let result = ast.insert("services.caddy.enable", "true");
+
+        assert!(result.is_ok());
+
+        let expected_ast = NixValue::AttrSet(IndexMap::from([(
+            "services".to_string(),
+            NixValue::AttrSet(IndexMap::from([(
+                "caddy".to_string(),
+                NixValue::AttrSet(IndexMap::from([("enable".to_string(), NixValue::Bool(true))])),
+            )])),
+        )]));
+
+        assert_eq!(ast, expected_ast);
+    }
+
+    #[test]
+    fn test_engine_generator_insert_into_list() {
+        let mut ast = NixValue::List(vec![NixValue::Identifier("git".to_string())]);
+        let result = ast.insert("", "\"nodejs\"");
+
+        assert!(result.is_ok());
+        assert_eq!(
+            ast,
+            NixValue::List(vec![NixValue::Identifier("git".to_string()), NixValue::Str("nodejs".to_string()),])
+        );
+    }
+
+    #[test]
+    fn test_engine_generator_insert_into_let_in() {
+        let mut ast = NixValue::LetIn(IndexMap::new(), Box::new(NixValue::Identifier("body".to_string())));
+        let result = ast.insert_into_let_in("var", "42");
+
+        assert!(result.is_ok());
+        assert_eq!(
+            ast,
+            NixValue::LetIn(
+                IndexMap::from([("var".to_string(), NixValue::Int(42))]),
+                Box::new(NixValue::Identifier("body".to_string()))
+            )
+        );
+    }
+
+    #[test]
+    fn test_engine_generator_insert_invalid_target_node() {
+        let mut ast = NixValue::Str("hello".to_string());
+        let result = ast.insert("key", "true");
+
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Fehler: Der Zeil-Knoten muss ein Attribute Set oder Let In Statment sein");
+    }
+
+    #[test]
+    fn test_engine_generator_insert_invalid_string_syntax() {
+        let mut ast = NixValue::AttrSet(IndexMap::new());
+        let result = ast.insert("key", "{ kaputt");
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Syntax-Fehler"));
+    }
+
+    #[test]
+    fn test_engine_generator_insert_empty_string() {
+        let mut ast = NixValue::AttrSet(IndexMap::new());
+        let result = ast.insert("key", "   ");
+
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Fehler: Leerer Wert kann nicht eingefügt werden");
+    }
+
+    #[test]
     fn test_engine_generator_generate_generate_file_empty_tree() {
         let mut fsdata = FsData::new("/home/cato");
         fsdata.generate_file("file.nix", None).unwrap();
 
-        assert_eq!(fsdata.fsnodes, FsNodes::Dir(
-                IndexMap::from([(String::from("home"), FsNodes::Dir(
-                        IndexMap::from([(String::from("cato"), FsNodes::Dir(
-                            IndexMap::from([("file.nix".to_string(), FsNodes::File { name: "file.nix".to_string(), ast: NixValue::AttrSet(IndexMap::new()) })])
-        ))])))])));
+        assert_eq!(
+            fsdata.fsnodes,
+            FsNodes::Dir(IndexMap::from([(
+                String::from("home"),
+                FsNodes::Dir(IndexMap::from([(
+                    String::from("cato"),
+                    FsNodes::Dir(IndexMap::from([(
+                        "file.nix".to_string(),
+                        FsNodes::File { name: "file.nix".to_string(), ast: NixValue::AttrSet(IndexMap::new()) }
+                    )]))
+                )]))
+            )]))
+        );
     }
 
     #[test]
@@ -133,11 +258,19 @@ mod tests {
         let mut fsdata = FsData::new("/home/cato");
         fsdata.generate_file("/file.nix", None).unwrap();
 
-        assert_eq!(fsdata.fsnodes, FsNodes::Dir(
-                IndexMap::from([(String::from("home"), FsNodes::Dir(
-                        IndexMap::from([(String::from("cato"), FsNodes::Dir(
-                            IndexMap::from([("file.nix".to_string(), FsNodes::File { name: "file.nix".to_string(), ast: NixValue::AttrSet(IndexMap::new()) })])
-        ))])))])));
+        assert_eq!(
+            fsdata.fsnodes,
+            FsNodes::Dir(IndexMap::from([(
+                String::from("home"),
+                FsNodes::Dir(IndexMap::from([(
+                    String::from("cato"),
+                    FsNodes::Dir(IndexMap::from([(
+                        "file.nix".to_string(),
+                        FsNodes::File { name: "file.nix".to_string(), ast: NixValue::AttrSet(IndexMap::new()) }
+                    )]))
+                )]))
+            )]))
+        );
     }
 
     #[test]
@@ -145,65 +278,109 @@ mod tests {
         let mut fsdata = FsData::new("/home/cato");
         fsdata.generate_file("file.nix", None).unwrap();
 
-        assert_eq!(fsdata.fsnodes, FsNodes::Dir(
-                IndexMap::from([(String::from("home"), FsNodes::Dir(
-                        IndexMap::from([(String::from("cato"), FsNodes::Dir(
-                            IndexMap::from([("file.nix".to_string(), FsNodes::File { name: "file.nix".to_string(), ast: NixValue::AttrSet(IndexMap::new()) })])
-        ))])))])));
+        assert_eq!(
+            fsdata.fsnodes,
+            FsNodes::Dir(IndexMap::from([(
+                String::from("home"),
+                FsNodes::Dir(IndexMap::from([(
+                    String::from("cato"),
+                    FsNodes::Dir(IndexMap::from([(
+                        "file.nix".to_string(),
+                        FsNodes::File { name: "file.nix".to_string(), ast: NixValue::AttrSet(IndexMap::new()) }
+                    )]))
+                )]))
+            )]))
+        );
     }
 
     #[test]
     fn test_engine_generator_generate_generate_file_polymorphisim_option_nixvalue() {
         let mut fsdata = FsData::new("/home/cato");
-        let nixvalue = NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("b")))]));
+        let nixvalue =
+            NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("b")))]));
         fsdata.generate_file("file.nix", Some(nixvalue.clone())).unwrap();
 
-        assert_eq!(fsdata.fsnodes, FsNodes::Dir(
-                IndexMap::from([(String::from("home"), FsNodes::Dir(
-                        IndexMap::from([(String::from("cato"), FsNodes::Dir(
-                            IndexMap::from([("file.nix".to_string(), FsNodes::File { name: "file.nix".to_string(), ast: nixvalue})])
-        ))])))])));
+        assert_eq!(
+            fsdata.fsnodes,
+            FsNodes::Dir(IndexMap::from([(
+                String::from("home"),
+                FsNodes::Dir(IndexMap::from([(
+                    String::from("cato"),
+                    FsNodes::Dir(IndexMap::from([(
+                        "file.nix".to_string(),
+                        FsNodes::File { name: "file.nix".to_string(), ast: nixvalue }
+                    )]))
+                )]))
+            )]))
+        );
     }
 
     #[test]
     fn test_engine_generator_generate_generate_file_polymorphisim_nixvalue() {
         let mut fsdata = FsData::new("/home/cato");
-        let nixvalue = NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("b")))]));
+        let nixvalue =
+            NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("b")))]));
         fsdata.generate_file("file.nix", nixvalue.clone()).unwrap();
 
-        assert_eq!(fsdata.fsnodes, FsNodes::Dir(
-                IndexMap::from([(String::from("home"), FsNodes::Dir(
-                        IndexMap::from([(String::from("cato"), FsNodes::Dir(
-                            IndexMap::from([("file.nix".to_string(), FsNodes::File { name: "file.nix".to_string(), ast: nixvalue})])
-        ))])))])));
+        assert_eq!(
+            fsdata.fsnodes,
+            FsNodes::Dir(IndexMap::from([(
+                String::from("home"),
+                FsNodes::Dir(IndexMap::from([(
+                    String::from("cato"),
+                    FsNodes::Dir(IndexMap::from([(
+                        "file.nix".to_string(),
+                        FsNodes::File { name: "file.nix".to_string(), ast: nixvalue }
+                    )]))
+                )]))
+            )]))
+        );
     }
 
     #[test]
     fn test_engine_generator_generate_generate_file_polymorphisim_string() {
         let mut fsdata = FsData::new("/home/cato");
-        let nixvalue = NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("b")))]));
+        let nixvalue =
+            NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("b")))]));
         let nixvalue_as_string = String::from("{ a = b; }");
         fsdata.generate_file("file.nix", nixvalue_as_string).unwrap();
 
-        assert_eq!(fsdata.fsnodes, FsNodes::Dir(
-                IndexMap::from([(String::from("home"), FsNodes::Dir(
-                        IndexMap::from([(String::from("cato"), FsNodes::Dir(
-                            IndexMap::from([("file.nix".to_string(), FsNodes::File { name: "file.nix".to_string(), ast: nixvalue})])
-        ))])))])));
+        assert_eq!(
+            fsdata.fsnodes,
+            FsNodes::Dir(IndexMap::from([(
+                String::from("home"),
+                FsNodes::Dir(IndexMap::from([(
+                    String::from("cato"),
+                    FsNodes::Dir(IndexMap::from([(
+                        "file.nix".to_string(),
+                        FsNodes::File { name: "file.nix".to_string(), ast: nixvalue }
+                    )]))
+                )]))
+            )]))
+        );
     }
 
     #[test]
     fn test_engine_generator_generate_generate_file_polymorphisim_str() {
         let mut fsdata = FsData::new("/home/cato");
-        let nixvalue = NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("b")))]));
+        let nixvalue =
+            NixValue::AttrSet(IndexMap::from([(String::from("a"), NixValue::Identifier(String::from("b")))]));
         let nixvalue_as_string = "{ a = b; }";
         fsdata.generate_file("file.nix", nixvalue_as_string).unwrap();
 
-        assert_eq!(fsdata.fsnodes, FsNodes::Dir(
-                IndexMap::from([(String::from("home"), FsNodes::Dir(
-                        IndexMap::from([(String::from("cato"), FsNodes::Dir(
-                            IndexMap::from([("file.nix".to_string(), FsNodes::File { name: "file.nix".to_string(), ast: nixvalue})])
-        ))])))])));
+        assert_eq!(
+            fsdata.fsnodes,
+            FsNodes::Dir(IndexMap::from([(
+                String::from("home"),
+                FsNodes::Dir(IndexMap::from([(
+                    String::from("cato"),
+                    FsNodes::Dir(IndexMap::from([(
+                        "file.nix".to_string(),
+                        FsNodes::File { name: "file.nix".to_string(), ast: nixvalue }
+                    )]))
+                )]))
+            )]))
+        );
     }
 
     #[test]
@@ -213,34 +390,78 @@ mod tests {
         // Step 1
         fsdata.generate_file("file.nix", None).unwrap();
 
-        assert_eq!(fsdata.fsnodes, FsNodes::Dir(
-                IndexMap::from([(String::from("home"), FsNodes::Dir(
-                        IndexMap::from([(String::from("cato"), FsNodes::Dir(
-                            IndexMap::from([(String::from("file.nix"), FsNodes::File { name: String::from("file.nix"), ast: NixValue::AttrSet(IndexMap::new()) })])
-        ))])))])));
+        assert_eq!(
+            fsdata.fsnodes,
+            FsNodes::Dir(IndexMap::from([(
+                String::from("home"),
+                FsNodes::Dir(IndexMap::from([(
+                    String::from("cato"),
+                    FsNodes::Dir(IndexMap::from([(
+                        String::from("file.nix"),
+                        FsNodes::File { name: String::from("file.nix"), ast: NixValue::AttrSet(IndexMap::new()) }
+                    )]))
+                )]))
+            )]))
+        );
         // Step 2
         fsdata.generate_file("test_file.nix", None).unwrap();
 
-        assert_eq!(fsdata.fsnodes, FsNodes::Dir(
-                IndexMap::from([(String::from("home"), FsNodes::Dir(
-                        IndexMap::from([(String::from("cato"), FsNodes::Dir(
-                            IndexMap::from([
-                                (String::from("file.nix"), FsNodes::File { name: String::from("file.nix"), ast: NixValue::AttrSet(IndexMap::new()) }),
-                                (String::from("test_file.nix"), FsNodes::File { name: String::from("test_file.nix"), ast: NixValue::AttrSet(IndexMap::new()) })
-                            ])
-        ))])))])));
+        assert_eq!(
+            fsdata.fsnodes,
+            FsNodes::Dir(IndexMap::from([(
+                String::from("home"),
+                FsNodes::Dir(IndexMap::from([(
+                    String::from("cato"),
+                    FsNodes::Dir(IndexMap::from([
+                        (
+                            String::from("file.nix"),
+                            FsNodes::File { name: String::from("file.nix"), ast: NixValue::AttrSet(IndexMap::new()) }
+                        ),
+                        (
+                            String::from("test_file.nix"),
+                            FsNodes::File {
+                                name: String::from("test_file.nix"),
+                                ast: NixValue::AttrSet(IndexMap::new())
+                            }
+                        )
+                    ]))
+                )]))
+            )]))
+        );
         // Step 3
         fsdata.generate_file("test/file.nix", None).unwrap();
 
-        assert_eq!(fsdata.fsnodes, FsNodes::Dir(
-                IndexMap::from([(String::from("home"), FsNodes::Dir(
-                        IndexMap::from([(String::from("cato"), FsNodes::Dir(
-                            IndexMap::from([
-                                (String::from("file.nix"), FsNodes::File { name: String::from("file.nix"), ast: NixValue::AttrSet(IndexMap::new()) }),
-                                (String::from("test_file.nix"), FsNodes::File { name: String::from("test_file.nix"), ast: NixValue::AttrSet(IndexMap::new()) }),
-                                (String::from("test"), FsNodes::Dir(
-                                        IndexMap::from([
-                                            (String::from("file.nix"), FsNodes::File { name: String::from("file.nix"), ast: NixValue::AttrSet(IndexMap::new()) })
-        ])))])))])))])));
+        assert_eq!(
+            fsdata.fsnodes,
+            FsNodes::Dir(IndexMap::from([(
+                String::from("home"),
+                FsNodes::Dir(IndexMap::from([(
+                    String::from("cato"),
+                    FsNodes::Dir(IndexMap::from([
+                        (
+                            String::from("file.nix"),
+                            FsNodes::File { name: String::from("file.nix"), ast: NixValue::AttrSet(IndexMap::new()) }
+                        ),
+                        (
+                            String::from("test_file.nix"),
+                            FsNodes::File {
+                                name: String::from("test_file.nix"),
+                                ast: NixValue::AttrSet(IndexMap::new())
+                            }
+                        ),
+                        (
+                            String::from("test"),
+                            FsNodes::Dir(IndexMap::from([(
+                                String::from("file.nix"),
+                                FsNodes::File {
+                                    name: String::from("file.nix"),
+                                    ast: NixValue::AttrSet(IndexMap::new())
+                                }
+                            )]))
+                        )
+                    ]))
+                )]))
+            )]))
+        );
     }
 }

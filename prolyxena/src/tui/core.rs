@@ -101,11 +101,9 @@ impl Tui {
 
         #[cfg(not(test))]
         thread::spawn(move || {
-            if let Err(err) = prolyxena.load() {
-                return Err(err);
-            }
+            prolyxena.load()?;
             let _ = time_tx.send(prolyxena.get_time());
-            Ok(())
+            Ok::<(), String>(())
         });
         if var("PROLYXENA_TEST").is_err() {
             #[cfg(not(test))]

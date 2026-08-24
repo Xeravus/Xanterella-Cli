@@ -7,7 +7,7 @@ on:
 jobs:
   flake: 
     name: Flake Check (Staging)
-    runs-on: [self-hosted, xanterella]
+    runs-on: [self-hosted, xanterella, fast]
 
     steps:
       - name: Checkout
@@ -18,7 +18,7 @@ jobs:
 
   xanterella1:
     name: Xanterella Check (Staging)
-    runs-on: [self-hosted, xanterella]
+    runs-on: [self-hosted, xanterella, fast]
     needs: 
       - flake
 
