@@ -23,7 +23,7 @@ impl<'a> Helper for XanterellaInstall<'a> {
             self.xanterella.log_event(Events::OkGetHardware);
             Ok(String::from_utf8_lossy(&cmd.stdout).to_string())
         } else {
-            return Ok(String::new());
+            Ok(String::new())
         }
     }
 
