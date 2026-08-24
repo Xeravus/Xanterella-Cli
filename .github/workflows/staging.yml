@@ -5,49 +5,93 @@ on:
     branches: [ "final/staging" ]
 
 jobs:
-  xanterella:
-    name: Xanterella (Staging)
-    runs-on: [self-hosted, xanterella]
+  flake: 
+    name: Flake Check (Staging)
+    runs-on: [self-hosted, xanterella, fast]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with: 
-          clean: false
+        uses: actions/checkout@v6
 
-      - name: Nix Flake Check
-        run: nix flake check
+      - name: Nix Flake Check 
+        run: nix flake check 
+
+  xanterella1:
+    name: Xanterella Check (Staging)
+    runs-on: [self-hosted, xanterella, fast]
+    needs: 
+      - flake
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Cargo Check
-        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check --release"
+        run: nix develop .#xanterella --command bash -c "cd xanterella && cargo check"
+
+  xanterella2:
+    name: Xanterella Test (Staging)
+    runs-on: [self-hosted, xanterella]
+    needs: 
+      - xanterella1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Cargo Tests
         run: nix develop .#xanterella --command bash -c "cd xanterella && cargo test"
 
-      - name: Cargo Build
-        run: nix build .#xanterella
-
-      - name: Cleanup
-        uses: Swatinem/rust-cache@v2
-
-  prolyxena:
-    name: Prolyxena (Staging)
+  xanterella3:
+    name: Xanterella Build (Staging)
     runs-on: [self-hosted, xanterella]
+    needs: 
+      - xanterella1
+      - xanterella2
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with: 
-          clean: false
+        uses: actions/checkout@v6
+
+      - name: Cargo Build
+        run: nix build .#xanterella
+
+  prolyxena1:
+    name: Prolyxena Check (Staging)
+    runs-on: [self-hosted, xanterella]
+    needs: 
+      - flake
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Cargo Check
-        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo check --release"
+        run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo check"
+
+  prolyxena2:
+    name: Prolyxena Test (Staging)
+    runs-on: [self-hosted, xanterella]
+    needs: 
+      - prolyxena1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Cargo Tests
         run: nix develop .#prolyxena --command bash -c "cd prolyxena && cargo test"
 
+  prolyxena3:
+    name: Prolyxena Build (Staging)
+    runs-on: [self-hosted, xanterella]
+    needs: 
+      - prolyxena1
+      - prolyxena2
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Cargo Build
         run: nix build .#prolyxena
-
-      - name: Cleanup
-        uses: Swatinem/rust-cache@v2

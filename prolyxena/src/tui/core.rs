@@ -29,6 +29,8 @@ pub struct Tui {
     num_of_pars: u32,
     sort: bool,
     debug: bool,
+    expand: bool,
+    flatten: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -53,7 +55,7 @@ pub enum TaskBool {
 
 impl Tui {
     #[allow(clippy::new_without_default)]
-    pub fn new(sort: bool, debug: bool) -> Self {
+    pub fn new() -> Self {
         Tui {
             logs: Vec::new(),
             path: String::new(),
@@ -62,12 +64,30 @@ impl Tui {
             trans: None,
             last_update: Instant::now(),
             num_of_pars: 0,
-            sort,
-            debug,
+            sort: false,
+            debug: false,
+            expand: false,
+            flatten: false,
         }
     }
 
-    pub fn load(&mut self, path: &str) {
+    pub fn set_sort(&mut self, sort: bool) {
+        self.sort = sort;
+    }
+
+    pub fn set_expand(&mut self, expand: bool) {
+        self.expand = expand;
+    }
+
+    pub fn set_flatten(&mut self, flatten: bool) {
+        self.flatten = flatten;
+    }
+
+    pub fn set_debug(&mut self, debug: bool) {
+        self.debug = debug;
+    }
+
+    pub fn load(&mut self, path: &str) -> Result<(), String> {
         self.path = path.to_string();
         let (tx, rx) = mpsc::channel::<ParseEvent>();
         #[allow(unused)]
@@ -75,17 +95,21 @@ impl Tui {
         self.trans = Some(rx);
         self.time_rx = Some(time_rx);
         let mut prolyxena = FsData::new_trans(path, tx.clone());
-        prolyxena.sort(self.sort);
+        prolyxena.set_sort(self.sort);
+        prolyxena.set_expand(self.expand);
+        prolyxena.set_flatten(self.flatten);
 
         #[cfg(not(test))]
         thread::spawn(move || {
-            prolyxena.load();
+            prolyxena.load()?;
             let _ = time_tx.send(prolyxena.get_time());
+            Ok::<(), String>(())
         });
         if var("PROLYXENA_TEST").is_err() {
             #[cfg(not(test))]
             let _ = self.start_tui();
         }
+        Ok(())
     }
 
     pub fn start_tui(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -190,6 +214,12 @@ impl Tui {
                 ParseEvent::StartSortingFile(file) => (TaskBool::True, format!("Sorting AST: {}", file).into()),
                 ParseEvent::EndSortingFile(file) => (TaskBool::False, format!("Sorting AST: {}", file).into()),
 
+                ParseEvent::StartExpandingFile(file) => (TaskBool::True, format!("Expanding AST: {}", file).into()),
+                ParseEvent::EndExpandingFile(file) => (TaskBool::False, format!("Expanding AST: {}", file).into()),
+
+                ParseEvent::StartFlatteningFile(file) => (TaskBool::True, format!("Flattening AST: {}", file).into()),
+                ParseEvent::EndFlatteningFile(file) => (TaskBool::False, format!("Flattening AST: {}", file).into()),
+
                 ParseEvent::StartAttrSet => (TaskBool::True, "Parsing Attribut Set".into()),
                 ParseEvent::EndAttrSet => (TaskBool::False, "Parsing Attribut Set".into()),
 
@@ -283,5 +313,263 @@ impl Tui {
 }
 
 #[cfg(test)]
-#[path = "core_test.rs"]
-mod tests;
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tui_core_new() {
+        let data = Tui::new();
+
+        assert!(data.logs.is_empty());
+        assert!(data.path.is_empty());
+        assert!(data.time.is_none());
+        assert!(data.time_rx.is_none());
+        assert!(data.trans.is_none());
+        assert_eq!(data.num_of_pars, 0);
+    }
+
+    #[test]
+    fn test_tui_core_channels_time() {
+        let mut tui = Tui::new();
+        let mut indent = 0;
+        let (tx, rx) = mpsc::channel();
+        tui.time_rx = Some(rx);
+
+        tx.send("0.052s".to_string()).unwrap();
+
+        tui.parse_events(&mut indent);
+
+        assert_eq!(tui.time, Some("0.052s".to_string()));
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_clock() {
+        let mut tui = Tui::new();
+        let mut indent = 0;
+        let (tx, rx) = mpsc::channel();
+        tui.trans = Some(rx);
+
+        tx.send(ParseEvent::StartAttrSet).unwrap();
+
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+
+        tui.parse_events(&mut indent);
+
+        assert_eq!(tui.logs.len(), 1);
+        assert_eq!(tui.logs[0].name, "Parsing Attribut Set");
+        assert_eq!(tui.logs[0].status, TaskStatus::Running);
+        assert_eq!(tui.logs[0].indent, 0);
+
+        assert_eq!(indent, 1);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_remove() {
+        let mut tui = Tui::new();
+        let mut indent = 0;
+        let (tx, rx) = mpsc::channel();
+        tui.trans = Some(rx);
+
+        tx.send(ParseEvent::StartList).unwrap();
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+        tui.parse_events(&mut indent);
+
+        assert_eq!(tui.logs.len(), 1);
+        assert_eq!(indent, 1);
+
+        tx.send(ParseEvent::EndList).unwrap();
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+        tui.parse_events(&mut indent);
+
+        assert_eq!(tui.logs.len(), 0);
+        assert_eq!(indent, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_keeps_finished_tasks() {
+        let mut tui = Tui::new();
+        let mut indent = 0;
+        let file_name = "configuration.nix".to_string();
+        let (tx, rx) = mpsc::channel();
+        tui.trans = Some(rx);
+
+        tx.send(ParseEvent::StartParsingFile(file_name.clone())).unwrap();
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+        tui.parse_events(&mut indent);
+
+        tx.send(ParseEvent::EndParsingFile(file_name)).unwrap();
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+        tui.parse_events(&mut indent);
+
+        assert_eq!(tui.logs.len(), 1);
+        assert_eq!(tui.logs[0].status, TaskStatus::Finished);
+        assert_eq!(tui.logs[0].name, "Generating AST: configuration.nix");
+    }
+
+    #[test]
+    fn test_tui_core_load() {
+        let mut tui = Tui::new();
+        let _ = tui.load("/testestestestest");
+        assert_eq!(tui.path, String::from("/testestestestest"));
+        assert!(tui.trans.is_some());
+        assert!(tui.time_rx.is_some());
+    }
+
+    fn assert_events(
+        event1: ParseEvent, event2: Option<ParseEvent>, len1: usize, len2: usize, ind1: usize, ind2: usize,
+    ) {
+        let mut tui = Tui::new();
+        let mut indent = 0;
+        let (tx, rx) = mpsc::channel();
+        tui.trans = Some(rx);
+        tx.send(event1).unwrap();
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+        tui.parse_events(&mut indent);
+
+        assert_eq!(tui.logs.len(), len1);
+        if len1 != 0 {
+            assert_eq!(tui.logs[0].status, TaskStatus::Running);
+        }
+        assert_eq!(indent, ind1);
+
+        if let Some(ev) = event2 {
+            tx.send(ev).unwrap();
+        }
+        tui.last_update = Instant::now() - Duration::from_millis(10);
+        tui.parse_events(&mut indent);
+
+        assert_eq!(tui.logs.len(), len2);
+        assert_eq!(indent, ind2);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_attr_set() {
+        assert_events(ParseEvent::StartAttrSet, Some(ParseEvent::EndAttrSet), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_list() {
+        assert_events(ParseEvent::StartList, Some(ParseEvent::EndList), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_let_in() {
+        assert_events(ParseEvent::StartLetIn, Some(ParseEvent::EndLetIn), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_lambda() {
+        assert_events(ParseEvent::StartLambda, Some(ParseEvent::EndLambda), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_with() {
+        assert_events(ParseEvent::StartWith, Some(ParseEvent::EndWith), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_string() {
+        assert_events(ParseEvent::StartString, Some(ParseEvent::EndString), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_path() {
+        assert_events(ParseEvent::StartPath, Some(ParseEvent::EndPath), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_number() {
+        assert_events(ParseEvent::StartNumber, Some(ParseEvent::EndNumber), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_expression() {
+        assert_events(ParseEvent::StartExpression, Some(ParseEvent::EndExpression), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_operator() {
+        assert_events(ParseEvent::StartOperator, Some(ParseEvent::EndOperator), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_iddentifier() {
+        assert_events(ParseEvent::StartIdentifier, Some(ParseEvent::EndIdentifier), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_whitespace() {
+        assert_events(ParseEvent::StartWhitespace, Some(ParseEvent::EndWhitespace), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_value() {
+        assert_events(ParseEvent::StartValue, Some(ParseEvent::EndValue), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_group() {
+        assert_events(ParseEvent::StartGroup, Some(ParseEvent::EndGroup), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_antiquotation() {
+        assert_events(ParseEvent::StartAntiquotation, Some(ParseEvent::EndAntiquotation), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_indented_string() {
+        assert_events(ParseEvent::StartIndentedString, Some(ParseEvent::EndIndentedString), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_gen() {
+        assert_events(ParseEvent::StartGen, Some(ParseEvent::EndGen), 1, 1, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_getting_files() {
+        assert_events(ParseEvent::StartGettingFiles, Some(ParseEvent::EndGettingFiles), 1, 0, 1, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_finished() {
+        assert_events(ParseEvent::Finished("test".to_string()), None, 0, 0, 0, 0);
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_sorting_files() {
+        assert_events(
+            ParseEvent::StartSortingFile("test".to_string()),
+            Some(ParseEvent::EndSortingFile("test".to_string())),
+            1,
+            0,
+            1,
+            0,
+        );
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_expanding_file() {
+        assert_events(
+            ParseEvent::StartExpandingFile("test".to_string()),
+            Some(ParseEvent::EndExpandingFile("test".to_string())),
+            1,
+            0,
+            1,
+            0,
+        );
+    }
+
+    #[test]
+    fn test_tui_core_parse_events_flattening_file() {
+        assert_events(
+            ParseEvent::StartFlatteningFile("test".to_string()),
+            Some(ParseEvent::EndFlatteningFile("test".to_string())),
+            1,
+            0,
+            1,
+            0,
+        );
+    }
+}
