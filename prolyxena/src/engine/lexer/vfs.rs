@@ -86,6 +86,10 @@ impl FsData {
         Ok(())
     }
 
+    pub fn sort(&mut self, sort: bool) {
+        self.sort = sort;
+    }
+
     pub fn get_files(&mut self) {
         if let Some(tx) = &self.trans {
             let _ = tx.send(ParseEvent::StartGettingFiles);
@@ -184,6 +188,13 @@ impl FsData {
                                 if self.sort {
                                     parsed_ast.sort_ast();
                                 }
+                        if self.sort {
+                            if let Some(tx) = &self.trans {
+                                let _ = tx.send(ParseEvent::StartSortingFile(clean_path.to_string()));
+                                parsed_ast.sort_ast();
+                                let _ = tx.send(ParseEvent::EndSortingFile(clean_path.to_string()));
+                            } else {
+                                parsed_ast.sort_ast();
                             }
                         }
                         parsed_ast
