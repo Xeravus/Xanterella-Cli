@@ -170,7 +170,7 @@ jobs:
   prolyxena-start:
     name: Prolyxena Start (Stable)
     if: needs.check-guard.outputs.proceed == 'true'
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
     needs: 
       - flake
 
@@ -180,7 +180,7 @@ jobs:
 
   prolyxena-start-test:
     name: Prolyxena Start Tests (Stable)
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
     needs: 
       - prolyxena-start
       - prolyxena-machete
@@ -197,7 +197,7 @@ jobs:
     name: Prolyxena Machete (Stable)
     needs: 
       - prolyxena-start
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -210,7 +210,7 @@ jobs:
     name: Prolyxena Audit (Stable)
     needs:
       - prolyxena-start
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -223,7 +223,7 @@ jobs:
     name: Prolyxena Format (Stable)
     needs:
       - prolyxena-start
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -236,7 +236,7 @@ jobs:
     name: Prolyxena Check (Stable)
     needs:
       - prolyxena-start
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -249,7 +249,7 @@ jobs:
     name: Prolyxena Clippy (Stable)
     needs:
       - prolyxena-start
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -262,7 +262,7 @@ jobs:
     name: Prolyxena Test (Stable)
     needs:
       - prolyxena-start-test
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -275,7 +275,7 @@ jobs:
     name: Prolyxena Tarpaulin (Stable)
     needs:
       - prolyxena-start-test
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -288,7 +288,7 @@ jobs:
     name: Prolyxena Doc Check (Stable)
     needs:
       - prolyxena-start-test
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -303,7 +303,7 @@ jobs:
       - prolyxena-doc
       - prolyxena-tarpaulin
       - prolyxena-test
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout

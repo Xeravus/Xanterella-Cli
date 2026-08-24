@@ -169,7 +169,7 @@ jobs:
 
   prolyxena-start:
     name: Prolyxena Start (Cleanup)
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
     needs: 
       - flake
 
@@ -179,7 +179,7 @@ jobs:
 
   prolyxena-start-test:
     name: Prolyxena Start Tests (Cleanup)
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
     needs: 
       - prolyxena-start
       - prolyxena-machete
@@ -196,7 +196,7 @@ jobs:
     name: Prolyxena Machete (Cleanup)
     needs: 
       - prolyxena-start
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -209,7 +209,7 @@ jobs:
     name: Prolyxena Audit (Cleanup)
     needs:
       - prolyxena-start
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -222,7 +222,7 @@ jobs:
     name: Prolyxena Format (Cleanup)
     needs:
       - prolyxena-start
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -235,7 +235,7 @@ jobs:
     name: Prolyxena Check (Cleanup)
     needs:
       - prolyxena-start
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -248,7 +248,7 @@ jobs:
     name: Prolyxena Clippy (Cleanup)
     needs:
       - prolyxena-start
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -261,7 +261,7 @@ jobs:
     name: Prolyxena Test (Cleanup)
     needs:
       - prolyxena-start-test
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -274,7 +274,7 @@ jobs:
     name: Prolyxena Tarpaulin (Cleanup)
     needs:
       - prolyxena-start-test
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -287,7 +287,7 @@ jobs:
     name: Prolyxena Doc Check (Cleanup)
     needs:
       - prolyxena-start-test
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
@@ -302,7 +302,7 @@ jobs:
       - prolyxena-doc
       - prolyxena-tarpaulin
       - prolyxena-test
-    runs-on: [self-hosted, prolyxena]
+    runs-on: [self-hosted, xanterella]
 
     steps:
       - name: Checkout
