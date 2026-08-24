@@ -449,6 +449,10 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_single_value_empty() {
         let mut data = setup_lexer("");
+    #[test]
+    fn test_engine_lexer_primitives_parse_single_value_empty() {
+        let content = "";
+        let mut data = Lexer::new(content, String::from("path.nix"));
         let result = data.parse_single_value();
 
         assert!(result.is_err());
@@ -456,6 +460,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_single_value_error() {
         let mut data = setup_lexer(";");
+        let content = ";";
+        let mut data = Lexer::new(content, String::from("path.nix"));
         let result = data.parse_single_value();
 
         assert!(result.is_err());
@@ -464,6 +470,11 @@ mod tests {
     fn test_engine_lexer_primitives_parse_single_value_lambda() {
         let mut data1 = setup_lexer("{}");
         let mut data2 = setup_lexer(",");
+        let content1 = "{}";
+        let content2 = ",";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
 
         let result1 = data1.parse_single_value();
         let result2 = data2.parse_single_value();
@@ -475,6 +486,11 @@ mod tests {
     fn test_engine_lexer_primitives_parse_single_value_attr_set() {
         let mut data1 = setup_lexer("{}");
         let mut data2 = setup_lexer(",");
+        let content1 = "{}";
+        let content2 = ",";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
 
         let result1 = data1.parse_single_value();
         let result2 = data2.parse_single_value();
@@ -486,6 +502,11 @@ mod tests {
     fn test_engine_lexer_primitives_parse_single_value_list() {
         let mut data1 = setup_lexer("[test test test]");
         let mut data2 = setup_lexer(",");
+        let content1 = "[test test test]";
+        let content2 = ",";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
 
         let result1 = data1.parse_single_value();
         let result2 = data2.parse_single_value();
@@ -497,6 +518,11 @@ mod tests {
     fn test_engine_lexer_primitives_parse_single_value_string() {
         let mut data1 = setup_lexer("\"test\"");
         let mut data2 = setup_lexer(",");
+        let content1 = "\"test\"";
+        let content2 = ",";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
 
         let result1 = data1.parse_single_value();
         let result2 = data2.parse_single_value();
@@ -509,6 +535,13 @@ mod tests {
         let mut data1 = setup_lexer(".test");
         let mut data2 = setup_lexer("/test");
         let mut data3 = setup_lexer("~test");
+        let content1 = ".test";
+        let content2 = "/test";
+        let content3 = "~test";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
 
         let result1 = data1.parse_single_value();
         let result2 = data2.parse_single_value();
@@ -522,6 +555,11 @@ mod tests {
     fn test_engine_lexer_primitives_parse_single_value_group() {
         let mut data1 = setup_lexer("(test)");
         let mut data2 = setup_lexer("(test");
+        let content1 = "(test)";
+        let content2 = "(test";
+
+        let mut data1 = Lexer::new(content1, String::from("path"));
+        let mut data2 = Lexer::new(content2, String::from("path"));
 
         let result1 = data1.parse_single_value();
         let result2 = data2.parse_single_value();
@@ -537,6 +575,15 @@ mod tests {
         let mut data2 = setup_lexer("${test");
         let mut data3 = setup_lexer("$test}");
         let mut data4 = setup_lexer("$test");
+        let content1 = "${test}";
+        let content2 = "${test";
+        let content3 = "$test}";
+        let content4 = "$test";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
+        let mut data4 = Lexer::new(content4, String::from("path.nix"));
 
         let result1 = data1.parse_single_value();
         let result2 = data2.parse_single_value();
@@ -557,6 +604,15 @@ mod tests {
         let mut data2 = setup_lexer("${test test");
         let mut data3 = setup_lexer("$test test}");
         let mut data4 = setup_lexer("$test test");
+        let content1 = "${test test}";
+        let content2 = "${test test";
+        let content3 = "$test test}";
+        let content4 = "$test test";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
+        let mut data4 = Lexer::new(content4, String::from("path.nix"));
 
         let result1 = data1.parse_single_value();
         let result2 = data2.parse_single_value();
@@ -574,6 +630,11 @@ mod tests {
     fn test_engine_lexer_primitives_parse_single_value_digit() {
         let mut data1 = setup_lexer("1");
         let mut data2 = setup_lexer(",");
+        let content1 = "1";
+        let content2 = ",";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
 
         let result1 = data1.parse_single_value();
         let result2 = data2.parse_single_value();
@@ -593,6 +654,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_path() {
         let mut data = setup_lexer("test");
+        let content = "test";
+        let mut data = Lexer::new(content, String::from("path.nix"));
         let result = data.parse_path();
 
         assert!(result.is_ok());
@@ -605,6 +668,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_string() {
         let mut data = setup_lexer("test\"");
+        let content = "test\"";
+        let mut data = Lexer::new(content, String::from("path.nix"));
         let result = data.parse_string();
 
         assert!(result.is_ok());
@@ -618,6 +683,11 @@ mod tests {
     fn test_engine_lexer_primitives_parse_number_int() {
         let mut data1 = setup_lexer("1");
         let mut data2 = setup_lexer(",");
+        let content1 = "1";
+        let content2 = ",";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
 
         let result1 = data1.parse_number();
         let result2 = data2.parse_number();
@@ -636,6 +706,11 @@ mod tests {
     fn test_engine_lexer_primitives_parse_number_float() {
         let mut data1 = setup_lexer("1.0");
         let mut data2 = setup_lexer(",");
+        let content1 = "1.0";
+        let content2 = ",";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
 
         let result1 = data1.parse_number();
         let result2 = data2.parse_number();
@@ -653,6 +728,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_identifier_word() {
         let mut data = setup_lexer("test");
+        let content = "test";
+        let mut data = Lexer::new(content, String::from("path.nix"));
         let result = data.parse_identifier();
 
         assert!(result.is_ok());
@@ -666,6 +743,11 @@ mod tests {
     fn test_engine_lexer_primitives_parse_identifier_with() {
         let mut data1 = setup_lexer("with test; test");
         let mut data2 = setup_lexer(",");
+        let content1 = "with test; test";
+        let content2 = ",";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
 
         let result1 = data1.parse_identifier();
         let result2 = data2.parse_identifier();
@@ -682,6 +764,11 @@ mod tests {
     fn test_engine_lexer_primitives_parse_identifier_let_it() {
         let mut data1 = setup_lexer("let in test");
         let mut data2 = setup_lexer(",");
+        let content1 = "let in test";
+        let content2 = ",";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
 
         let result1 = data1.parse_identifier();
         let result2 = data2.parse_identifier();
@@ -701,6 +788,16 @@ mod tests {
 
         assert!(result1.is_ok());
         assert!(matches!(result1, Ok(NixValue::Identifier(..))));
+        let content1 = "le${pkgs}";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+
+        let result1 = data1.parse_identifier();
+
+        assert!(result1.is_ok());
+
+        assert!(matches!(result1, Ok(NixValue::Identifier(..))));
+
         assert!(!matches!(result1, Ok(NixValue::AttrSet(_))));
     }
 
@@ -709,6 +806,13 @@ mod tests {
         let mut data1 = setup_lexer("true");
         let mut data2 = setup_lexer("false");
         let mut data3 = setup_lexer(",");
+        let content1 = "true";
+        let content2 = "false";
+        let content3 = ",";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
 
         let result1 = data1.parse_identifier();
         let result2 = data2.parse_identifier();
@@ -733,6 +837,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_operator_add() {
         let mut data1 = setup_lexer("+");
+        let content1 = "+";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_operator();
 
         assert!(result1.is_some());
@@ -742,6 +848,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitves_parse_expression_add() {
         let mut data1 = setup_lexer("test + test");
+        let content1 = "test + test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_expression();
         assert!(result1.is_ok());
         assert!(matches!(result1, Ok(NixValue::BinaryOp { left: _, operator: Operator::Add, right: _ })));
@@ -750,6 +858,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_operator_concat() {
         let mut data1 = setup_lexer("++");
+        let content1 = "++";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_operator();
 
         assert!(result1.is_some());
@@ -759,6 +869,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitves_parse_expression_concat() {
         let mut data1 = setup_lexer("test ++ test");
+        let content1 = "test ++ test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_expression();
         assert!(result1.is_ok());
         assert!(matches!(result1, Ok(NixValue::BinaryOp { left: _, operator: Operator::Concat, right: _ })));
@@ -767,6 +879,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_operator_sub() {
         let mut data1 = setup_lexer("-");
+        let content1 = "-";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_operator();
 
         assert!(result1.is_some());
@@ -776,6 +890,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitves_parse_expression_sub() {
         let mut data1 = setup_lexer("test - test");
+        let content1 = "test - test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_expression();
         assert!(result1.is_ok());
         assert!(matches!(result1, Ok(NixValue::BinaryOp { left: _, operator: Operator::Sub, right: _ })));
@@ -784,6 +900,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_operator_equal() {
         let mut data1 = setup_lexer("==");
+        let content1 = "==";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_operator();
 
         assert!(result1.is_some());
@@ -793,6 +911,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitves_parse_expression_equal() {
         let mut data1 = setup_lexer("test == test");
+        let content1 = "test == test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_expression();
         assert!(result1.is_ok());
         assert!(matches!(result1, Ok(NixValue::BinaryOp { left: _, operator: Operator::Equal, right: _ })));
@@ -801,6 +921,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_operator_unequal() {
         let mut data1 = setup_lexer("!=");
+        let content1 = "!=";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_operator();
 
         assert!(result1.is_some());
@@ -810,6 +932,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitves_parse_expression_unequal() {
         let mut data1 = setup_lexer("test != test");
+        let content1 = "test != test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_expression();
         assert!(result1.is_ok());
         assert!(matches!(result1, Ok(NixValue::BinaryOp { left: _, operator: Operator::Unequal, right: _ })));
@@ -818,6 +942,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_operator_and() {
         let mut data1 = setup_lexer("&&");
+        let content1 = "&&";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_operator();
 
         assert!(result1.is_some());
@@ -827,6 +953,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitves_parse_expression_and() {
         let mut data1 = setup_lexer("test && test");
+        let content1 = "test && test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_expression();
         assert!(result1.is_ok());
         assert!(matches!(result1, Ok(NixValue::BinaryOp { left: _, operator: Operator::And, right: _ })));
@@ -835,6 +963,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_operator_merge() {
         let mut data1 = setup_lexer("//");
+        let content1 = "//";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_operator();
 
         assert!(result1.is_some());
@@ -844,6 +974,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitves_parse_expression_merge() {
         let mut data1 = setup_lexer("test // test");
+        let content1 = "test // test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_expression();
         assert!(result1.is_ok());
         assert!(matches!(result1, Ok(NixValue::BinaryOp { left: _, operator: Operator::Merge, right: _ })));
@@ -852,6 +984,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitives_parse_operator_divide() {
         let mut data1 = setup_lexer("/");
+        let content1 = "/";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_operator();
 
         assert!(result1.is_some());
@@ -861,6 +995,8 @@ mod tests {
     #[test]
     fn test_engine_lexer_primitves_parse_expression_divide() {
         let mut data1 = setup_lexer("test / test");
+        let content1 = "test / test";
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.parse_expression();
         assert!(result1.is_ok());
         assert!(matches!(result1, Ok(NixValue::BinaryOp { left: _, operator: Operator::Divide, right: _ })));
@@ -875,6 +1011,21 @@ mod tests {
         let mut data5 = setup_lexer("test''$(test)test'';");
         let mut data6 = setup_lexer("test''");
         let mut data7 = setup_lexer("test';");
+        let content1 = "test'';";
+        let content2 = "${test}'';";
+        let content3 = "test${test}test'';";
+        let content4 = "test$(test)test'';";
+        let content5 = "test''$(test)test'';";
+        let content6 = "test''";
+        let content7 = "test';";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+        let mut data2 = Lexer::new(content2, String::from("path.nix"));
+        let mut data3 = Lexer::new(content3, String::from("path.nix"));
+        let mut data4 = Lexer::new(content4, String::from("path.nix"));
+        let mut data5 = Lexer::new(content5, String::from("path.nix"));
+        let mut data6 = Lexer::new(content6, String::from("path.nix"));
+        let mut data7 = Lexer::new(content7, String::from("path.nix"));
 
         let result1 = data1.parse_indented_string();
         let result2 = data2.parse_indented_string();
@@ -905,6 +1056,14 @@ mod tests {
         let result1 = data1.parse_application();
 
         assert!(result1.is_ok());
+        let content1 = "test test";
+
+        let mut data1 = Lexer::new(content1, String::from("path.nix"));
+
+        let result1 = data1.parse_application();
+
+        assert!(result1.is_ok());
+
         assert!(matches!(result1, Ok(NixValue::Apply(..))));
     }
 }
