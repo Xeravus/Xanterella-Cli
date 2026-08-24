@@ -55,7 +55,7 @@ pub enum TaskBool {
 
 impl Tui {
     #[allow(clippy::new_without_default)]
-    pub fn new(sort: bool, debug: bool) -> Self {
+    pub fn new() -> Self {
         Tui {
             logs: Vec::new(),
             path: String::new(),
@@ -68,8 +68,6 @@ impl Tui {
             debug: false,
             expand: false,
             flatten: false,
-            sort,
-            debug,
         }
     }
 
@@ -100,7 +98,6 @@ impl Tui {
         prolyxena.set_sort(self.sort);
         prolyxena.set_expand(self.expand);
         prolyxena.set_flatten(self.flatten);
-        prolyxena.sort(self.sort);
 
         #[cfg(not(test))]
         thread::spawn(move || {

@@ -55,15 +55,6 @@ impl Format for NixValue {
                     }
                 }
                 out.push_str("''");
-                out.push_str(&inner_indent);
-                for i in vec {
-                    match i {
-                        StringFragment::Text(s) => out.push_str(s),
-                        StringFragment::Antiquotation(s) => out.push_str(&s.format_nix(0)),
-                    }
-                }
-                out.push('\'');
-                out.push('\'');
                 out
             }
             NixValue::Int(i) => i.to_string(),
@@ -164,29 +155,6 @@ impl Format for NixValue {
                         out
                     }
                 }
-            NixValue::Lambda(vec, alias, b) => {
-                let mut out = String::new();
-                if vec.is_empty() {
-                    out.push_str("{ }:");
-                } else {
-                    out.push_str("{\n");
-                }
-
-                for i in vec {
-                    if i != "..." {
-                        out.push_str(&format!("{}{},\n", inner_indent, i));
-                    }
-                }
-                out.push_str(&format!("{}...\n", inner_indent));
-                out.push('}');
-
-                if let Some(al) = alias {
-                    out.push_str(&format!(" @ {}", al));
-                }
-                out.push(':');
-                out.push(' ');
-                out.push_str(&b.format_nix(depth));
-                out
             }
             NixValue::Apply(lb, rb) => {
                 let mut out = String::new();

@@ -34,7 +34,6 @@ pub enum Commands {
         #[arg(short, long, conflicts_with = "animation")]
         time: bool,
         #[arg(short, long, requires = "animation")]
-        #[arg(short, long)]
         debug: bool,
     },
     Format {
@@ -54,7 +53,6 @@ pub enum Commands {
         #[arg(short, long, conflicts_with = "animation")]
         time: bool,
         #[arg(short, long, requires = "animation")]
-        #[arg(short, long)]
         debug: bool,
     },
 }
@@ -89,13 +87,6 @@ pub fn cli_parse() {
                 *time,
                 *debug,
             );
-        Commands::Show { path, animation, output, time, debug } => {
-            let mut stdout = stdout();
-            prolyxena_parse(&mut stdout, path.to_string(), *animation, *output, *time, *debug);
-        }
-        Commands::Format { path, animation, output, time, debug } => {
-            let mut stdout = stdout();
-            prolyxena_format(&mut stdout, path.to_string(), *animation, *output, *time, *debug);
         }
     }
 }
@@ -114,10 +105,6 @@ pub fn prolyxena_parse(
         if let Err(err) = tui.load(&file) {
             let _ = writeln!(writer, "{}", err);
         }
-pub fn prolyxena_parse(writer: &mut impl StdOut, file: String, animation: bool, output: bool, time: bool, debug: bool) {
-    if animation {
-        let mut tui = Tui::new(false, debug);
-        tui.load(&file);
     } else {
         let mut data = FsData::new(&file);
         data.set_sort(sort);
@@ -157,16 +144,6 @@ pub fn prolyxena_format(
         if let Err(err) = data.load() {
             let _ = writeln!(writer, "{}", err);
         }
-pub fn prolyxena_format(
-    writer: &mut impl StdOut, file: String, animation: bool, output: bool, time: bool, debug: bool,
-) {
-    if animation {
-        let mut tui = Tui::new(true, debug);
-        tui.load(&file);
-    } else {
-        let mut data = FsData::new(&file);
-        data.sort(true);
-        data.load();
         let _ = data.walk_tree();
         if output {
             let _ = writeln!(writer, "{:#?}", data.fsnodes);
