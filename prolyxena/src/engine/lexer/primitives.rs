@@ -107,7 +107,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         self.log_event(ParseEvent::StartPath);
         let mut string = String::new();
         while let Some(&c) = self.chars.peek() {
-            if c.is_whitespace() || c == ';' {
+            if c.is_whitespace() || c == ';' || c == ')' || c == '}' {
                 break;
             }
             string.push(c);
@@ -517,6 +517,17 @@ mod tests {
         assert!(result1.is_ok());
         assert!(result2.is_ok());
         assert!(result3.is_ok());
+    }
+    #[test]
+    fn test_engine_lexer_primitives_parse_single_value_path_ending_correct() {
+        let mut data1 = setup_lexer(".test)");
+        let mut data2 = setup_lexer("/test}");
+
+        let result1 = data1.parse_single_value();
+        let result2 = data2.parse_single_value();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_ok());
     }
     #[test]
     fn test_engine_lexer_primitives_parse_single_value_group() {
