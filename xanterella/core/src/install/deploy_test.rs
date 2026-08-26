@@ -8,8 +8,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install1.xanterella.home = "/test".to_string();
@@ -28,8 +28,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install1.xanterella.home = "/test".to_string();
@@ -48,8 +48,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install1.xanterella.home = "/test".to_string();
@@ -68,8 +68,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install1.ip = "127.127.127.127.127".to_string();
@@ -88,8 +88,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install1.ip = "127.127.127.127.127".to_string();
@@ -108,8 +108,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install2.ip = "127.127.127.127.127".to_string();
@@ -128,8 +128,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install1.ip = "127.127.127.127.127".to_string();

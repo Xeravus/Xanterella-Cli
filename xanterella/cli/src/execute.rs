@@ -1,0 +1,110 @@
+use cliclack::*;
+use tokio::sync::broadcast;
+
+use xanterella_core::{Xanterella, xanterella::{EventFormat, EventState}, XanterellaInstall, get::Get, install::drives::Drives};
+use std::process;
+
+pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, flake: &str) {
+    if let Err(_) = intro("Start Installer") {
+        println!("CliClack could initialize");
+        process::exit(2);
+    };
+    let init_spinner = spinner();
+
+    let (tx, mut rx) = broadcast::channel::<EventFormat>(100);
+
+    init_spinner.start("Initialization");
+    let mut xanterella = Xanterella::new();
+    xanterella.set_path(flake);
+    let mut installer =  XanterellaInstall::new(xanterella.clone());
+    installer.xanterella.set_automate(automate);
+    installer.xanterella.set_fast(speed);
+    installer.xanterella.set_debug(debug);
+    installer.xanterella.set_sender(tx);
+    init_spinner.stop("Init success");
+
+    let ip = choose_device(&xanterella).await;
+    let drive = choose_drive(&mut installer).await;
+    
+    installer.set_ip(&ip);
+    installer.set_drive(&drive);
+
+    let bar = progress_bar(30);
+    bar.start("Installer");
+
+    tokio::spawn(async move {
+        if let Err(e) = installer.remote_integration() {
+            println!("Install-Error: \nStage: 'Remote Integration' \n{:#?}", e);
+            process::exit(2);
+        }
+        if let Err(e) = installer.remote_prep_fs() {
+            println!("Install-Error: \nStage: 'Remote Prep Filesystem' \n{:#?}", e);
+            process::exit(3);
+        }
+        if let Err(e) = installer.remote_install() {
+            println!("Install-Error: \nStage: 'Remote Install' \n{:#?}", e);
+            process::exit(4);
+        }
+        if let Err(e) = installer.remote_install_cleanup() {
+            println!("Install-Error: \nStage: 'Remote Install Cleanup' \n{:#?}", e);
+            process::exit(5);
+        }
+    });
+    let mut spin = spinner();
+    while let Ok(msg) = rx.recv().await {
+        match msg.state {
+            EventState::Run => {
+                spin.start(format!("Start {}", msg.step));
+            }
+            EventState::Finish => {
+                spin.stop(format!("Finished {}", msg.step));
+                spin = spinner();
+                bar.inc(1);
+            }
+            EventState::Failed => {
+                spin.error(format!("Abort {}", msg.step));
+                break;
+            }
+        }
+    }
+
+    bar.stop("Installation complete");
+
+    if let Err(_) = outro("Finished Installer") {
+        println!("CliClack could end. \nDont worry the installer is finished");
+        process::exit(1);
+    }
+}
+
+async fn choose_device(xanterella: &Xanterella) -> String {
+    if let Ok(devices) = xanterella.get_taildevices() {
+        let mut select = select("Choose the target");
+        for (_, i) in devices.devices {
+            let ip = i.ip[0].clone();
+            select = select.item(ip.clone() , format!("{:>15} - {}", i.name, ip), "");
+        }
+        if let Ok(ans) = select.interact() {
+            ans.to_string()
+        } else {
+            String::from("127.0.0.1")
+        }
+    } else {
+        String::from("127.0.0.1")
+    }
+}
+
+async fn choose_drive(xanterella: &mut XanterellaInstall) -> String {
+    if let Ok(drives) = xanterella.get_drives() {
+        let mut select = select("Choose the main Drive");
+        for i in drives.blockdevices {
+            select = select.item(i.name.clone(), format!("{:>20} - {}", i.name, i.size), "");
+        }
+        if let Ok(ans) = select.interact() {
+            ans.to_string()
+        } else {
+            String::from("/dev/null")
+        }
+    } else {
+        String::from("/dev/null")
+    }
+}

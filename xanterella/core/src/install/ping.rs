@@ -5,7 +5,7 @@ pub trait Ping {
     fn ping_ssh(&mut self) -> Result<(), EventsFailed>;
 }
 
-impl<'a> Ping for XanterellaInstall<'a> {
+impl Ping for XanterellaInstall {
     fn ping(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPing);
 

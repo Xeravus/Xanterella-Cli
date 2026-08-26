@@ -16,8 +16,8 @@ pub async fn health_check() -> impl IntoResponse {
 }
 
 pub async fn get_ping(Path(ip): Path<String>) -> Result<Json<Value>, ApiError> {
-    let mut xanterella = Xanterella::new();
-    let mut install = XanterellaInstall::new(&mut xanterella);
+    let xanterella = Xanterella::new();
+    let mut install = XanterellaInstall::new(xanterella);
     install.set_ip(&ip);
 
     let result = install.ping();

@@ -31,7 +31,7 @@ pub struct DeviceInfo {
 
 pub trait Get {
     fn get_path(&mut self, path: Paths) -> String;
-    fn get_taildevices() -> Result<Taildevices, EventsFailed>;
+    fn get_taildevices(&self) -> Result<Taildevices, EventsFailed>;
     fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String>;
 }
 
@@ -50,7 +50,7 @@ impl Get for Xanterella {
         result.to_str().expect("[ FAILED ] - Get Path is fehlgeschlagen").to_string()
     }
 
-    fn get_taildevices() -> Result<Taildevices, EventsFailed> {
+    fn get_taildevices(&self) -> Result<Taildevices, EventsFailed> {
         let cmd = Command::new("tailscale")
             .args(["status", "--json"])
             .output()

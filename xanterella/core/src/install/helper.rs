@@ -5,7 +5,7 @@ pub trait Helper {
     fn get_sshstring(&mut self, user: User) -> Vec<String>;
 }
 
-impl<'a> Helper for XanterellaInstall<'a> {
+impl Helper for XanterellaInstall {
     fn get_hardware(&mut self) -> Result<String, EventsFailed> {
         self.xanterella.log_event(Events::RunGetHardware);
 

@@ -15,13 +15,14 @@ mod tests {
                 fast: _,
                 debug: _,
                 automate: _,
+                sender: _,
             }
         ));
-        assert!(matches!(&data.path, String));
-        assert!(matches!(&data.home, String));
-        assert!(matches!(data.fast, bool));
-        assert!(matches!(data.debug, bool));
-        assert!(matches!(data.automate, bool));
+        assert!(matches!(&data.path, _String));
+        assert!(matches!(&data.home, _String));
+        assert!(matches!(data.fast, _bool));
+        assert!(matches!(data.debug, _bool));
+        assert!(matches!(data.automate, _bool));
 
         assert!(data.path.is_empty());
         assert!(data.home.is_empty());
@@ -37,7 +38,7 @@ mod tests {
 
         data.set_path("test.path");
 
-        assert!(matches!(&data.path, String));
+        assert!(matches!(&data.path, _String));
         assert!(!data.path.is_empty());
         assert_eq!(data.path, String::from("test.path"));
     }
@@ -48,7 +49,7 @@ mod tests {
 
         data.set_home("test.path");
 
-        assert!(matches!(&data.home, String));
+        assert!(matches!(&data.home, _String));
         assert!(!data.home.is_empty());
         assert_eq!(data.home, String::from("test.path"));
     }
@@ -59,7 +60,7 @@ mod tests {
 
         data.set_fast(true);
 
-        assert!(matches!(data.fast, bool));
+        assert!(matches!(data.fast, _bool));
         assert_eq!(data.fast, true);
         assert_ne!(data.fast, false);
     }
@@ -70,7 +71,7 @@ mod tests {
 
         data.set_debug(true);
 
-        assert!(matches!(data.debug, bool));
+        assert!(matches!(data.debug, _bool));
         assert_eq!(data.debug, true);
         assert_ne!(data.debug, false);
     }
@@ -81,7 +82,7 @@ mod tests {
 
         data.set_automate(true);
 
-        assert!(matches!(data.automate, bool));
+        assert!(matches!(data.automate, _bool));
         assert_eq!(data.automate, true);
         assert_ne!(data.automate, false);
     }

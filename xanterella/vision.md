@@ -3,24 +3,24 @@
 - [x] Tailscale Device Fetch
 - [x] Remote Partitioning
 - [x] Remote Mounting
-- [x] Remote Install
+- [ ] Remote Install
 
 ## 0.2v Xanterella - USB
-- [x] USB Flashing
-- [x] Remote USB Flashing
+- [ ] USB Flashing
+- [ ] Remote USB Flashing
 
 ## 0.3v Xanterella - Daemon
-- [x] Basic USB Discovery Daemon
-- [x] Remote-Install Deamon
+- [ ] Basic USB Discovery Daemon
+- [ ] Remote-Install Deamon
 
 ## 0.4v Xanterella - Auto Init
 ### 0.41v Xanterella - Auto Init - Injection
-- [x] Generall Config File
-- [x] Wlan Injection
-- [x] Tailscale Key Injection
+- [ ] Generall Config File
+- [ ] Wlan Injection
+- [ ] Tailscale Key Injection
 
 ### 0.42v Xanterella - Auto Init - Git/GitHub/Tailscale
-- [x] Git Init
+- [ ] Git Init
 - [ ] GitHub Init
 - [ ] Tailscale Init
 
@@ -50,12 +50,11 @@
     - [x] - Deklaritiv selfhosted GitHub runner
 - [x] - GitHub Action
     - [x] - On Pull Request
-        - [ ] - Multiple Scipts for different branches
-    - [ ] - On Workflow run
+        - [x] - Multiple Scipts for different branches
 ### Cd Part - Zero-Click Release
 - [x] - Self hosted GitHub Runner
     - [x] - Deklaritiv selfhosted GitHub runner
-- [ ] - GitHub Action
+- [x] - GitHub Action
     - [ ] - On Pull Request / Tag
         - [ ] - Tests
         - [ ] - Release 
@@ -65,6 +64,5 @@
                     - [ ] - aarch64
 ### Ephermeral Integration Testing (Testing of the installer virtualy using QEMU)
 - [x] - Self hosted GitHub Runner
-    - [x] - Deklaritiv selfhosted GitHub runner
+    - [ ] - Deklaritiv selfhosted GitHub runner
 - [ ] - GitHub Action
-    - [ ] - 

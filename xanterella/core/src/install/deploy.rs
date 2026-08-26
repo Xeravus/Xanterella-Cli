@@ -11,7 +11,7 @@ pub trait Deploy {
     fn reboot_sys(&mut self) -> Result<(), EventsFailed>;
 }
 
-impl<'a> Deploy for XanterellaInstall<'a> {
+impl Deploy for XanterellaInstall {
     fn nix_build(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunNixBuild);
 

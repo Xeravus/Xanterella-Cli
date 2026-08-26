@@ -8,8 +8,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install2.ip = "127.127.127.127.127".to_string();
@@ -28,8 +28,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install2.ip = "127.127.127.127.127".to_string();
@@ -48,8 +48,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install2.ip = "127.127.127.127.127".to_string();
@@ -68,8 +68,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install2.ip = "127.127.127.127.127".to_string();
@@ -88,8 +88,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install2.ip = "127.127.127.127.127".to_string();
@@ -108,8 +108,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install2.ip = "127.127.127.127.127".to_string();
@@ -128,8 +128,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.xanterella.debug = true;
         install2.ip = "127.127.127.127.127".to_string();
@@ -146,7 +146,7 @@ mod tests {
     #[test]
     fn test_installer_helper_sort_drives() {
         let mut xanterella = Xanterella::new();
-        let mut install = XanterellaInstall::new(&mut xanterella);
+        let mut install = XanterellaInstall::new(xanterella);
 
         let mock_json = r#"{
             "blockdevices": [
@@ -205,7 +205,7 @@ mod tests {
     #[test]
     fn test_installer_helper_get_drive_size() {
         let mut xanterella = Xanterella::new();
-        let mut install = XanterellaInstall::new(&mut xanterella);
+        let mut install = XanterellaInstall::new(xanterella);
 
         let size1 = "1K";
         let size2 = "1M";
@@ -223,8 +223,8 @@ mod tests {
         let mut xanterella1 = Xanterella::new();
         let mut xanterella2 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
 
         install1.ip = "127.0.0.1".to_string();
         install2.ip = "127.127.127.127.127".to_string();
@@ -246,11 +246,11 @@ mod tests {
         let mut xanterella4 = Xanterella::new();
         let mut xanterella5 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
-        let mut install3 = XanterellaInstall::new(&mut xanterella3);
-        let mut install4 = XanterellaInstall::new(&mut xanterella4);
-        let mut install5 = XanterellaInstall::new(&mut xanterella5);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
+        let mut install3 = XanterellaInstall::new(xanterella3);
+        let mut install4 = XanterellaInstall::new(xanterella4);
+        let mut install5 = XanterellaInstall::new(xanterella5);
 
         install1.drive = "nvme".to_string();
         install2.drive = "mmclblk".to_string();

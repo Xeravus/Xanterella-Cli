@@ -31,7 +31,7 @@ pub trait Drives {
     fn mount_root(&mut self) -> Result<(), EventsFailed>;
 }
 
-impl<'a> Drives for XanterellaInstall<'a> {
+impl Drives for XanterellaInstall {
     fn sort_drives(&mut self, drives: StorageDrives) -> StorageDrives {
         let mut drives = drives;
         drives.blockdevices.sort_by(|a, b| {

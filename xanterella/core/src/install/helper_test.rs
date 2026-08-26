@@ -11,11 +11,11 @@ mod tests {
         let mut xanterella4 = Xanterella::new();
         let mut xanterella5 = Xanterella::new();
 
-        let mut install1 = XanterellaInstall::new(&mut xanterella1);
-        let mut install2 = XanterellaInstall::new(&mut xanterella2);
-        let mut install3 = XanterellaInstall::new(&mut xanterella3);
-        let mut install4 = XanterellaInstall::new(&mut xanterella4);
-        let mut install5 = XanterellaInstall::new(&mut xanterella5);
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
+        let mut install3 = XanterellaInstall::new(xanterella3);
+        let mut install4 = XanterellaInstall::new(xanterella4);
+        let mut install5 = XanterellaInstall::new(xanterella5);
 
         install1.ip = "127.0.0.1".to_string();
         install2.ip = "127.0.0.1".to_string();
@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn test_installer_helper_get_hardware() {
         let mut xanterella = Xanterella::new();
-        let mut install = XanterellaInstall::new(&mut xanterella);
+        let mut install = XanterellaInstall::new(xanterella);
 
         let result = install.get_hardware();
 

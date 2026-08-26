@@ -6,7 +6,7 @@ pub trait Inject {
     fn inject_wifi(&mut self) -> Result<(), EventsFailed>;
 }
 
-impl<'a> Inject for XanterellaInstall<'a> {
+impl Inject for XanterellaInstall {
     fn inject_tailscale(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunInjectTailscale);
 

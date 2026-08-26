@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, PartialEq)]
 pub enum EventsFailed {
     /// Generall Errors
     Failed(String),
@@ -58,6 +59,7 @@ pub enum EventsFailed {
     Prolyxena(String),
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Events {
     /// Utils
     /// utils/Git.rs

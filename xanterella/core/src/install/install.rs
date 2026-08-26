@@ -7,15 +7,15 @@ use crate::nix::check::Check;
 use crate::nix::edit::Edit;
 use crate::prelude::*;
 
-pub struct XanterellaInstall<'a> {
-    pub xanterella: &'a mut Xanterella,
+pub struct XanterellaInstall {
+    pub xanterella: Xanterella,
     pub ip: String,
     pub drive: String,
 }
 
-impl<'a> XanterellaInstall<'a> {
+impl XanterellaInstall {
     #[allow(clippy::new_without_default)]
-    pub fn new(xanterella: &'a mut Xanterella) -> Self {
+    pub fn new(xanterella: Xanterella) -> Self {
         XanterellaInstall {
             xanterella,
             ip: String::new(),
