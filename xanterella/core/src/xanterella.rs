@@ -93,9 +93,11 @@ impl Xanterella {
             // utils/Config.rs
             Events::RunConfigCreateDir => (EventState::Run, "Create Config Dir"),
             Events::RunConfigGenBasic => (EventState::Run, "Create basic Config"),
+            Events::RunConfigWrite => (EventState::Run, "Writing Config"),
 
             Events::OkConfigCreateDir => (EventState::Finish, "Create Config Dir"),
             Events::OkConfigGenBasic => (EventState::Finish, "Create basic Config"),
+            Events::OkConfigWrite => (EventState::Run, "Wrote Config"),
             // Installer
             // installer/Core.rs
             Events::RunRemoteIntegration => (EventState::Run, "Remote Integration"),

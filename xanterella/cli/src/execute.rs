@@ -1,19 +1,65 @@
 use cliclack::*;
 use tokio::sync::broadcast;
 
-use xanterella_core::{Xanterella, xanterella::{EventFormat, EventState}, XanterellaInstall, get::Get, install::drives::Drives};
+use xanterella_core::{Xanterella, Config, xanterella::{EventFormat, EventState}, XanterellaInstall, get::Get, install::drives::Drives};
 use std::process;
+
+pub async fn execute_init_config() {
+    if let Err(_) = intro("Start Installer") {
+        println!("CliClack could initialize");
+        process::exit(2);
+    };
+    let init_spinner = spinner();
+    let (tx, mut rx) = broadcast::channel::<EventFormat>(100);
+
+    init_spinner.start("Init");
+    let mut xanterella = Xanterella::new();
+    xanterella.set_sender(tx);
+    init_spinner.stop("Init success");
+
+    tokio::spawn(async move {
+        if let Err(e) = xanterella.config_create_dir() {
+            println!("Init-Process: \nStage: 'Creating Config Directory' \n{:#?}", e);
+            process::exit(2);
+        }
+        if let Err(e) = xanterella.config_gen_basic() {
+            println!("Init-Process: \nStage: 'Generating & Writing Config' \n{:#?}", e);
+            process::exit(1);
+        }
+    });
+    let mut spin = spinner();
+    while let Ok(msg) = rx.recv().await {
+        match msg.state {
+            EventState::Run => {
+                spin.start(format!("Start {}", msg.step));
+            }
+            EventState::Finish => {
+                spin.stop(format!("Finished {}", msg.step));
+                spin = spinner();
+            }
+            EventState::Failed => {
+                spin.error(format!("Abort {}", msg.step));
+                break;
+            }
+        }
+    }
+
+    if let Err(_) = outro("Finished Writing Config") {
+        println!("CliClack could end. \nDont worry writing the config is finished");
+        process::exit(1);
+    }
+}
 
 pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, flake: &str) {
     if let Err(_) = intro("Start Installer") {
-        println!("CliClack could initialize");
+        println!("CliClack could not initialize");
         process::exit(2);
     };
     let init_spinner = spinner();
 
     let (tx, mut rx) = broadcast::channel::<EventFormat>(100);
 
-    init_spinner.start("Initialization");
+    init_spinner.start("Init");
     let mut xanterella = Xanterella::new();
     xanterella.set_path(flake);
     let mut installer =  XanterellaInstall::new(xanterella.clone());

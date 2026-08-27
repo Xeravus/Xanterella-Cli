@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use xanterella_core::{Config, Ping, Xanterella, XanterellaInstall};
+use xanterella_core::{Ping, Xanterella, XanterellaInstall};
 use crate::execute::*;
 
 #[derive(Parser)]
@@ -32,9 +32,7 @@ pub async fn cli_parse() {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Init => {
-            let mut xanterella = Xanterella::new();
-            let _ = xanterella.config_create_dir();
-            let _ = xanterella.config_gen_basic();
+            execute_init_config().await;
         }
         Commands::Ping {
             ip,

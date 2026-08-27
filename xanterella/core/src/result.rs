@@ -83,9 +83,11 @@ pub enum Events {
     /// utils/Config.rs
     RunConfigCreateDir,
     RunConfigGenBasic,
+    RunConfigWrite,
 
     OkConfigCreateDir,
     OkConfigGenBasic,
+    OkConfigWrite,
 
     /// Installer
     /// installer/Core.rs
