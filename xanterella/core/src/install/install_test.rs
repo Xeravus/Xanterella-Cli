@@ -5,8 +5,8 @@ mod tests {
     use super::*;
     #[test]
     fn test_installer_core_new() {
-        let mut xanterella = Xanterella::new();
-        let mut install = XanterellaInstall::new(xanterella);
+        let xanterella = Xanterella::new();
+        let install = XanterellaInstall::new(xanterella);
 
         assert!(matches!(
             install,
@@ -27,38 +27,33 @@ mod tests {
                 sender: _,
             }
         ));
-        assert!(matches!(&install.ip, String));
-        assert!(matches!(&install.drive, String));
-
         assert!(install.ip.is_empty());
         assert!(install.drive.is_empty());
     }
 
     #[test]
     fn test_installer_core_set_ip() {
-        let mut xanterella = Xanterella::new();
+        let xanterella = Xanterella::new();
         let mut install = XanterellaInstall::new(xanterella);
 
         install.set_ip("127.0.0.1");
-        assert!(matches!(&install.ip, String));
         assert!(!install.ip.is_empty());
         assert_eq!(install.ip, String::from("127.0.0.1"));
     }
 
     #[test]
     fn test_installer_core_set_drive() {
-        let mut xanterella = Xanterella::new();
+        let xanterella = Xanterella::new();
         let mut install = XanterellaInstall::new(xanterella);
 
         install.set_drive("nvme");
-        assert!(matches!(&install.drive, String));
         assert!(!install.drive.is_empty());
         assert_eq!(install.drive, String::from("nvme"));
     }
 
     #[test]
     fn test_installer_core_remote_integration() {
-        let mut xanterella = Xanterella::new();
+        let xanterella = Xanterella::new();
         let mut install = XanterellaInstall::new(xanterella);
 
         install.xanterella.set_debug(true);
@@ -70,7 +65,7 @@ mod tests {
 
     #[test]
     fn test_installer_core_remote_prep_fs() {
-        let mut xanterella = Xanterella::new();
+        let xanterella = Xanterella::new();
         let mut install = XanterellaInstall::new(xanterella);
 
         install.xanterella.set_debug(true);
@@ -82,7 +77,7 @@ mod tests {
 
     #[test]
     fn test_installer_core_remote_install() {
-        let mut xanterella = Xanterella::new();
+        let xanterella = Xanterella::new();
         let mut install = XanterellaInstall::new(xanterella);
 
         install.xanterella.set_debug(true);
@@ -94,7 +89,7 @@ mod tests {
 
     #[test]
     fn test_installer_core_remote_install_cleanup() {
-        let mut xanterella = Xanterella::new();
+        let xanterella = Xanterella::new();
         let mut install = XanterellaInstall::new(xanterella);
 
         install.xanterella.set_debug(true);

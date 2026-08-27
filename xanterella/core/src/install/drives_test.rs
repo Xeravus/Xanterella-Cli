@@ -5,8 +5,8 @@ mod tests {
     use super::*;
     #[test]
     fn test_installer_drives_part_efi() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -25,8 +25,8 @@ mod tests {
 
     #[test]
     fn test_installer_drives_part_root() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -45,8 +45,8 @@ mod tests {
 
     #[test]
     fn test_installer_drives_format_efi() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -65,8 +65,8 @@ mod tests {
 
     #[test]
     fn test_installer_drives_format_root() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -85,8 +85,8 @@ mod tests {
 
     #[test]
     fn test_installer_drives_create_boot_dir() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -105,8 +105,8 @@ mod tests {
 
     #[test]
     fn test_installer_drives_mount_boot() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -125,8 +125,8 @@ mod tests {
 
     #[test]
     fn test_installer_drives_mount_root() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn test_installer_helper_sort_drives() {
-        let mut xanterella = Xanterella::new();
+        let xanterella = Xanterella::new();
         let mut install = XanterellaInstall::new(xanterella);
 
         let mock_json = r#"{
@@ -204,8 +204,8 @@ mod tests {
 
     #[test]
     fn test_installer_helper_get_drive_size() {
-        let mut xanterella = Xanterella::new();
-        let mut install = XanterellaInstall::new(xanterella);
+        let xanterella = Xanterella::new();
+        let install = XanterellaInstall::new(xanterella);
 
         let size1 = "1K";
         let size2 = "1M";
@@ -220,8 +220,8 @@ mod tests {
 
     #[test]
     fn test_installer_helper_get_drives() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -240,11 +240,11 @@ mod tests {
 
     #[test]
     fn test_installer_helper_get_part_name() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
-        let mut xanterella3 = Xanterella::new();
-        let mut xanterella4 = Xanterella::new();
-        let mut xanterella5 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
+        let xanterella3 = Xanterella::new();
+        let xanterella4 = Xanterella::new();
+        let xanterella5 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);

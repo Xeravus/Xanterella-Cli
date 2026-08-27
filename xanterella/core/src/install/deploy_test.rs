@@ -5,8 +5,8 @@ mod tests {
     use super::*;
     #[test]
     fn test_installer_deploy_nix_build() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -25,8 +25,8 @@ mod tests {
 
     #[test]
     fn test_installer_deploy_nix_copy() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -45,8 +45,8 @@ mod tests {
 
     #[test]
     fn test_installer_deploy_nix_create_profile() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -65,8 +65,8 @@ mod tests {
 
     #[test]
     fn test_installer_deploy_nix_prep_sys() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -85,8 +85,8 @@ mod tests {
 
     #[test]
     fn test_installer_deploy_nix_activate_sys() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -105,8 +105,8 @@ mod tests {
 
     #[test]
     fn test_installer_deploy_nix_activate_bootloader() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -125,8 +125,8 @@ mod tests {
 
     #[test]
     fn test_installer_deploy_nix_reboot_sys() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);

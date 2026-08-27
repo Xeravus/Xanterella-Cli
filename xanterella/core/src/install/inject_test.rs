@@ -5,8 +5,8 @@ mod tests {
     use super::*;
     #[test]
     fn test_installer_inject_inject_tailscale() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -25,8 +25,8 @@ mod tests {
 
     #[test]
     fn test_installer_inject_inject_wifi() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);

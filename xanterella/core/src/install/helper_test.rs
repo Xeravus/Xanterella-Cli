@@ -5,11 +5,11 @@ mod tests {
     use super::*;
     #[test]
     fn test_installer_helper_get_sshstring() {
-        let mut xanterella1 = Xanterella::new();
-        let mut xanterella2 = Xanterella::new();
-        let mut xanterella3 = Xanterella::new();
-        let mut xanterella4 = Xanterella::new();
-        let mut xanterella5 = Xanterella::new();
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
+        let xanterella3 = Xanterella::new();
+        let xanterella4 = Xanterella::new();
+        let xanterella5 = Xanterella::new();
 
         let mut install1 = XanterellaInstall::new(xanterella1);
         let mut install2 = XanterellaInstall::new(xanterella2);
@@ -68,7 +68,7 @@ mod tests {
 
     #[test]
     fn test_installer_helper_get_hardware() {
-        let mut xanterella = Xanterella::new();
+        let xanterella = Xanterella::new();
         let mut install = XanterellaInstall::new(xanterella);
 
         let result = install.get_hardware();
