@@ -138,5 +138,35 @@ impl Git for Xanterella {
 }
 
 #[cfg(test)]
-#[path = "git_test.rs"]
-mod tests;
+mod tests {
+    use super::*;
+    fn test_git_debug() -> Xanterella {
+        let mut xanterella = Xanterella::new();
+        xanterella.debug = true;
+        xanterella
+    }
+
+    #[test]
+    fn test_utils_git_git_commit() {
+        let result1 = test_git_debug().git_commit("Test");
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_utils_git_git_checkout() {
+        let result1 = test_git_debug().git_checkout(Branches::Main);
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_utils_git_git_merge() {
+        let result1 = test_git_debug().git_merge();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_utils_git_git_pr() {
+        let result1 = test_git_debug().git_merge();
+        assert!(result1.is_ok());
+    }
+}

@@ -1,10 +1,11 @@
 use crate::xanterella::*;
+use tokio::sync::broadcast::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn test_core_core_new() {
+    fn test_core_xanterella_set_core() {
         let data = Xanterella::new();
 
         assert!(matches!(
@@ -26,6 +27,7 @@ mod tests {
 
         assert!(data.path.is_empty());
         assert!(data.home.is_empty());
+        assert!(data.sender.is_none());
 
         assert_eq!(data.fast, false);
         assert_eq!(data.debug, false);
@@ -33,7 +35,7 @@ mod tests {
     }
 
     #[test]
-    fn test_core_set_path() {
+    fn test_core_xanterella_set_path() {
         let mut data = Xanterella::new();
 
         data.set_path("test.path");
@@ -44,7 +46,7 @@ mod tests {
     }
 
     #[test]
-    fn test_core_set_home() {
+    fn test_core_xanterella_set_home() {
         let mut data = Xanterella::new();
 
         data.set_home("test.path");
@@ -55,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn test_core_set_fast() {
+    fn test_core_xanterella_set_fast() {
         let mut data = Xanterella::new();
 
         data.set_fast(true);
@@ -66,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn test_core_set_debug() {
+    fn test_core_xanterella_set_debug() {
         let mut data = Xanterella::new();
 
         data.set_debug(true);
@@ -77,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn test_core_set_automate() {
+    fn test_core_xanterella_set_automate() {
         let mut data = Xanterella::new();
 
         data.set_automate(true);
