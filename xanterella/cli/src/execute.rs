@@ -2,6 +2,7 @@ use cliclack::*;
 use tokio::sync::broadcast;
 
 use xanterella_core::{Xanterella, Config, xanterella::{EventFormat, EventState}, XanterellaInstall, get::Get, install::drives::Drives};
+
 use std::process;
 
 pub async fn execute_init_config() {
@@ -61,7 +62,10 @@ pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, fl
 
     init_spinner.start("Init");
     let mut xanterella = Xanterella::new();
-    xanterella.set_path(flake);
+    if let Err(err ) = xanterella.set_path(flake) {
+        println!("Error: {:#?}", err);
+        process::exit(1);
+    };
     let mut installer =  XanterellaInstall::new(xanterella.clone());
     installer.xanterella.set_automate(automate);
     installer.xanterella.set_fast(speed);

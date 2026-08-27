@@ -1,6 +1,8 @@
 use crate::prelude::*;
 use tokio::sync::broadcast::*;
 
+use crate::config::Config;
+
 #[derive(Debug, Clone)]
 pub struct Xanterella {
     pub path: String,
@@ -47,8 +49,13 @@ impl Xanterella {
         }
     }
 
-    pub fn set_path(&mut self, value: &str) {
-        self.path = value.to_string();
+    pub fn set_path(&mut self, value: &str) -> Result<(), EventsFailed> {
+        if !value.is_empty() {
+            self.path = value.to_string();
+        } else {
+            self.path = self.config_parse()?.flake;
+        }
+        Ok(())
     }
 
     pub fn set_home(&mut self, value: &str) {
