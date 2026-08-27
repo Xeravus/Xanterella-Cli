@@ -168,5 +168,54 @@ impl Deploy for XanterellaInstall {
 }
 
 #[cfg(test)]
-#[path = "deploy_test.rs"]
-mod tests;
+mod tests {
+    use super::*;
+    fn test_deploy_debug() -> XanterellaInstall {
+        let xanterella = Xanterella::new();
+        let mut install = XanterellaInstall::new(xanterella);
+        install.xanterella.debug = true;
+        install
+    }
+
+    #[test]
+    fn test_installer_deploy_nix_build() {
+        let result1 = test_deploy_debug().nix_build();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_deploy_nix_copy() {
+        let result1 = test_deploy_debug().nix_copy();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_deploy_nix_create_profile() {
+        let result1 = test_deploy_debug().create_profile();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_deploy_nix_prep_sys() {
+        let result1 = test_deploy_debug().prep_sys();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_deploy_nix_activate_sys() {
+        let result1 = test_deploy_debug().activate_sys();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_deploy_nix_activate_bootloader() {
+        let result1 = test_deploy_debug().activate_bootloader();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_deploy_nix_reboot_sys() {
+        let result1 = test_deploy_debug().reboot_sys();
+        assert!(result1.is_ok());
+    }
+}

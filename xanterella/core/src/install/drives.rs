@@ -256,5 +256,176 @@ impl Drives for XanterellaInstall {
 }
 
 #[cfg(test)]
-#[path = "drives_test.rs"]
-mod tests;
+mod tests {
+    use super::*;
+    fn test_drives_debug() -> XanterellaInstall {
+        let xanterella = Xanterella::new();
+        let mut install = XanterellaInstall::new(xanterella);
+        install.xanterella.debug = true;
+        install
+    }
+
+    #[test]
+    fn test_installer_drives_part_efi() {
+        let result1 = test_drives_debug().part_efi();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_drives_part_root() {
+        let result1 = test_drives_debug().part_root();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_drives_format_efi() {
+        let result1 = test_drives_debug().format_efi();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_drives_format_root() {
+        let result1 = test_drives_debug().format_root();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_drives_create_boot_dir() {
+        let result1 = test_drives_debug().create_boot_dir();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_drives_mount_boot() {
+        let result1 = test_drives_debug().mount_boot();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_drives_mount_root() {
+        let result1 = test_drives_debug().mount_root();
+        assert!(result1.is_ok());
+    }
+
+    #[test]
+    fn test_installer_helper_sort_drives() {
+        let xanterella = Xanterella::new();
+        let mut install = XanterellaInstall::new(xanterella);
+
+        let mock_json = r#"{
+            "blockdevices": [
+                {
+                    "name": "nvme0n1",
+                    "size": "1T",
+                    "type": "disk"
+                },
+                {
+                    "name": "sda",
+                    "size": "500G",
+                    "type": "disk"
+                },
+                {
+                    "name": "sdb1",
+                    "size": "800G",
+                    "type": "part"
+                },
+                {
+                    "name": "sdc1",
+                    "size": "600G",
+                    "type": "part"
+                },
+                {
+                    "name": "sdd1",
+                    "size": "400G",
+                    "type": "part"
+                }
+            ]
+        }"#;
+        let parsed: StorageDrives = serde_json::from_str(mock_json).unwrap();
+        let sorted: StorageDrives = install.sort_drives(parsed);
+
+        assert_eq!(sorted.blockdevices.len(), 5);
+        assert_eq!(sorted.blockdevices[0].name, "nvme0n1");
+        assert_eq!(sorted.blockdevices[0].size, "1T");
+        assert_eq!(sorted.blockdevices[0].device_type, "disk");
+
+        assert_eq!(sorted.blockdevices[1].name, "sdb1");
+        assert_eq!(sorted.blockdevices[1].size, "800G");
+        assert_eq!(sorted.blockdevices[1].device_type, "part");
+
+        assert_eq!(sorted.blockdevices[2].name, "sdc1");
+        assert_eq!(sorted.blockdevices[2].size, "600G");
+        assert_eq!(sorted.blockdevices[2].device_type, "part");
+
+        assert_eq!(sorted.blockdevices[3].name, "sda");
+        assert_eq!(sorted.blockdevices[3].size, "500G");
+        assert_eq!(sorted.blockdevices[3].device_type, "disk");
+
+        assert_eq!(sorted.blockdevices[4].name, "sdd1");
+        assert_eq!(sorted.blockdevices[4].size, "400G");
+        assert_eq!(sorted.blockdevices[4].device_type, "part");
+    }
+
+    #[test]
+    fn test_installer_helper_get_drive_size() {
+        let xanterella = Xanterella::new();
+        let install = XanterellaInstall::new(xanterella);
+
+        let size1 = "1K";
+        let size2 = "1M";
+        let size3 = "1G";
+        let size4 = "1T";
+
+        assert_eq!(install.get_drive_size(&size1), 1024);
+        assert_eq!(install.get_drive_size(&size2), 1048576);
+        assert_eq!(install.get_drive_size(&size3), 1073741824);
+        assert_eq!(install.get_drive_size(&size4), 1099511627776);
+    }
+
+    #[test]
+    fn test_installer_helper_get_drives() {
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
+
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
+
+        install1.ip = "127.0.0.1".to_string();
+        install2.ip = "127.127.127.127.127".to_string();
+
+        let result1 = install1.get_drives();
+        let result2 = install2.get_drives();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+
+        assert!(matches!(result2, Err(EventsFailed::GetDrives(_))));
+    }
+
+    #[test]
+    fn test_installer_helper_get_part_name() {
+        let xanterella1 = Xanterella::new();
+        let xanterella2 = Xanterella::new();
+        let xanterella3 = Xanterella::new();
+        let xanterella4 = Xanterella::new();
+        let xanterella5 = Xanterella::new();
+
+        let mut install1 = XanterellaInstall::new(xanterella1);
+        let mut install2 = XanterellaInstall::new(xanterella2);
+        let mut install3 = XanterellaInstall::new(xanterella3);
+        let mut install4 = XanterellaInstall::new(xanterella4);
+        let mut install5 = XanterellaInstall::new(xanterella5);
+
+        install1.drive = "nvme".to_string();
+        install2.drive = "mmclblk".to_string();
+        install3.drive = "sda".to_string();
+        install4.drive = "sdc".to_string();
+        install5.drive = "sdd".to_string();
+
+        assert_eq!(install1.get_part_name(1), "/dev/nvmep1".to_string());
+        assert_eq!(install2.get_part_name(2), "/dev/mmclblkp2".to_string());
+        assert_eq!(install3.get_part_name(3), "/dev/sda3".to_string());
+        assert_eq!(install4.get_part_name(4), "/dev/sdc4".to_string());
+        assert_eq!(install5.get_part_name(5), "/dev/sdd5".to_string());
+    }
+}
