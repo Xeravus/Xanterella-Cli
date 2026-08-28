@@ -85,7 +85,6 @@ pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, fl
     tokio::spawn(async move {
         if let Err(e) = installer.remote_integration() {
             println!("Install-Error: \nStage: 'Remote Integration' \n{:#?}", e);
-            process::exit(1);
             if let Err(e) = installer.xanterella.git_rollback(1) {
                 println!("Rollback-Error: \nGit could rollback. \n{:#?} \nCritical Error", e);
                 process::exit(2);
@@ -105,7 +104,6 @@ pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, fl
                 println!("Rollback-Error: \nGit could rollback. \n{:#?} \nCritical Error", e);
                 process::exit(2);
             }
-            process::exit(1);
         }
     });
     let mut spin = spinner();

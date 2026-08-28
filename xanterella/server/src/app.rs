@@ -1,19 +1,26 @@
 use std::sync::Arc;
+use std::convert::Infallible;
 
+use tokio_stream::Stream;
 use axum::{
     Json, Router,
     extract::{Path, State},
-    response::IntoResponse,
+    response::{IntoResponse, Sse, sse::{KeepAlive, Event}},
     routing::get,
 };
 use serde_json::{Value, json};
+use tokio_stream::{StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{Ping, Xanterella, XanterellaInstall};
 
 use crate::ApiError;
 use crate::AppState;
 
 pub fn create_app(state: Arc<AppState>) -> Router {
-    Router::new().route("/health", get(health_check)).route("/ping/:ip", get(get_ping)).with_state(state)
+    Router::new()
+        .route("/health", get(health_check))
+        .route("/ping/:ip", get(get_ping))
+        .route("/stream", get(event_stream))
+        .with_state(state)
 }
 
 pub async fn health_check() -> impl IntoResponse {
@@ -21,6 +28,22 @@ pub async fn health_check() -> impl IntoResponse {
         "status": "ok",
         "message": "Server is running",
     }))
+}
+
+pub async fn event_stream(State(state): State<Arc<AppState>>) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+    let rx = state.tx.subscribe();
+    let stream = BroadcastStream::new(rx).filter_map(|msg| {
+        match msg {
+            Ok(event) => {
+                let json_data = serde_json::to_string(&event).unwrap_or_default();
+                Some(Ok::<_, Infallible>(Event::default().data(json_data)))
+            }
+            Err(_) => {
+                None
+            }
+        }
+    });
+    Sse::new(stream).keep_alive(KeepAlive::default())
 }
 
 pub async fn get_ping(State(state): State<Arc<AppState>>, Path(ip): Path<String>) -> Result<Json<Value>, ApiError> {

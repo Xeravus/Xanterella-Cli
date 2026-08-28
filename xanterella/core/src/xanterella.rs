@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use tokio::sync::broadcast::*;
+use serde::Serialize;
 
 use crate::config::Config;
 
@@ -23,13 +24,13 @@ impl PartialEq for Xanterella {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct EventFormat {
     pub state: EventState,
     pub step: String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum EventState {
     Run,
     Finish, 
