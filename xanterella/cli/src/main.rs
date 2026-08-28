@@ -1,6 +1,5 @@
 mod commands;
 mod execute;
-mod ui_elements;
 
 use commands::cli_parse;
 

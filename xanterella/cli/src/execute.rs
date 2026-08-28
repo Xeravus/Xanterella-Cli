@@ -85,19 +85,27 @@ pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, fl
     tokio::spawn(async move {
         if let Err(e) = installer.remote_integration() {
             println!("Install-Error: \nStage: 'Remote Integration' \n{:#?}", e);
-            process::exit(2);
+            process::exit(1);
+            if let Err(e) = installer.xanterella.git_rollback(1) {
+                println!("Rollback-Error: \nGit could rollback. \n{:#?} \nCritical Error", e);
+                process::exit(2);
+            }
         }
         if let Err(e) = installer.remote_prep_fs() {
             println!("Install-Error: \nStage: 'Remote Prep Filesystem' \n{:#?}", e);
-            process::exit(3);
+            process::exit(1);
         }
         if let Err(e) = installer.remote_install() {
             println!("Install-Error: \nStage: 'Remote Install' \n{:#?}", e);
-            process::exit(4);
+            process::exit(1);
         }
         if let Err(e) = installer.remote_install_cleanup() {
             println!("Install-Error: \nStage: 'Remote Install Cleanup' \n{:#?}", e);
-            process::exit(5);
+            if let Err(e) = installer.xanterella.git_rollback(1) {
+                println!("Rollback-Error: \nGit could rollback. \n{:#?} \nCritical Error", e);
+                process::exit(2);
+            }
+            process::exit(1);
         }
     });
     let mut spin = spinner();
