@@ -19,6 +19,8 @@ pub trait Git {
     fn git_checkout(&mut self, branch: Branches) -> Result<(), EventsFailed>;
     fn git_merge(&mut self) -> Result<(), EventsFailed>;
     fn git_pr(&mut self, pr: PrType) -> Result<(), EventsFailed>;
+    fn git_rollback(&mut self, head: i8) -> Result<(), EventsFailed>;
+    fn git_reset(&mut self, head: i8) -> Result<(), EventsFailed>;
 }
 
 impl Git for Xanterella {
@@ -133,6 +135,36 @@ impl Git for Xanterella {
         };
 
         self.log_event(Events::OkGitPr);
+        Ok(())
+    }
+
+    fn git_rollback(&mut self, head: i8) -> Result<(), EventsFailed> {
+        self.log_event(Events::RunGitRollback);
+
+        self.git_reset(head)?;
+        self.git_checkout(Branches::Main)?;
+
+        self.log_event(Events::OkGitRollback);
+        Ok(())
+    }
+
+    fn git_reset(&mut self, head: i8) -> Result<(), EventsFailed> {
+        self.log_event(Events::RunGitReset);
+
+        let commit = format!("HEAD~{}", head);
+
+        if !self.debug {
+            let cmd = Command::new("git")
+                .args(["reset", "--hard", &commit])
+                .current_dir(self.get_path(Paths::Nixconf))
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+            if !cmd.status.success() {
+                return Err(EventsFailed::GitReset(String::from_utf8_lossy(&cmd.stderr).to_string()));
+            }
+        }
+        self.log_event(Events::OkGitReset);
         Ok(())
     }
 }
