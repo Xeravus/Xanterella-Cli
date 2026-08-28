@@ -1,7 +1,7 @@
 use cliclack::*;
 use tokio::sync::broadcast;
 
-use xanterella_core::{Xanterella, Config, xanterella::{EventFormat, EventState}, XanterellaInstall, get::Get, install::drives::Drives};
+use xanterella_core::{Xanterella, Config, xanterella::{EventFormat, EventState}, XanterellaInstall, get::Get, install::drives::Drives, Git};
 
 use std::process;
 

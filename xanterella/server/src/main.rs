@@ -1,9 +1,16 @@
+use std::sync::Arc;
+
 use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde_json::json;
+use tokio::sync::broadcast;
+use xanterella_core::xanterella::EventFormat;
 
 mod app;
-
 use crate::app::*;
+
+pub struct AppState {
+    pub tx: broadcast::Sender<EventFormat>,
+}
 
 #[allow(unused)]
 #[derive(Debug)]
@@ -30,7 +37,12 @@ impl IntoResponse for ApiError {
 
 #[tokio::main]
 async fn main() {
-    let app = create_app();
+    let (tx, _rx) = broadcast::channel::<EventFormat>(100);
+    let state = Arc::new(AppState {
+        tx,
+    });
+
+    let app = create_app(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.expect("Failed to bind Tcp Listener");
     println!("Server running on http://0.0.0.0:3000");
