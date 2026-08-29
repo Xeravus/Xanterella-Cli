@@ -9,3 +9,4 @@ tokio.workspace = true
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.149"
 prolyxena = { git = "https://github.com/Xeravus/Xanterella-Cli", branch = "final/staging" }
+sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio", "macros"] }
