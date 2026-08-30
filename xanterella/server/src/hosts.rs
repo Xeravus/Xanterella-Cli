@@ -4,19 +4,20 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use serde::Deserialize;
+use serde::{Deserialize};
 use serde_json::{Value, json};
 use xanterella_core::{
     db::DBHost,
     xanterella::{EventFormat, EventState},
 };
-
 use crate::{ApiError, AppState};
 
 #[derive(Deserialize)]
 pub struct CreateHost {
     pub hostname: String,
     pub ip: String,
+    pub profiles: Vec<Value>,
+    pub options: Vec<Value>,
 }
 
 pub async fn create_host(
@@ -26,7 +27,7 @@ pub async fn create_host(
         state: EventState::Run,
         step: format!("Add Host '{}'", payload.hostname),
     });
-    state.db.add_host(&payload.hostname, &payload.ip).await.map_err(|_| ApiError::InternalError)?;
+    state.db.add_host(&payload.hostname, &payload.ip, payload.profiles.clone(), payload.options).await.map_err(|_| ApiError::InternalError)?;
 
     let _ = state.tx.send(EventFormat {
         state: EventState::Finish,
