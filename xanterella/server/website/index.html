@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Xanterella Control</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .box { padding: 1.5rem; background: #f4f4f5; border-radius: 8px; }
+        pre { background: #18181b; color: #a3e635; padding: 1rem; border-radius: 6px; height: 150px; overflow-y: auto; }
+        input, button { margin-top: 5px; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Xanterella Test-Dashboard</h1>
+    
+    <div class="box" style="margin-bottom: 2rem;">
+        <h3>Live Event Stream</h3>
+        <pre id="stream-output">Verbunden... warte auf Events.</pre>
+    </div>
+
+    <div class="grid">
+        <div class="box">
+            <h3>Hosts</h3>
+            <ul id="hosts-list"></ul>
+            <input id="h-name" placeholder="Hostname"><br>
+            <input id="h-ip" placeholder="IP"><br>
+            <button onclick="addHost()">+ Host anlegen</button>
+        </div>
+
+        <div class="box">
+            <h3>Module</h3>
+            <ul id="modules-list"></ul>
+            <input id="m-name" placeholder="Modulname"><br>
+            <input id="m-desc" placeholder="Beschreibung"><br>
+            <input id="m-cat" placeholder="Kategorie"><br>
+            <input id="m-opt" placeholder="Option (z.B. sys.enable)"><br>
+            <button onclick="addModule()">+ Modul anlegen</button>
+        </div>
+    </div>
+
+    <script>
+        // 1. SSE Stream
+        const sse = new EventSource("/stream");
+        sse.onmessage = (e) => {
+            const out = document.getElementById("stream-output");
+            out.innerText += `\n${e.data}`;
+            out.scrollTop = out.scrollHeight;
+        };
+
+        // 2. Fetch Helper
+        async function loadData() {
+            const hRes = await fetch("/hosts");
+            const mRes = await fetch("/modules");
+            const hosts = await hRes.json();
+            const mods = await mRes.json();
+
+            document.getElementById("hosts-list").innerHTML = hosts.map(h => 
+                `<li>${h.hostname} - ${h.ip} <button onclick="del('/hosts/${h.hostname}')">X</button></li>`
+            ).join("");
+
+            document.getElementById("modules-list").innerHTML = mods.map(m => 
+                `<li>${m.name} <button onclick="del('/modules/${m.name}')">X</button></li>`
+            ).join("");
+        }
+
+        // 3. Mutations
+        async function addHost() {
+            await fetch("/hosts", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ hostname: document.getElementById("h-name").value, ip: document.getElementById("h-ip").value })
+            });
+            loadData();
+        }
+
+        async function addModule() {
+            await fetch("/modules", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: document.getElementById("m-name").value, desc: document.getElementById("m-desc").value,
+                    category: document.getElementById("m-cat").value, options: [document.getElementById("m-opt").value]
+                })
+            });
+            loadData();
+        }
+
+        async function del(path) {
+            await fetch(path, { method: "DELETE" });
+            loadData();
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

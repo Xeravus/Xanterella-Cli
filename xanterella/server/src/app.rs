@@ -4,7 +4,7 @@ use tokio_stream::Stream;
 use axum::{
     Json, Router,
     extract::{Path, State},
-    response::{IntoResponse, Sse, sse::{KeepAlive, Event}},
+    response::{IntoResponse, Sse, sse::{KeepAlive, Event}, Html},
     routing::{get},
 };
 use serde_json::{Value, json};
@@ -15,6 +15,7 @@ use crate::{ApiError, AppState, hosts::*, modules::*};
 
 pub fn create_app(state: Arc<AppState>) -> Router {
     Router::new()
+        .route("/", get(dashboard))
         .route("/health", get(health_check))
         .route("/ping/:ip", get(get_ping))
         .route("/stream", get(event_stream))
@@ -23,6 +24,10 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/modules", get(list_modules).post(create_modul))
         .route("/modules/:name", get(check_modul).delete(delete_modul))
         .with_state(state)
+}
+
+pub async fn dashboard() -> Html<&'static str> {
+    Html(include_str!("../website/index.html"))
 }
 
 pub async fn event_stream(State(state): State<Arc<AppState>>) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
