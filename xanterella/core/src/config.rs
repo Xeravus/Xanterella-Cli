@@ -29,7 +29,8 @@ impl Config for Xanterella {
     fn config_write(&mut self, data: Data) -> Result<(), EventsFailed> {
         self.log_event(Events::RunConfigWrite);
 
-        let json_string = serde_json::to_string_pretty(&data).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?;
+        let json_string =
+            serde_json::to_string_pretty(&data).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?;
         let json_path = PathBuf::from(self.get_path(Paths::Config)).join("config.json").display().to_string();
         fs::write(&json_path, &json_string).map_err(|err| EventsFailed::Fs(err.to_string()))?;
 
@@ -43,9 +44,10 @@ impl Config for Xanterella {
         let basic = Data {
             tailkey: String::from("tskey-auth-XXXXXXXXXXXXXXXXX-YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"),
             wifi: String::from("Obi Wlan Kenobi"),
-            flake: String::from("flake/flake.nix")
+            flake: String::from("flake/flake.nix"),
         };
-        let json_string = serde_json::to_string_pretty(&basic).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?;
+        let json_string =
+            serde_json::to_string_pretty(&basic).map_err(|err| EventsFailed::SerdeJson(err.to_string()))?;
         let json_path = PathBuf::from(self.get_path(Paths::Config)).join("config.json").display().to_string();
         fs::write(&json_path, &json_string).map_err(|err| EventsFailed::Fs(err.to_string()))?;
 

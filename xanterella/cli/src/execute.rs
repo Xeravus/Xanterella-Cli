@@ -1,9 +1,13 @@
+use std::process;
+
 use cliclack::*;
 use tokio::sync::broadcast;
-
-use xanterella_core::{Xanterella, Config, xanterella::{EventFormat, EventState}, XanterellaInstall, get::Get, install::drives::Drives, Git};
-
-use std::process;
+use xanterella_core::{
+    Config, Git, Xanterella, XanterellaInstall,
+    get::Get,
+    install::drives::Drives,
+    xanterella::{EventFormat, EventState},
+};
 
 pub async fn execute_init_config() {
     if let Err(_) = intro("Start Installer") {
@@ -62,11 +66,11 @@ pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, fl
 
     init_spinner.start("Init");
     let mut xanterella = Xanterella::new();
-    if let Err(err ) = xanterella.set_path(flake) {
+    if let Err(err) = xanterella.set_path(flake) {
         println!("Error: {:#?}", err);
         process::exit(1);
     };
-    let mut installer =  XanterellaInstall::new(xanterella.clone());
+    let mut installer = XanterellaInstall::new(xanterella.clone());
     installer.xanterella.set_automate(automate);
     installer.xanterella.set_fast(speed);
     installer.xanterella.set_debug(debug);
@@ -75,7 +79,7 @@ pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, fl
 
     let ip = choose_device(&xanterella).await;
     let drive = choose_drive(&mut installer).await;
-    
+
     installer.set_ip(&ip);
     installer.set_drive(&drive);
 
@@ -137,13 +141,9 @@ async fn choose_device(xanterella: &Xanterella) -> String {
         let mut select = select("Choose the target");
         for (_, i) in devices.devices {
             let ip = i.ip[0].clone();
-            select = select.item(ip.clone() , format!("{:>15} - {}", i.name, ip), "");
+            select = select.item(ip.clone(), format!("{:>15} - {}", i.name, ip), "");
         }
-        if let Ok(ans) = select.interact() {
-            ans.to_string()
-        } else {
-            String::from("127.0.0.1")
-        }
+        if let Ok(ans) = select.interact() { ans.to_string() } else { String::from("127.0.0.1") }
     } else {
         String::from("127.0.0.1")
     }
@@ -155,11 +155,7 @@ async fn choose_drive(xanterella: &mut XanterellaInstall) -> String {
         for i in drives.blockdevices {
             select = select.item(i.name.clone(), format!("{:>20} - {}", i.name, i.size), "");
         }
-        if let Ok(ans) = select.interact() {
-            ans.to_string()
-        } else {
-            String::from("/dev/null")
-        }
+        if let Ok(ans) = select.interact() { ans.to_string() } else { String::from("/dev/null") }
     } else {
         String::from("/dev/null")
     }

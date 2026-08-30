@@ -1,8 +1,8 @@
-use crate::prelude::*;
-use tokio::sync::broadcast::*;
 use serde::Serialize;
+use tokio::sync::broadcast::*;
 
 use crate::config::Config;
+use crate::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Xanterella {
@@ -16,11 +16,11 @@ pub struct Xanterella {
 
 impl PartialEq for Xanterella {
     fn eq(&self, other: &Self) -> bool {
-        self.path == other.path &&
-        self.home == other.home &&
-        self.fast == other.fast &&
-        self.debug == other.debug &&
-        self.automate == other.automate
+        self.path == other.path
+            && self.home == other.home
+            && self.fast == other.fast
+            && self.debug == other.debug
+            && self.automate == other.automate
     }
 }
 
@@ -33,7 +33,7 @@ pub struct EventFormat {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum EventState {
     Run,
-    Finish, 
+    Finish,
     Failed,
 }
 

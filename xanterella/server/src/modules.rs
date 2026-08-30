@@ -4,9 +4,12 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use xanterella_core::{xanterella::{EventFormat, EventState}, db::DBModul};
+use xanterella_core::{
+    db::DBModul,
+    xanterella::{EventFormat, EventState},
+};
 
 use crate::{ApiError, AppState};
 
@@ -18,12 +21,18 @@ pub struct CreateModul {
     pub options: Vec<Value>,
 }
 
-pub async fn create_modul(State(state): State<Arc<AppState>>, Json(payload): Json<CreateModul>) -> Result<Json<serde_json::Value>, ApiError> {
+pub async fn create_modul(
+    State(state): State<Arc<AppState>>, Json(payload): Json<CreateModul>,
+) -> Result<Json<serde_json::Value>, ApiError> {
     let _ = state.tx.send(EventFormat {
         state: EventState::Run,
         step: format!("Add Modul '{}'", payload.name),
     });
-    state.db.add_modul(&payload.name, &payload.desc, &payload.category, payload.options).await.map_err(|_| ApiError::InternalError )?;
+    state
+        .db
+        .add_modul(&payload.name, &payload.desc, &payload.category, payload.options)
+        .await
+        .map_err(|_| ApiError::InternalError)?;
 
     let _ = state.tx.send(EventFormat {
         state: EventState::Finish,
@@ -36,7 +45,9 @@ pub async fn create_modul(State(state): State<Arc<AppState>>, Json(payload): Jso
     })))
 }
 
-pub async fn delete_modul(State(state): State<Arc<AppState>>, Path(name): Path<String>) -> Result<Json<Value>, ApiError> {
+pub async fn delete_modul(
+    State(state): State<Arc<AppState>>, Path(name): Path<String>,
+) -> Result<Json<Value>, ApiError> {
     let _ = state.tx.send(EventFormat {
         state: EventState::Run,
         step: format!("Delete Modul '{}'", name),
@@ -53,7 +64,7 @@ pub async fn delete_modul(State(state): State<Arc<AppState>>, Path(name): Path<S
     });
     Ok(Json(json!({
         "status": "success",
-        "modulname": name 
+        "modulname": name
     })))
 }
 
@@ -62,7 +73,9 @@ pub async fn list_modules(State(state): State<Arc<AppState>>) -> Result<Json<Vec
     Ok(Json(modules))
 }
 
-pub async fn check_modul(State(state): State<Arc<AppState>>, Path(name): Path<String>) -> Result<Json<DBModul>, ApiError> {
+pub async fn check_modul(
+    State(state): State<Arc<AppState>>, Path(name): Path<String>,
+) -> Result<Json<DBModul>, ApiError> {
     let modul = state.db.get_modul(&name).await.map_err(|_| ApiError::InternalError)?;
     match modul {
         Some(h) => Ok(Json(h)),

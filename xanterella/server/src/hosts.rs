@@ -6,7 +6,10 @@ use axum::{
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
-use xanterella_core::{xanterella::{EventFormat, EventState}, db::DBHost};
+use xanterella_core::{
+    db::DBHost,
+    xanterella::{EventFormat, EventState},
+};
 
 use crate::{ApiError, AppState};
 
@@ -16,12 +19,14 @@ pub struct CreateHost {
     pub ip: String,
 }
 
-pub async fn create_host(State(state): State<Arc<AppState>>, Json(payload): Json<CreateHost>) -> Result<Json<serde_json::Value>, ApiError> {
+pub async fn create_host(
+    State(state): State<Arc<AppState>>, Json(payload): Json<CreateHost>,
+) -> Result<Json<serde_json::Value>, ApiError> {
     let _ = state.tx.send(EventFormat {
         state: EventState::Run,
         step: format!("Add Host '{}'", payload.hostname),
     });
-    state.db.add_host(&payload.hostname, &payload.ip).await.map_err(|_| ApiError::InternalError )?;
+    state.db.add_host(&payload.hostname, &payload.ip).await.map_err(|_| ApiError::InternalError)?;
 
     let _ = state.tx.send(EventFormat {
         state: EventState::Finish,
@@ -34,7 +39,9 @@ pub async fn create_host(State(state): State<Arc<AppState>>, Json(payload): Json
     })))
 }
 
-pub async fn delete_host(State(state): State<Arc<AppState>>, Path(hostname): Path<String>) -> Result<Json<Value>, ApiError> {
+pub async fn delete_host(
+    State(state): State<Arc<AppState>>, Path(hostname): Path<String>,
+) -> Result<Json<Value>, ApiError> {
     let _ = state.tx.send(EventFormat {
         state: EventState::Run,
         step: format!("Delete Host '{}'", hostname),
@@ -51,7 +58,7 @@ pub async fn delete_host(State(state): State<Arc<AppState>>, Path(hostname): Pat
     });
     Ok(Json(json!({
         "status": "success",
-        "hostname": hostname 
+        "hostname": hostname
     })))
 }
 
@@ -60,7 +67,9 @@ pub async fn list_hosts(State(state): State<Arc<AppState>>) -> Result<Json<Vec<D
     Ok(Json(hosts))
 }
 
-pub async fn check_host(State(state): State<Arc<AppState>>, Path(hostname): Path<String>) -> Result<Json<DBHost>, ApiError> {
+pub async fn check_host(
+    State(state): State<Arc<AppState>>, Path(hostname): Path<String>,
+) -> Result<Json<DBHost>, ApiError> {
     let host = state.db.get_host(&hostname).await.map_err(|_| ApiError::InternalError)?;
     match host {
         Some(h) => Ok(Json(h)),

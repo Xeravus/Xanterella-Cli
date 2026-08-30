@@ -1,11 +1,11 @@
 pub mod config;
+pub mod db;
 pub mod get;
 pub mod git;
 pub mod install;
 pub mod nix;
 pub mod result;
 pub mod xanterella;
-pub mod db;
 
 pub mod prelude;
 

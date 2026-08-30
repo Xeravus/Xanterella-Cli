@@ -1,13 +1,16 @@
-use std::{sync::Arc, convert::Infallible};
+use std::{convert::Infallible, sync::Arc};
 
-use tokio_stream::Stream;
 use axum::{
     Json, Router,
     extract::{Path, State},
-    response::{IntoResponse, Sse, sse::{KeepAlive, Event}, Html},
-    routing::{get},
+    response::{
+        Html, IntoResponse, Sse,
+        sse::{Event, KeepAlive},
+    },
+    routing::get,
 };
 use serde_json::{Value, json};
+use tokio_stream::Stream;
 use tokio_stream::{StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{Ping, Xanterella, XanterellaInstall};
 
@@ -32,16 +35,12 @@ pub async fn dashboard() -> Html<&'static str> {
 
 pub async fn event_stream(State(state): State<Arc<AppState>>) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     let rx = state.tx.subscribe();
-    let stream = BroadcastStream::new(rx).filter_map(|msg| {
-        match msg {
-            Ok(event) => {
-                let json_data = serde_json::to_string(&event).unwrap_or_default();
-                Some(Ok::<_, Infallible>(Event::default().data(json_data)))
-            }
-            Err(_) => {
-                None
-            }
+    let stream = BroadcastStream::new(rx).filter_map(|msg| match msg {
+        Ok(event) => {
+            let json_data = serde_json::to_string(&event).unwrap_or_default();
+            Some(Ok::<_, Infallible>(Event::default().data(json_data)))
         }
+        Err(_) => None,
     });
     Sse::new(stream).keep_alive(KeepAlive::default())
 }
@@ -69,4 +68,3 @@ pub async fn health_check() -> impl IntoResponse {
         "message": "Server is running",
     }))
 }
-
