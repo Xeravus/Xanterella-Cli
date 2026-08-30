@@ -1,3 +1,7 @@
+pub mod app;
+pub mod hosts;
+pub mod modules;
+
 use std::sync::Arc;
 
 use axum::{Json, http::StatusCode, response::IntoResponse};
@@ -5,7 +9,6 @@ use serde_json::json;
 use tokio::sync::broadcast;
 use xanterella_core::{xanterella::EventFormat, db::Database};
 
-mod app;
 use crate::app::*;
 
 pub struct AppState {
@@ -15,7 +18,7 @@ pub struct AppState {
 
 #[allow(unused)]
 #[derive(Debug)]
-enum ApiError {
+pub enum ApiError {
     NotFound,
     InvalidInput(String),
     InternalError,
