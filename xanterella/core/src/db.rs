@@ -29,6 +29,14 @@ pub struct DBModul {
     pub options: sqlx::types::Json<Vec<String>>,
 }
 
+#[derive(Serialize, Deserialize, FromRow)]
+pub struct DBProfile {
+    pub id: i64,
+    pub name: String,
+    pub dir: String,
+    pub options: sqlx::types::Json<Vec<String>>,
+}
+
 impl Database {
     pub async fn init(db_url: &str) -> Result<Self, sqlx::Error> {
         let pool = SqlitePoolOptions::new().max_connections(5).connect(db_url).await?;
@@ -62,9 +70,14 @@ impl Database {
         Ok(())
     }
 
+    pub async fn add_profile(&self, name: &str, dir: &str, options: Vec<serde_json::Value>) -> Result<(), sqlx::Error> {
+        let json_options = Json(options);
+        sqlx::query!("INSERT INTO profiles (name, dir, options) VALUES (?, ?, ?)", name, dir, json_options).execute(&self.pool).await?;
+        Ok(())
+    }
+
     pub async fn list_hosts(&self) -> Result<Vec<DBHost>, sqlx::Error> {
-        let hosts =
-            sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, profiles as 'profiles: Json<Vec<String>>', options as 'options: Json<Vec<String>>' FROM hosts").fetch_all(&self.pool).await?;
+        let hosts = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, profiles as 'profiles: Json<Vec<String>>', options as 'options: Json<Vec<String>>' FROM hosts").fetch_all(&self.pool).await?;
         Ok(hosts)
     }
 
@@ -76,6 +89,11 @@ impl Database {
         .fetch_all(&self.pool)
         .await?;
         Ok(modules)
+    }
+
+    pub async fn list_profiles(&self) -> Result<Vec<DBProfile>, sqlx::Error> {
+        let profiles = sqlx::query_as!(DBProfile, "SELECT id as 'id!', name, dir, options as 'options: Json<Vec<String>>' FROM profiles").fetch_all(&self.pool).await?;
+        Ok(profiles)
     }
 
     pub async fn get_host(&self, hostname: &str) -> Result<Option<DBHost>, sqlx::Error> {
@@ -91,6 +109,12 @@ impl Database {
         Ok(modul)
     }
 
+    pub async fn get_profile(&self, name: &str) -> Result<Option<DBProfile>, sqlx::Error> {
+        let modul = sqlx::query_as!(DBProfile, "SELECT id as 'id!', name, dir, options as 'options: Json<Vec<String>>' FROM profiles WHERE name = ?", name)
+            .fetch_optional(&self.pool).await?;
+        Ok(modul)
+    }
+
     pub async fn delete_host(&self, hostname: &str) -> Result<u64, sqlx::Error> {
         let result = sqlx::query!("DELETE FROM hosts WHERE hostname = ?", hostname).execute(&self.pool).await?;
         Ok(result.rows_affected())
@@ -98,6 +122,11 @@ impl Database {
 
     pub async fn delete_modul(&self, name: &str) -> Result<u64, sqlx::Error> {
         let result = sqlx::query!("DELETE FROM modules WHERE name = ?", name).execute(&self.pool).await?;
+        Ok(result.rows_affected())
+    }
+
+    pub async fn delete_profile(&self, name: &str) -> Result<u64, sqlx::Error> {
+        let result = sqlx::query!("DELETE FROM profiles WHERE name = ?", name).execute(&self.pool).await?;
         Ok(result.rows_affected())
     }
 }

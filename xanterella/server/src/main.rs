@@ -1,6 +1,7 @@
 pub mod app;
 pub mod hosts;
 pub mod modules;
+pub mod profiles;
 
 use std::sync::Arc;
 
