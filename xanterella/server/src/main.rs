@@ -8,7 +8,7 @@ use std::sync::Arc;
 use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde_json::json;
 use tokio::sync::broadcast;
-use xanterella_core::{db::Database, xanterella::EventFormat};
+use xanterella_core::{database::db::Database, xanterella::EventFormat};
 
 use crate::app::*;
 

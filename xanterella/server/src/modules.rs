@@ -7,7 +7,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use xanterella_core::{
-    db::DBModul,
+    database::db::DBModul,
     xanterella::{EventFormat, EventState},
 };
 

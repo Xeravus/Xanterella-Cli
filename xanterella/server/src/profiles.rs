@@ -7,7 +7,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use xanterella_core::{
-    db::DBProfile,
+    database::db::DBProfile,
     xanterella::{EventFormat, EventState},
 };
 
@@ -80,4 +80,36 @@ pub async fn check_profile(
         Some(h) => Ok(Json(h)),
         None => Err(ApiError::NotFound),
     }
+}
+
+pub async fn profile_add_option(State(state): State<Arc<AppState>>, Path(name): Path<String>, Json(payload): Json<serde_json::Value>) -> Result<Json<Value>, ApiError> {
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Run,
+        step: format!("Add Option to Profile '{}'", name),
+    });
+    state.db.profile_add_option(&name, payload).await.map_err(|_| ApiError::InternalError)?;
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Finish,
+        step: format!("Added Option to Profile '{}'", name),
+    });
+    Ok(Json(json!({
+        "status": "success",
+        "profile": name,
+    })))
+}
+
+pub async fn profile_remove_option(State(state): State<Arc<AppState>>, Path(name): Path<String>, Json(payload): Json<serde_json::Value>) -> Result<Json<Value>, ApiError> {
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Run,
+        step: format!("Remove Option from Profile '{}'", name),
+    });
+    state.db.profile_remove_option(&name, payload).await.map_err(|_| ApiError::InternalError)?;
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Finish,
+        step: format!("Removed Option from Profile '{}'", name),
+    });
+    Ok(Json(json!({
+        "status": "success",
+        "profile": name,
+    })))
 }

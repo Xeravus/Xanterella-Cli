@@ -7,14 +7,18 @@ use axum::{
         Html, IntoResponse, Sse,
         sse::{Event, KeepAlive},
     },
-    routing::get,
+    routing::{
+        get,
+        post,
+        delete,
+    },
 };
 use serde_json::{Value, json};
 use tokio_stream::Stream;
 use tokio_stream::{StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{Ping, Xanterella, XanterellaInstall};
 
-use crate::{ApiError, AppState, hosts::*, modules::*};
+use crate::{ApiError, AppState, hosts::*, profiles::*, modules::*};
 
 pub fn create_app(state: Arc<AppState>) -> Router {
     Router::new()
@@ -24,6 +28,12 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/stream", get(event_stream))
         .route("/hosts", get(list_hosts).post(create_host))
         .route("/hosts/:hostname", get(check_host).delete(delete_host))
+        .route("/hosts/:hostname/profiles", post(host_add_profile))
+        .route("/hosts/:hostname/profiles/:profile", delete(host_remove_profile))
+        .route("/profiles", get(list_profiles).post(create_profile))
+        .route("/profiles/:name", get(check_profile).delete(delete_profile))
+        .route("/profiles/:name/option", post(profile_add_option))
+        .route("/profiles/:name/option/:option", delete(profile_remove_option))
         .route("/modules", get(list_modules).post(create_modul))
         .route("/modules/:name", get(check_modul).delete(delete_modul))
         .with_state(state)
