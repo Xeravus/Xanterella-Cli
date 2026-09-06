@@ -50,9 +50,9 @@ impl Database {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use sqlx::sqlite::SqlitePoolOptions;
+    
 
-    use super::*;
+    
     use crate::database::tests_utils::setup_test_db;
 
     #[tokio::test]

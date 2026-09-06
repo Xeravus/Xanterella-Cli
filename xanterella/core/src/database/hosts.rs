@@ -97,9 +97,9 @@ impl Database {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use sqlx::sqlite::SqlitePoolOptions;
+    
 
-    use super::*;
+    
     use crate::database::tests_utils::setup_test_db;
 
     #[tokio::test]
@@ -149,7 +149,7 @@ mod tests {
 
     #[tokio::test]
     async fn db_profiles_crud() {
-        let mut db = setup_test_db().await;
+        let db = setup_test_db().await;
         db.add_host("profile-node", "10.0.0.1", vec![], vec![]).await.unwrap();
         db.host_add_profile("profile-node", json!("web-server")).await.unwrap();
         let host = db.get_host("profile-node").await.unwrap().unwrap();
@@ -166,7 +166,7 @@ mod tests {
 
     #[tokio::test]
     async fn db_options_crud() {
-        let mut db = setup_test_db().await;
+        let db = setup_test_db().await;
         db.add_host("options-node", "10.0.0.2", vec![], vec![]).await.unwrap();
         db.host_add_option("options-node", json!("sys.port=80")).await.unwrap();
         let host = db.get_host("options-node").await.unwrap().unwrap();

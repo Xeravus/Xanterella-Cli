@@ -7,7 +7,7 @@ use crate::database::db::Database;
 
 #[cfg(test)]
 mod tests_utils {
-    use serde_json::json;
+    
     use sqlx::sqlite::SqlitePoolOptions;
 
     use super::*;
