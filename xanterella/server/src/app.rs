@@ -7,18 +7,14 @@ use axum::{
         Html, IntoResponse, Sse,
         sse::{Event, KeepAlive},
     },
-    routing::{
-        get,
-        post,
-        delete,
-    },
+    routing::{delete, get, post},
 };
 use serde_json::{Value, json};
 use tokio_stream::Stream;
 use tokio_stream::{StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{Ping, Xanterella, XanterellaInstall};
 
-use crate::{ApiError, AppState, hosts::*, profiles::*, modules::*};
+use crate::{ApiError, AppState, hosts::*, modules::*, profiles::*};
 
 pub fn create_app(state: Arc<AppState>) -> Router {
     Router::new()

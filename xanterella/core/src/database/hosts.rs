@@ -1,15 +1,23 @@
-use sqlx::{
-    types::Json,
-};
+use sqlx::types::Json;
 
 use crate::database::db::DBHost;
 use crate::database::db::Database;
 
 impl Database {
-    pub async fn add_host(&self, hostname: &str, ip: &str, profiles: Vec<serde_json::Value>, options: Vec<serde_json::Value>) -> Result<(), sqlx::Error> {
+    pub async fn add_host(
+        &self, hostname: &str, ip: &str, profiles: Vec<serde_json::Value>, options: Vec<serde_json::Value>,
+    ) -> Result<(), sqlx::Error> {
         let json_profiles = Json(profiles);
         let json_options = Json(options);
-        sqlx::query!("INSERT INTO hosts (hostname, ip, profiles, options) VALUES (?, ?, ?, ?)", hostname, ip, json_profiles, json_options).execute(&self.pool).await?;
+        sqlx::query!(
+            "INSERT INTO hosts (hostname, ip, profiles, options) VALUES (?, ?, ?, ?)",
+            hostname,
+            ip,
+            json_profiles,
+            json_options
+        )
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
 
@@ -37,10 +45,9 @@ impl Database {
         };
         host.profiles.0.push(profile.to_string());
         let json_host = Json(host.profiles.0);
-        sqlx::query!("UPDATE hosts SET profiles = ? WHERE hostname = ?", 
-            json_host, 
-            hostname
-        ).execute(&self.pool).await?;
+        sqlx::query!("UPDATE hosts SET profiles = ? WHERE hostname = ?", json_host, hostname)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
 
@@ -53,10 +60,9 @@ impl Database {
             host.profiles.0.swap_remove(index);
         }
         let json_host = Json(host.profiles.0);
-        sqlx::query!("UPDATE hosts SET profiles = ? WHERE hostname = ?", 
-            json_host, 
-            hostname
-        ).execute(&self.pool).await?;
+        sqlx::query!("UPDATE hosts SET profiles = ? WHERE hostname = ?", json_host, hostname)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
 
@@ -67,10 +73,9 @@ impl Database {
         };
         host.options.0.push(option.to_string());
         let json_host = Json(host.options.0);
-        sqlx::query!("UPDATE hosts SET options = ? WHERE hostname = ?", 
-            json_host, 
-            hostname
-        ).execute(&self.pool).await?;
+        sqlx::query!("UPDATE hosts SET options = ? WHERE hostname = ?", json_host, hostname)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
 
@@ -83,19 +88,18 @@ impl Database {
             host.options.0.swap_remove(index);
         }
         let json_host = Json(host.options.0);
-        sqlx::query!("UPDATE hosts SET options = ? WHERE hostname = ?", 
-            json_host, 
-            hostname
-        ).execute(&self.pool).await?;
+        sqlx::query!("UPDATE hosts SET options = ? WHERE hostname = ?", json_host, hostname)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
-
 }
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use sqlx::sqlite::SqlitePoolOptions;
     use serde_json::json;
+    use sqlx::sqlite::SqlitePoolOptions;
+
+    use super::*;
     use crate::database::tests_utils::setup_test_db;
 
     #[tokio::test]
@@ -108,7 +112,7 @@ mod tests {
             .await
             .expect("Fehler beim Hinzufügen des Hosts");
         let hosts = db.list_hosts().await.expect("Fehler beim Auslesen");
-        
+
         assert_eq!(hosts.len(), 1);
         assert_eq!(hosts[0].hostname, "test-node-01");
         assert_eq!(hosts[0].ip, "100.100.100.1");

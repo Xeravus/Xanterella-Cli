@@ -1,9 +1,6 @@
-use serde::{Deserialize, Serialize};
-use sqlx::{
-    types::Json,
-};
+use sqlx::types::Json;
 
-use crate::database::{Database, db::{DBModul}};
+use crate::database::{Database, db::DBModul};
 
 impl Database {
     pub async fn add_modul(

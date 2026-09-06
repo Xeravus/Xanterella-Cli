@@ -4,12 +4,13 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use serde::{Deserialize};
+use serde::Deserialize;
 use serde_json::{Value, json};
 use xanterella_core::{
     database::db::DBHost,
     xanterella::{EventFormat, EventState},
 };
+
 use crate::{ApiError, AppState};
 
 #[derive(Deserialize)]
@@ -27,7 +28,11 @@ pub async fn create_host(
         state: EventState::Run,
         step: format!("Add Host '{}'", payload.hostname),
     });
-    state.db.add_host(&payload.hostname, &payload.ip, payload.profiles.clone(), payload.options).await.map_err(|_| ApiError::InternalError)?;
+    state
+        .db
+        .add_host(&payload.hostname, &payload.ip, payload.profiles.clone(), payload.options)
+        .await
+        .map_err(|_| ApiError::InternalError)?;
 
     let _ = state.tx.send(EventFormat {
         state: EventState::Finish,
@@ -78,7 +83,9 @@ pub async fn check_host(
     }
 }
 
-pub async fn host_add_profile(State(state): State<Arc<AppState>>, Path(hostname): Path<String>, Json(payload): Json<serde_json::Value>) -> Result<Json<Value>, ApiError> {
+pub async fn host_add_profile(
+    State(state): State<Arc<AppState>>, Path(hostname): Path<String>, Json(payload): Json<serde_json::Value>,
+) -> Result<Json<Value>, ApiError> {
     let _ = state.tx.send(EventFormat {
         state: EventState::Run,
         step: format!("Add Profile to Host '{}'", hostname),
@@ -94,7 +101,9 @@ pub async fn host_add_profile(State(state): State<Arc<AppState>>, Path(hostname)
     })))
 }
 
-pub async fn host_remove_profile(State(state): State<Arc<AppState>>, Path(hostname): Path<String>, Json(payload): Json<serde_json::Value>) -> Result<Json<Value>, ApiError> {
+pub async fn host_remove_profile(
+    State(state): State<Arc<AppState>>, Path(hostname): Path<String>, Json(payload): Json<serde_json::Value>,
+) -> Result<Json<Value>, ApiError> {
     let _ = state.tx.send(EventFormat {
         state: EventState::Run,
         step: format!("Remove Profile from Host '{}'", hostname),
@@ -110,7 +119,9 @@ pub async fn host_remove_profile(State(state): State<Arc<AppState>>, Path(hostna
     })))
 }
 
-pub async fn host_add_option(State(state): State<Arc<AppState>>, Path(hostname): Path<String>, Json(payload): Json<serde_json::Value>) -> Result<Json<Value>, ApiError> {
+pub async fn host_add_option(
+    State(state): State<Arc<AppState>>, Path(hostname): Path<String>, Json(payload): Json<serde_json::Value>,
+) -> Result<Json<Value>, ApiError> {
     let _ = state.tx.send(EventFormat {
         state: EventState::Run,
         step: format!("Add Option to Host '{}'", hostname),
@@ -126,7 +137,9 @@ pub async fn host_add_option(State(state): State<Arc<AppState>>, Path(hostname):
     })))
 }
 
-pub async fn host_remove_option(State(state): State<Arc<AppState>>, Path(hostname): Path<String>, Json(payload): Json<serde_json::Value>) -> Result<Json<Value>, ApiError> {
+pub async fn host_remove_option(
+    State(state): State<Arc<AppState>>, Path(hostname): Path<String>, Json(payload): Json<serde_json::Value>,
+) -> Result<Json<Value>, ApiError> {
     let _ = state.tx.send(EventFormat {
         state: EventState::Run,
         step: format!("Remove Option from Host '{}'", hostname),

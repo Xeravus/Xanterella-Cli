@@ -27,11 +27,7 @@ pub async fn create_profile(
         state: EventState::Run,
         step: format!("Add Profile '{}'", payload.name),
     });
-    state
-        .db
-        .add_profile(&payload.name, &payload.dir, payload.options)
-        .await
-        .map_err(|_| ApiError::InternalError)?;
+    state.db.add_profile(&payload.name, &payload.dir, payload.options).await.map_err(|_| ApiError::InternalError)?;
 
     let _ = state.tx.send(EventFormat {
         state: EventState::Finish,
@@ -82,7 +78,9 @@ pub async fn check_profile(
     }
 }
 
-pub async fn profile_add_option(State(state): State<Arc<AppState>>, Path(name): Path<String>, Json(payload): Json<serde_json::Value>) -> Result<Json<Value>, ApiError> {
+pub async fn profile_add_option(
+    State(state): State<Arc<AppState>>, Path(name): Path<String>, Json(payload): Json<serde_json::Value>,
+) -> Result<Json<Value>, ApiError> {
     let _ = state.tx.send(EventFormat {
         state: EventState::Run,
         step: format!("Add Option to Profile '{}'", name),
@@ -98,7 +96,9 @@ pub async fn profile_add_option(State(state): State<Arc<AppState>>, Path(name): 
     })))
 }
 
-pub async fn profile_remove_option(State(state): State<Arc<AppState>>, Path(name): Path<String>, Json(payload): Json<serde_json::Value>) -> Result<Json<Value>, ApiError> {
+pub async fn profile_remove_option(
+    State(state): State<Arc<AppState>>, Path(name): Path<String>, Json(payload): Json<serde_json::Value>,
+) -> Result<Json<Value>, ApiError> {
     let _ = state.tx.send(EventFormat {
         state: EventState::Run,
         step: format!("Remove Option from Profile '{}'", name),

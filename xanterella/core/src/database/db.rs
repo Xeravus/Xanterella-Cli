@@ -10,8 +10,7 @@ pub struct Database {
     pub pool: SqlitePool,
 }
 
-#[derive(Serialize, FromRow)]
-#[derive(Debug, Clone)]
+#[derive(Serialize, FromRow, Debug, Clone)]
 pub struct DBHost {
     pub id: i64,
     pub hostname: String,
@@ -50,9 +49,10 @@ impl Database {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use sqlx::sqlite::SqlitePoolOptions;
     use serde_json::json;
+    use sqlx::sqlite::SqlitePoolOptions;
+
+    use super::*;
     use crate::database::tests_utils::setup_test_db;
 
     #[tokio::test]
