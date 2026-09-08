@@ -9,17 +9,10 @@ use serde_json::{Value, json};
 use xanterella_core::{
     database::db::DBHost,
     xanterella::{EventFormat, EventState},
+    prolyxena::CreateHost,
 };
 
 use crate::{ApiError, AppState};
-
-#[derive(Deserialize)]
-pub struct CreateHost {
-    pub hostname: String,
-    pub ip: String,
-    pub profiles: Vec<Value>,
-    pub options: Vec<Value>,
-}
 
 pub async fn create_host(
     State(state): State<Arc<AppState>>, Json(payload): Json<CreateHost>,
