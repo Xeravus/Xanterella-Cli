@@ -1,91 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-    <title>Xanterella Control</title>
+    <title>Xanterella Control Center</title>
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-        .box { padding: 1.5rem; background: #f4f4f5; border-radius: 8px; }
-        pre { background: #18181b; color: #a3e635; padding: 1rem; border-radius: 6px; height: 150px; overflow-y: auto; }
-        input, button { margin-top: 5px; padding: 5px; }
+        body { font-family: system-ui, sans-serif; background: #f4f4f5; margin: 0; padding: 2rem; color: #18181b; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        pre { background: #09090b; color: #a3e635; padding: 1rem; border-radius: 6px; height: 180px; overflow-y: auto; }
+        input, button { padding: 6px; margin: 4px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #3b82f6; color: white; border: none; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        .del-btn { background: #ef4444; padding: 2px 6px; font-size: 0.8rem; margin-left: auto; }
+        ul { list-style: none; padding: 0; }
+        li { background: #f9fafb; margin-bottom: 8px; padding: 10px; border-radius: 4px; border: 1px solid #e4e4e7; display: flex; flex-direction: column; }
+        .flex-row { display: flex; justify-content: space-between; align-items: center; }
+        .badge { background: #e4e4e7; font-size: 0.75rem; padding: 2px 6px; border-radius: 12px; margin: 2px; display: inline-block; }
     </style>
 </head>
 <body>
-    <h1>Xanterella Test-Dashboard</h1>
+    <h1 style="margin-top: 0;">Xanterella Control</h1>
     
-    <div class="box" style="margin-bottom: 2rem;">
-        <h3>Live Event Stream</h3>
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h3 style="margin-top: 0;">Live Event Stream</h3>
         <pre id="stream-output">Verbunden... warte auf Events.</pre>
     </div>
 
     <div class="grid">
-        <div class="box">
+        <!-- HOSTS -->
+        <div class="card">
             <h3>Hosts</h3>
             <ul id="hosts-list"></ul>
-            <input id="h-name" placeholder="Hostname"><br>
-            <input id="h-ip" placeholder="IP"><br>
-            <button onclick="addHost()">+ Host anlegen</button>
+            <hr>
+            <input id="h-name" placeholder="Hostname (z.B. node-1)"><br>
+            <input id="h-ip" placeholder="IP Adresse"><br>
+            <button onclick="addHost()">+ Host erstellen</button>
         </div>
 
-        <div class="box">
+        <!-- PROFILES -->
+        <div class="card">
+            <h3>Profile</h3>
+            <ul id="profiles-list"></ul>
+            <hr>
+            <input id="p-name" placeholder="Profilname (z.B. web-server)"><br>
+            <input id="p-dir" placeholder="Verzeichnis"><br>
+            <button onclick="addProfile()">+ Profil erstellen</button>
+        </div>
+
+        <!-- MODULES -->
+        <div class="card">
             <h3>Module</h3>
             <ul id="modules-list"></ul>
+            <hr>
             <input id="m-name" placeholder="Modulname"><br>
             <input id="m-desc" placeholder="Beschreibung"><br>
             <input id="m-cat" placeholder="Kategorie"><br>
-            <input id="m-opt" placeholder="Option (z.B. sys.enable)"><br>
-            <button onclick="addModule()">+ Modul anlegen</button>
+            <button onclick="addModule()">+ Modul erstellen</button>
         </div>
     </div>
 
     <script>
-        // 1. SSE Stream
         const sse = new EventSource("/stream");
         sse.onmessage = (e) => {
             const out = document.getElementById("stream-output");
-            out.innerText += `\n${e.data}`;
+            let data = JSON.parse(e.data);
+            out.innerText += `\n[${data.state}] ${data.step}`;
             out.scrollTop = out.scrollHeight;
         };
 
-        // 2. Fetch Helper
+        async function fetchAPI(url, method = "GET", body = null) {
+            const options = { method, headers: { "Content-Type": "application/json" } };
+            if (body) options.body = JSON.stringify(body);
+            await fetch(url, options);
+            loadData();
+        }
+
         async function loadData() {
-            const hRes = await fetch("/hosts");
-            const mRes = await fetch("/modules");
-            const hosts = await hRes.json();
-            const mods = await mRes.json();
+            const [hRes, pRes, mRes] = await Promise.all([fetch("/hosts"), fetch("/profiles"), fetch("/modules")]);
+            const [hosts, profiles, modules] = await Promise.all([hRes.json(), pRes.json(), mRes.json()]);
 
-            document.getElementById("hosts-list").innerHTML = hosts.map(h => 
-                `<li>${h.hostname} - ${h.ip} <button onclick="del('/hosts/${h.hostname}')">X</button></li>`
-            ).join("");
+            document.getElementById("hosts-list").innerHTML = hosts.map(h => `
+                <li>
+                    <div class="flex-row">
+                        <strong>${h.hostname}</strong> <span>${h.ip}</span>
+                        <button class="del-btn" onclick="fetchAPI('/hosts/${h.hostname}', 'DELETE')">X</button>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 0.85rem;">
+                        <div><strong>Profile:</strong> ${h.profiles.map(p => `<span class="badge">${p}</span>`).join('')}</div>
+                        <div><strong>Optionen:</strong> ${h.options.map(o => `<span class="badge">${o}</span>`).join('')}</div>
+                        <div style="margin-top: 5px;">
+                            <input id="add-p-${h.hostname}" placeholder="Profil anhängen" style="width: 100px; font-size: 0.7rem;">
+                            <button style="font-size: 0.7rem;" onclick="fetchAPI('/hosts/${h.hostname}/profiles', 'POST', document.getElementById('add-p-${h.hostname}').value)">Add</button>
+                        </div>
+                    </div>
+                </li>
+            `).join("");
 
-            document.getElementById("modules-list").innerHTML = mods.map(m => 
-                `<li>${m.name} <button onclick="del('/modules/${m.name}')">X</button></li>`
-            ).join("");
+            document.getElementById("profiles-list").innerHTML = profiles.map(p => `
+                <li>
+                    <div class="flex-row">
+                        <strong>${p.name}</strong> <span>${p.dir}</span>
+                        <button class="del-btn" onclick="fetchAPI('/profiles/${p.name}', 'DELETE')">X</button>
+                    </div>
+                </li>
+            `).join("");
+
+            document.getElementById("modules-list").innerHTML = modules.map(m => `
+                <li>
+                    <div class="flex-row">
+                        <strong>${m.name}</strong> <span>${m.category}</span>
+                        <button class="del-btn" onclick="fetchAPI('/modules/${m.name}', 'DELETE')">X</button>
+                    </div>
+                </li>
+            `).join("");
         }
 
-        // 3. Mutations
-        async function addHost() {
-            await fetch("/hosts", {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ hostname: document.getElementById("h-name").value, ip: document.getElementById("h-ip").value })
+        function addHost() {
+            fetchAPI("/hosts", "POST", { 
+                hostname: document.getElementById("h-name").value, 
+                ip: document.getElementById("h-ip").value, 
+                profiles: [], options: [] 
             });
-            loadData();
         }
 
-        async function addModule() {
-            await fetch("/modules", {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: document.getElementById("m-name").value, desc: document.getElementById("m-desc").value,
-                    category: document.getElementById("m-cat").value, options: [document.getElementById("m-opt").value]
-                })
+        function addProfile() {
+            fetchAPI("/profiles", "POST", { 
+                name: document.getElementById("p-name").value, 
+                dir: document.getElementById("p-dir").value, 
+                options: [] 
             });
-            loadData();
         }
 
-        async function del(path) {
-            await fetch(path, { method: "DELETE" });
-            loadData();
+        function addModule() {
+            fetchAPI("/modules", "POST", { 
+                name: document.getElementById("m-name").value, 
+                desc: document.getElementById("m-desc").value, 
+                category: document.getElementById("m-cat").value, 
+                options: [] 
+            });
         }
 
         loadData();
