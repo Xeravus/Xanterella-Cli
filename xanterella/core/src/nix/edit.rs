@@ -1,7 +1,7 @@
 use prolyxena::engine::formater::write::Write;
 use prolyxena::engine::generator::generate::Generate;
 use prolyxena::engine::generator::generate::Modify;
-use prolyxena::engine::generator::query::Search;
+use prolyxena::engine::generator::query::SearchContent;
 use prolyxena::engine::generator::remove::Delete;
 use prolyxena::engine::generator::remove::Remove;
 use prolyxena::engine::lexer::vfs::FsData;
