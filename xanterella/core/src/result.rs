@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, PartialEq)]
 pub enum EventsFailed {
     /// Generall Errors
     Failed(String),
@@ -15,6 +16,7 @@ pub enum EventsFailed {
     GitCheckoutCreate(String),
     GitMerge(String),
     GitPr(String),
+    GitReset(String),
 
     /// utils/Check.rs
     CheckNix(String),
@@ -58,6 +60,7 @@ pub enum EventsFailed {
     Prolyxena(String),
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Events {
     /// Utils
     /// utils/Git.rs
@@ -66,12 +69,16 @@ pub enum Events {
     RunGitCheckoutCreate,
     RunGitMerge,
     RunGitPr,
+    RunGitRollback,
+    RunGitReset,
 
     OkGitCommit,
     OkGitCheckout,
     OkGitCheckoutCreate,
     OkGitMerge,
     OkGitPr,
+    OkGitRollback,
+    OkGitReset,
 
     /// utils/Check.rs
     RunCheckNix,
@@ -81,9 +88,11 @@ pub enum Events {
     /// utils/Config.rs
     RunConfigCreateDir,
     RunConfigGenBasic,
+    RunConfigWrite,
 
     OkConfigCreateDir,
     OkConfigGenBasic,
+    OkConfigWrite,
 
     /// Installer
     /// installer/Core.rs

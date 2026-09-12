@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
-use xanterella_core::{Config, Ping, Xanterella, XanterellaInstall};
+use xanterella_core::{Ping, Xanterella, XanterellaInstall};
+
+use crate::execute::*;
 
 #[derive(Parser)]
 #[command(name = "Xanterella")]
@@ -22,6 +24,8 @@ pub enum Commands {
         speed: bool,
         #[arg(short = 'd', long = "debug")]
         debug: bool,
+        #[arg(short = 'f', long = "flake-dir")]
+        flake: String,
     },
 }
 
@@ -29,15 +33,13 @@ pub async fn cli_parse() {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Init => {
-            let mut xanterella = Xanterella::new();
-            let _ = xanterella.config_create_dir();
-            let _ = xanterella.config_gen_basic();
+            execute_init_config().await;
         }
         Commands::Ping {
             ip,
         } => {
-            let mut xanterella = Xanterella::new();
-            let mut installer = XanterellaInstall::new(&mut xanterella);
+            let xanterella = Xanterella::new();
+            let mut installer = XanterellaInstall::new(xanterella);
             installer.set_ip(ip);
             let _ = installer.ping();
         }
@@ -45,16 +47,9 @@ pub async fn cli_parse() {
             automate,
             speed,
             debug,
+            flake,
         } => {
-            let mut xanterella = Xanterella::new();
-            let mut installer = XanterellaInstall::new(&mut xanterella);
-            installer.xanterella.set_automate(*automate);
-            installer.xanterella.set_fast(*speed);
-            installer.xanterella.set_debug(*debug);
-            let _ = installer.remote_integration();
-            let _ = installer.remote_prep_fs();
-            let _ = installer.remote_install();
-            let _ = installer.remote_install_cleanup();
+            execute_remote_install(*automate, *speed, *debug, flake).await;
         }
     }
 }

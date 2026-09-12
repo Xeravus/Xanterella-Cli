@@ -1,13 +1,25 @@
+pub mod app;
+pub mod hosts;
+pub mod modules;
+pub mod profiles;
+
+use std::sync::Arc;
+
 use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde_json::json;
-
-mod app;
+use tokio::sync::broadcast;
+use xanterella_core::{database::db::Database, xanterella::EventFormat};
 
 use crate::app::*;
 
+pub struct AppState {
+    pub tx: broadcast::Sender<EventFormat>,
+    pub db: Database,
+}
+
 #[allow(unused)]
 #[derive(Debug)]
-enum ApiError {
+pub enum ApiError {
     NotFound,
     InvalidInput(String),
     InternalError,
@@ -30,7 +42,17 @@ impl IntoResponse for ApiError {
 
 #[tokio::main]
 async fn main() {
-    let app = create_app();
+    let (tx, _rx) = broadcast::channel::<EventFormat>(100);
+    let db = Database::init("sqlite://../../xanterella.db?mode=rwc")
+        .await
+        .expect("Datenkbank konnte nicht initialisiert werden");
+
+    let state = Arc::new(AppState {
+        tx,
+        db,
+    });
+
+    let app = create_app(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.expect("Failed to bind Tcp Listener");
     println!("Server running on http://0.0.0.0:3000");

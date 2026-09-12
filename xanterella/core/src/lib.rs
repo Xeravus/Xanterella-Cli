@@ -1,10 +1,12 @@
 pub mod config;
+pub mod database;
 pub mod get;
 pub mod git;
 pub mod install;
 pub mod nix;
 pub mod result;
 pub mod xanterella;
+pub mod prolyxena;
 
 pub mod prelude;
 
