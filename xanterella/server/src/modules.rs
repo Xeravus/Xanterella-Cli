@@ -10,6 +10,7 @@ use xanterella_core::{
     database::db::DBModul,
     xanterella::{EventFormat, EventState},
 };
+use xanterella_core::prolyxena::CreateModul;
 
 use crate::{ApiError, AppState};
 

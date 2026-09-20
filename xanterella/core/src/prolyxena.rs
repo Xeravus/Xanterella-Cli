@@ -145,7 +145,8 @@ impl Nixtractor {
                 let files_depth = self.prolyxena.fsnodes.dir_list_files(&i)?;
                 for j in files_depth {
                     let mut options = Vec::new();
-                    let dir = i.split('/').last().expect("Konnte den base Dir des Modules nicht extrahieren");
+                    let dir = i.split('/').last().expect("Query-Fehler: Konnte die Kategory des Modules nicht extrahieren");
+
                     let name = match j.split('/').last() {
                         Some(p) => p.trim_end_matches(".nix"),
                         None => return Err("Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)".to_string()),
@@ -169,5 +170,68 @@ impl Nixtractor {
     }
 
     pub async fn extract_modules(&mut self) -> Result<Vec<CreateModul>, String> {
+        let mut modules: Vec<CreateModul> = Vec::new();
+        let modul_dir = self.prolyxena.fsnodes.search_dir("modules")?;
+        if modul_dir.is_empty() {
+            return Err("Query-Fehler: Kein Pfad gefunden".to_string());
+        } else if modul_dir.len() < 1 {
+            return Err("Query-Fehler: Zu viele Pfade gefunden".to_string());
+        };
+        
+        let dirs = self.prolyxena.fsnodes.dir_list_files(&modul_dir[0])?;
+        if dirs.is_empty() {
+            return Err("Query-Fehler: Keine Dateien/Ordner im Modul Ordner".to_string());
+        }
+
+        for i in dirs {
+            let files = self.prolyxena.fsnodes.dir_list_files(&i)?;
+            for j in files {
+                if j.ends_with(".nix") {
+                    let mut options = Vec::new();
+                    let category = i.split('/').last().expect("Query-Fehler: Konnte die Kategory des Modules nicht extrahieren");
+                    let name = match j.split('/').last() {
+                        Some(p) => p.trim_end_matches(".nix"),
+                        None => return Err("Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)".to_string()),
+                    };
+                    let config_file = self.prolyxena.search_tree(&j)?;
+                    let modul_node = config_file.query_exact_mut(&["config"]);
+                    if let Some(NixValue::AttrSet(map)) = modul_node.first() {
+                        for k in map {
+                            options.push(serde_json::json!(k));
+                        }
+                    }
+                    modules.push(CreateModul {
+                        name: name.to_string(),
+                        desc: String::new(),
+                        category: category.to_string(),
+                        options,
+                    });
+                } else {
+                    let files_depth = self.prolyxena.fsnodes.dir_list_files(&j)?;
+                    for k in files_depth {
+                        let mut options = Vec::new();
+                        let category = j.split('/').last().expect("Query-Fehler: Konnte die Kategory des Modules nicht extrahieren");
+                        let name = match k.split('/').last() {
+                            Some(p) => p.trim_end_matches(".nix"),
+                            None => return Err("Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)".to_string()),
+                        };
+                        let config_file = self.prolyxena.search_tree(&k)?;
+                        let modul_node = config_file.query_exact_mut(&["config"]);
+                        if let Some(NixValue::AttrSet(map)) = modul_node.first() {
+                            for l in map {
+                                options.push(serde_json::json!(l));
+                            }
+                        }
+                        modules.push(CreateModul {
+                            name: name.to_string(),
+                            desc: String::new(),
+                            category: category.to_string(),
+                            options,
+                        });
+                    }
+                }
+            }
+        }
+        Ok(modules)
     }
 }
