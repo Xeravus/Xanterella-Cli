@@ -10,15 +10,9 @@ use xanterella_core::{
     database::db::DBProfile,
     xanterella::{EventFormat, EventState},
 };
+use xanterella_core::prolyxena::CreateProfile;
 
 use crate::{ApiError, AppState};
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateProfile {
-    pub name: String,
-    pub dir: String,
-    pub options: Vec<Value>,
-}
 
 pub async fn create_profile(
     State(state): State<Arc<AppState>>, Json(payload): Json<CreateProfile>,

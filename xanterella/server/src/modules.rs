@@ -10,16 +10,9 @@ use xanterella_core::{
     database::db::DBModul,
     xanterella::{EventFormat, EventState},
 };
+use xanterella_core::prolyxena::CreateModul;
 
 use crate::{ApiError, AppState};
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateModul {
-    pub name: String,
-    pub desc: String,
-    pub category: String,
-    pub options: Vec<Value>,
-}
 
 pub async fn create_modul(
     State(state): State<Arc<AppState>>, Json(payload): Json<CreateModul>,

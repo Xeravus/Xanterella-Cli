@@ -398,7 +398,8 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         if let Some(&';') = self.chars.peek() {
         } else {
             return Err(format!(
-                "Syntax-Fehler: Erwartet ';' nach dem Indented String \nDatei: {} \nErwartet: Indented String",
+                "Syntax-Fehler: Erwartet ';' nach dem Indented String \nKontext: {:#?} \nDatei: {} \nErwartet: Indented String",
+                output,
                 self.path
             ));
         }
