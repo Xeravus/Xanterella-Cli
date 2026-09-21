@@ -202,7 +202,7 @@ impl SearchObjekt for FsNodes {
                 if let Some(child) = map.get(folder) {
                     pointer = child;
                 } else {
-                    return Err(format!("Query-Fehler: Ordner '{}' nicht gefunden", folder));
+                    return Err(format!("Search-Fehler: Ordner '{}' nicht gefunden", folder));
                 }
             } else {
                 return Err("Query-Fehler: Versucht einen Ordner in einer Datei zu finden".to_string());
@@ -211,7 +211,7 @@ impl SearchObjekt for FsNodes {
         if let FsNodes::Dir(map) = pointer {
             Ok(map.keys().map(|f| f.to_string()).collect())
         } else {
-            Err(format!("Query-Fehler: Ordner nicht gefunden"))
+            Err(format!("Search-Fehler: Ordner nicht gefunden"))
         }
     }
 

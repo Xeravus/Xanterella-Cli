@@ -1,5 +1,7 @@
 use std::process;
 
+use prolyxena::engine::lexer::vfs::*;
+
 use cliclack::*;
 use tokio::sync::broadcast;
 use xanterella_core::{
@@ -7,6 +9,7 @@ use xanterella_core::{
     get::Get,
     install::drives::Drives,
     xanterella::{EventFormat, EventState},
+    prolyxena::Nixtractor,
 };
 
 pub async fn execute_init_config() {
@@ -158,5 +161,18 @@ async fn choose_drive(xanterella: &mut XanterellaInstall) -> String {
         if let Ok(ans) = select.interact() { ans.to_string() } else { String::from("/dev/null") }
     } else {
         String::from("/dev/null")
+    }
+}
+
+pub async fn execute_extract(flake: &str) {
+    let mut prolyxena = FsData::new(flake);
+    match prolyxena.load() {
+        Err(e) => eprintln!("Excration-Error: '{}'", e),
+        _ => {},
+    }
+    let extractor = Nixtractor::new(&mut prolyxena);
+    match extractor.await.extract_hosts().await {
+        Ok(hosts) => println!("{:#?}", hosts),
+        Err(err) => panic!("Error while extracting the Hosts: \n '{}'", err),
     }
 }

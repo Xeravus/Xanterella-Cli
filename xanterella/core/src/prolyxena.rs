@@ -9,11 +9,11 @@ use prolyxena::engine::core::NixValue;
 use serde::*;
 use serde_json::Value;
 
-pub struct Nixtractor {
-    pub prolyxena: FsData,
+pub struct Nixtractor<'a> {
+    pub prolyxena: &'a mut FsData,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CreateHost {
     pub hostname: String,
     pub ip: String, 
@@ -21,14 +21,14 @@ pub struct CreateHost {
     pub options: Vec<Value>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CreateProfile {
     pub name: String,
     pub dir: String,
     pub options: Vec<Value>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CreateModul {
     pub name: String,
     pub desc: String,
@@ -36,7 +36,13 @@ pub struct CreateModul {
     pub options: Vec<Value>,
 }
 
-impl Nixtractor {
+impl<'a> Nixtractor<'a> {
+    pub async fn new(prolyxena: &'a mut FsData) -> Self {
+        Nixtractor {
+            prolyxena,
+        }
+    }
+
     pub async fn extract_hosts(&mut self) -> Result<Vec<CreateHost>, String> {
         let mut hosts: Vec<CreateHost> = Vec::new();
         let mut conf_file_path = String::with_capacity(128);
@@ -44,7 +50,7 @@ impl Nixtractor {
         let hosts_dir = self.prolyxena.fsnodes.search_dir("hosts")?;
         if hosts_dir.is_empty() {
             return Err("Query-Fehler: Kein Pfad gefunden".to_string());
-        } else if hosts_dir.len() < 1 {
+        } else if hosts_dir.len() > 1 {
             return Err("Query-Fehler: Zu viele Pfade gefunden".to_string());
         };
 
@@ -54,11 +60,20 @@ impl Nixtractor {
             return Err("Query-Fehler: Keine Dateien im Hosts Ordner".to_string());
         }
 
+        println!("Hosts: {:#?}", hosts_files);
         for i in hosts_files {
-            let name = i.split('/').last().expect("Konnte das letzte Element nicht extrahieren");
+            let name = i.split('/').last().expect("Extracting Hosts: Konnte das letzte Element nicht extrahieren");
             conf_file_path.clear();
-            write!(&mut conf_file_path, "{}/{}/configuration.nix", name, i).unwrap();
-            let config_file = self.prolyxena.search_tree(&conf_file_path)?;
+            write!(&mut conf_file_path, "hosts/{}/configuration.nix", name).unwrap();
+            println!("Path: {}\nName: {}", conf_file_path, name);
+            let config_file = match self.prolyxena.search_tree(&conf_file_path) {
+                Ok(file) => file,
+                Err(e) => {
+                    eprintln!("Warnung: Überspringe Host '{}' - {}", name, e);
+                    continue;
+                }
+            };
+            println!("Found: Path: {} Name: {}", conf_file_path, name);
             let imports_node = config_file.query_exact_mut(&["imports"]);
             let mut profiles = Vec::new();
             let mut options = Vec::new();
@@ -72,12 +87,14 @@ impl Nixtractor {
 
             let app = app_files.iter().find(|f| f.contains(&i));
             if let Some(o) = app {
-                let file = self.prolyxena.search_tree(&o)?;
-                let config_node = file.query_exact_mut(&["xanterella"]);
-                if let Some(NixValue::AttrSet(map)) = config_node.first() {
-                    for j in map {
-                        options.push(serde_json::json!(j));
+                let app_path = format!("profiles/apps/{}", o);
+                if let Ok(file) = self.prolyxena.search_tree(&app_path) {
+                    let config_node = file.query_exact_mut(&["xanterella"]);
+                    if let Some(NixValue::AttrSet(map)) = config_node.first() {
+                        options.push(serde_json::json!(map));
                     }
+                } else {
+                    eprintln!("Extracting Hosts: App-Datei '{}' konnte im VFS unter '{}' nicht geladen werden.", o, app_path);
                 }
             }
 
@@ -91,18 +108,18 @@ impl Nixtractor {
         Ok(hosts)
     }
 
-    fn list_hosts_apps_files<'a>(&'a mut self) -> Result<Vec<String>, String> {
+    fn list_hosts_apps_files<'b>(&'b mut self) -> Result<Vec<String>, String> {
         let mut dir = self.prolyxena.fsnodes.search_dir("apps")?;
         dir.retain(|f| f.contains("profiles"));
 
         let mut path = "";
         if let Some(first) = dir.first() {
             if first.is_empty() {
-                return Err("Keine Dateien in profiles/apps/ gefunden".to_string());
+                return Err("Extracting Profiles: Keine Dateien in profiles/apps/ gefunden".to_string());
             }
             path = first;
         } else {
-            return Err("Konnte das erste Element nicht extrahieren".to_string());
+            return Err("Extracting Profiles: Konnte das erste Element nicht extrahieren".to_string());
         }
         self.prolyxena.fsnodes.dir_list_files(path)
     }
@@ -113,7 +130,7 @@ impl Nixtractor {
         let profiles_dir = self.prolyxena.fsnodes.search_dir("profiles")?;
         if profiles_dir.is_empty() {
             return Err("Query-Fehler: Kein Pfad gefunden".to_string());
-        } else if profiles_dir.len() < 1 {
+        } else if profiles_dir.len() > 1 {
             return Err("Query-Fehler: Zu viele Pfade gefunden".to_string());
         };
 
@@ -132,9 +149,7 @@ impl Nixtractor {
                 let config_file = self.prolyxena.search_tree(&i)?;
                 let profile_node = config_file.query_exact_mut(&["xanterella"]);
                 if let Some(NixValue::AttrSet(map)) = profile_node.first() {
-                    for j in map {
-                        options.push(serde_json::json!(j));
-                    }
+                        options.push(serde_json::json!(map));
                 }
                 profiles.push(CreateProfile {
                     name: name.to_string(),
@@ -154,9 +169,7 @@ impl Nixtractor {
                     let config_file = self.prolyxena.search_tree(&j)?;
                     let profile_node = config_file.query_exact_mut(&["xanterella"]);
                     if let Some(NixValue::AttrSet(map)) = profile_node.first() {
-                        for k in map {
-                            options.push(serde_json::json!(k));
-                        }
+                            options.push(serde_json::json!(map));
                     }
                     profiles.push(CreateProfile {
                         name: name.to_string(),
@@ -174,7 +187,7 @@ impl Nixtractor {
         let modul_dir = self.prolyxena.fsnodes.search_dir("modules")?;
         if modul_dir.is_empty() {
             return Err("Query-Fehler: Kein Pfad gefunden".to_string());
-        } else if modul_dir.len() < 1 {
+        } else if modul_dir.len() > 1 {
             return Err("Query-Fehler: Zu viele Pfade gefunden".to_string());
         };
         
@@ -196,9 +209,7 @@ impl Nixtractor {
                     let config_file = self.prolyxena.search_tree(&j)?;
                     let modul_node = config_file.query_exact_mut(&["config"]);
                     if let Some(NixValue::AttrSet(map)) = modul_node.first() {
-                        for k in map {
-                            options.push(serde_json::json!(k));
-                        }
+                            options.push(serde_json::json!(map));
                     }
                     modules.push(CreateModul {
                         name: name.to_string(),
@@ -218,9 +229,7 @@ impl Nixtractor {
                         let config_file = self.prolyxena.search_tree(&k)?;
                         let modul_node = config_file.query_exact_mut(&["config"]);
                         if let Some(NixValue::AttrSet(map)) = modul_node.first() {
-                            for l in map {
-                                options.push(serde_json::json!(l));
-                            }
+                                options.push(serde_json::json!(map));
                         }
                         modules.push(CreateModul {
                             name: name.to_string(),

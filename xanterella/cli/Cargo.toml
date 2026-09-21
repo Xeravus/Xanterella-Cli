@@ -8,5 +8,7 @@ xanterella-core = { path = "../core" }
 
 tokio.workspace = true
 
+prolyxena = { git = "https://github.com/Xeravus/Xanterella-Cli", branch = "final/staging" }
+
 clap = { version = "4.6.1", features = ["derive"]}
 cliclack = "0.5.6"

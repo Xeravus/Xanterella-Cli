@@ -27,6 +27,9 @@ pub enum Commands {
         #[arg(short = 'f', long = "flake-dir")]
         flake: String,
     },
+    Extract {
+        flake: String,
+    },
 }
 
 pub async fn cli_parse() {
@@ -50,6 +53,8 @@ pub async fn cli_parse() {
             flake,
         } => {
             execute_remote_install(*automate, *speed, *debug, flake).await;
+        }
+        Commands::Extract { flake} => { execute_extract(flake).await;
         }
     }
 }
