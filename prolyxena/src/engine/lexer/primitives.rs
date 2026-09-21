@@ -395,15 +395,6 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             }
         }
 
-        if let Some(&';') = self.chars.peek() {
-        } else {
-            return Err(format!(
-                "Syntax-Fehler: Erwartet ';' nach dem Indented String \nKontext: {:#?} \nDatei: {} \nErwartet: Indented String",
-                output,
-                self.path
-            ));
-        }
-
         self.log_event(ParseEvent::EndIndentedString);
         Ok(NixValue::IndStr(output))
     }
@@ -901,14 +892,16 @@ mod tests {
         assert!(result3.is_ok());
         assert!(result4.is_ok());
         assert!(result5.is_ok());
-        assert!(result6.is_err());
-        assert!(result7.is_err());
+        assert!(result6.is_ok());
+        assert!(result7.is_ok());
 
         assert!(matches!(result1, Ok(NixValue::IndStr(_))));
         assert!(matches!(result2, Ok(NixValue::IndStr(_))));
         assert!(matches!(result3, Ok(NixValue::IndStr(_))));
         assert!(matches!(result4, Ok(NixValue::IndStr(_))));
         assert!(matches!(result5, Ok(NixValue::IndStr(_))));
+        assert!(matches!(result6, Ok(NixValue::IndStr(_))));
+        assert!(matches!(result7, Ok(NixValue::IndStr(_))));
     }
 
     #[test]
