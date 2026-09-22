@@ -35,6 +35,11 @@ impl Query for NixValue {
         }
 
         match self {
+            NixValue::Lambda(lam) => {
+                match lam {
+                    LambdaTypes::Nofix(_, body) | LambdaTypes::Prefix(_, _, body) | LambdaTypes::Suffix(_, _, body) | LambdaTypes::Single(_, body) => body.query_exact_inner(&path[1..], result),
+                }
+            }
             NixValue::AttrSet(map) => {
                 if let Some(value) = map.get_mut(path[0]) {
                     value.query_exact_inner(&path[1..], result);
