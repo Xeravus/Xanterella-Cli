@@ -519,7 +519,7 @@ mod tests {
         ]));
         let result = root.dir_list_files("myfile.nix");
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Query-Fehler: Ordner nicht gefunden");
+        assert_eq!(result.unwrap_err(), "Search-Fehler: Ordner nicht gefunden");
     }
 
     #[test]
