@@ -35,6 +35,11 @@ impl Query for NixValue {
         }
 
         match self {
+            NixValue::Lambda(lam) => {
+                match lam {
+                    LambdaTypes::Nofix(_, body) | LambdaTypes::Prefix(_, _, body) | LambdaTypes::Suffix(_, _, body) | LambdaTypes::Single(_, body) => body.query_exact_inner(&path[1..], result),
+                }
+            }
             NixValue::AttrSet(map) => {
                 if let Some(value) = map.get_mut(path[0]) {
                     value.query_exact_inner(&path[1..], result);
@@ -202,7 +207,7 @@ impl SearchObjekt for FsNodes {
                 if let Some(child) = map.get(folder) {
                     pointer = child;
                 } else {
-                    return Err(format!("Query-Fehler: Ordner '{}' nicht gefunden", folder));
+                    return Err(format!("Search-Fehler: Ordner '{}' nicht gefunden", folder));
                 }
             } else {
                 return Err("Query-Fehler: Versucht einen Ordner in einer Datei zu finden".to_string());
@@ -211,7 +216,7 @@ impl SearchObjekt for FsNodes {
         if let FsNodes::Dir(map) = pointer {
             Ok(map.keys().map(|f| f.to_string()).collect())
         } else {
-            Err(format!("Query-Fehler: Ordner nicht gefunden"))
+            Err(format!("Search-Fehler: Ordner nicht gefunden"))
         }
     }
 
@@ -519,7 +524,7 @@ mod tests {
         ]));
         let result = root.dir_list_files("myfile.nix");
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Query-Fehler: Ordner nicht gefunden");
+        assert_eq!(result.unwrap_err(), "Search-Fehler: Ordner nicht gefunden");
     }
 
     #[test]
