@@ -165,14 +165,34 @@ async fn choose_drive(xanterella: &mut XanterellaInstall) -> String {
 }
 
 pub async fn execute_extract(flake: &str) {
-    let mut prolyxena = FsData::new(flake);
-    match prolyxena.load() {
+    let mut prolyxena1 = FsData::new(flake);
+    let mut prolyxena2 = FsData::new(flake);
+    let mut prolyxena3 = FsData::new(flake);
+    match prolyxena1.load() {
         Err(e) => eprintln!("Excration-Error: '{}'", e),
         _ => {},
     }
-    let extractor = Nixtractor::new(&mut prolyxena);
-    match extractor.await.extract_hosts().await {
-        Ok(hosts) => println!("{:#?}", hosts),
-        Err(err) => panic!("Error while extracting the Hosts: \n '{}'", err),
+    match prolyxena2.load() {
+        Err(e) => eprintln!("Excration-Error: '{}'", e),
+        _ => {},
     }
+    match prolyxena3.load() {
+        Err(e) => eprintln!("Excration-Error: '{}'", e),
+        _ => {},
+    }
+    let extractor1 = Nixtractor::new(&mut prolyxena1);
+    let extractor2 = Nixtractor::new(&mut prolyxena2);
+    let extractor3 = Nixtractor::new(&mut prolyxena3);
+    match extractor1.await.extract_hosts().await {
+        Ok(_) => println!("Hosts OK"),
+        Err(err) => panic!("Error while extracting the Hosts: \n '{}'", err),
+    };
+    match extractor2.await.extract_profiles().await {
+        Ok(_) => println!("Profiles OK"),
+        Err(err) => panic!("Error while extracting the Hosts: \n '{}'", err),
+    };
+    match extractor3.await.extract_modules().await {
+        Ok(_) => println!("Modules OK"),
+        Err(err) => panic!("Error while extracting the Hosts: \n '{}'", err),
+    };
 }
