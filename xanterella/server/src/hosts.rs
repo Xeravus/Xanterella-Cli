@@ -8,8 +8,8 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use xanterella_core::{
     database::db::DBHost,
-    xanterella::{EventFormat, EventState},
     prolyxena::CreateHost,
+    xanterella::{EventFormat, EventState},
 };
 
 use crate::{ApiError, AppState};

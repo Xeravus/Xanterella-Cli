@@ -1,15 +1,16 @@
-use crate::prelude::*;
 use std::fmt::Write;
 
-use prolyxena::*;
-use prolyxena::engine::lexer::vfs::*;
-use prolyxena::engine::generator::query::{SearchObjekt, SearchContent};
-use prolyxena::engine::generator::query::Query;
-use prolyxena::engine::core::NixValue;
 use prolyxena::engine::core::LambdaTypes;
+use prolyxena::engine::core::NixValue;
 use prolyxena::engine::formater::core::Format;
+use prolyxena::engine::generator::query::Query;
+use prolyxena::engine::generator::query::{SearchContent, SearchObjekt};
+use prolyxena::engine::lexer::vfs::*;
+use prolyxena::*;
 use serde::*;
 use serde_json::Value;
+
+use crate::prelude::*;
 
 pub struct Nixtractor<'a> {
     pub prolyxena: &'a mut FsData,
@@ -18,7 +19,7 @@ pub struct Nixtractor<'a> {
 #[derive(Debug, Deserialize)]
 pub struct CreateHost {
     pub hostname: String,
-    pub ip: String, 
+    pub ip: String,
     pub profiles: Vec<Value>,
     pub options: Vec<Value>,
 }
@@ -90,7 +91,10 @@ impl<'a> Nixtractor<'a> {
                         options.push(serde_json::json!(map));
                     }
                 } else {
-                    eprintln!("Extracting Hosts: App-Datei '{}' konnte im VFS unter '{:#?}' nicht geladen werden.", o, host_app_file);
+                    eprintln!(
+                        "Extracting Hosts: App-Datei '{}' konnte im VFS unter '{:#?}' nicht geladen werden.",
+                        o, host_app_file
+                    );
                 }
             }
 
@@ -145,12 +149,15 @@ impl<'a> Nixtractor<'a> {
                 let mut options = Vec::new();
                 let name = match i.split('/').last() {
                     Some(p) => p.trim_end_matches(".nix"),
-                    None => return Err("Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)".to_string()),
+                    None => return Err(
+                        "Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)"
+                            .to_string(),
+                    ),
                 };
                 let profile_file = self.prolyxena.search_tree(&i)?;
                 let filtered_content = profile_file.query_exact_mut(&["xanterella"]);
                 if let Some(NixValue::AttrSet(map)) = filtered_content.first() {
-                        options.push(serde_json::json!(map));
+                    options.push(serde_json::json!(map));
                 }
                 profiles.push(CreateProfile {
                     name: name.to_string(),
@@ -167,7 +174,8 @@ impl<'a> Nixtractor<'a> {
 
                 for j in files_with_full_name_inner {
                     let mut options = Vec::new();
-                    let dir = i.split('/').last().expect("Query-Fehler: Konnte die Kategory des Modules nicht extrahieren");
+                    let dir =
+                        i.split('/').last().expect("Query-Fehler: Konnte die Kategory des Modules nicht extrahieren");
 
                     let name = match j.split('/').last() {
                         Some(p) => p.trim_end_matches(".nix"),
@@ -176,7 +184,7 @@ impl<'a> Nixtractor<'a> {
                     let profile_file = self.prolyxena.search_tree(&j)?;
                     let filtered_content = profile_file.query_exact_mut(&["xanterella"]);
                     if let Some(NixValue::AttrSet(map)) = filtered_content.first() {
-                            options.push(serde_json::json!(map));
+                        options.push(serde_json::json!(map));
                     }
                     profiles.push(CreateProfile {
                         name: name.to_string(),
@@ -198,7 +206,7 @@ impl<'a> Nixtractor<'a> {
         } else if main_dir.len() > 1 {
             return Err("Query-Fehler: Zu viele Pfade gefunden".to_string());
         };
-        
+
         let dirs = self.prolyxena.fsnodes.dir_list_files(&main_dir[0])?;
         if dirs.is_empty() {
             return Err("Query-Fehler: Keine Dateien/Ordner im Modul Ordner".to_string());
@@ -224,7 +232,7 @@ impl<'a> Nixtractor<'a> {
                     let modul_file = self.prolyxena.search_tree(&file_name)?;
                     let filtered_content = modul_file.query_exact_mut(&["config"]);
                     if let Some(NixValue::AttrSet(map)) = filtered_content.first() {
-                            options.push(serde_json::json!(map));
+                        options.push(serde_json::json!(map));
                     }
                     modules.push(CreateModul {
                         name: name.to_string(),
@@ -244,7 +252,7 @@ impl<'a> Nixtractor<'a> {
                         let config_file = self.prolyxena.search_tree(&file_name_inner)?;
                         let modul_node = config_file.query_exact_mut(&["config"]);
                         if let Some(NixValue::AttrSet(map)) = modul_node.first() {
-                                options.push(serde_json::json!(map));
+                            options.push(serde_json::json!(map));
                         }
                         modules.push(CreateModul {
                             name: name.to_string(),

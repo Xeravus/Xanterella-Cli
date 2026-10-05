@@ -54,7 +54,10 @@ pub async fn cli_parse() {
         } => {
             execute_remote_install(*automate, *speed, *debug, flake).await;
         }
-        Commands::Extract { flake} => { execute_extract(flake).await;
+        Commands::Extract {
+            flake,
+        } => {
+            execute_extract(flake).await;
         }
     }
 }

@@ -97,9 +97,7 @@ impl Database {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    
 
-    
     use crate::database::tests_utils::setup_test_db;
 
     #[tokio::test]

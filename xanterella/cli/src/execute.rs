@@ -1,15 +1,14 @@
 use std::process;
 
-use prolyxena::engine::lexer::vfs::*;
-
 use cliclack::*;
+use prolyxena::engine::lexer::vfs::*;
 use tokio::sync::broadcast;
 use xanterella_core::{
     Config, Git, Xanterella, XanterellaInstall,
     get::Get,
     install::drives::Drives,
-    xanterella::{EventFormat, EventState},
     prolyxena::Nixtractor,
+    xanterella::{EventFormat, EventState},
 };
 
 pub async fn execute_init_config() {
@@ -170,15 +169,15 @@ pub async fn execute_extract(flake: &str) {
     let mut prolyxena3 = FsData::new(flake);
     match prolyxena1.load() {
         Err(e) => eprintln!("Excration-Error: '{}'", e),
-        _ => {},
+        _ => {}
     }
     match prolyxena2.load() {
         Err(e) => eprintln!("Excration-Error: '{}'", e),
-        _ => {},
+        _ => {}
     }
     match prolyxena3.load() {
         Err(e) => eprintln!("Excration-Error: '{}'", e),
-        _ => {},
+        _ => {}
     }
     let extractor1 = Nixtractor::new(&mut prolyxena1);
     let extractor2 = Nixtractor::new(&mut prolyxena2);
