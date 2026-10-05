@@ -13,6 +13,8 @@ use serde_json::{Value, json};
 use tokio_stream::Stream;
 use tokio_stream::{StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{Ping, Xanterella, XanterellaInstall};
+use xanterella_core::prolyxena::Nixtractor;
+use prolyxena::engine::lexer::vfs::*;
 
 use crate::{ApiError, AppState, hosts::*, modules::*, profiles::*};
 
@@ -22,6 +24,7 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/health", get(health_check))
         .route("/ping/:ip", get(get_ping))
         .route("/stream", get(event_stream))
+        .route("/extract", get(extract_configs))
         .route("/hosts", get(list_hosts).post(create_host))
         .route("/hosts/:hostname", get(check_host).delete(delete_host))
         .route("/hosts/:hostname/profiles", post(host_add_profile).delete(host_remove_profile))
@@ -72,4 +75,35 @@ pub async fn health_check() -> impl IntoResponse {
         "status": "ok",
         "message": "Server is running",
     }))
+}
+
+pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<Value>, ApiError> {
+    let mut fs_data = FsData::new("/home/cato/xanterella/config");
+    fs_data.load().map_err(|err| {
+        eprintln!("Extractions-Fehler: VFS Init Fehler: '{}'", err);
+        ApiError::InternalError
+    })?;
+
+    let mut extractor = Nixtractor::new(&mut fs_data).await;
+
+    let hosts = extractor.extract_hosts().await.map_err(|err| {
+        eprintln!("Extractions-Fehler: Hosts: \n{}", err);
+        ApiError::InternalError 
+    })?;
+    let profiles = extractor.extract_profiles().await.map_err(|err| {
+        eprintln!("Extractions-Fehler: Profiles: \n{}", err);
+        ApiError::InternalError 
+    })?;
+    let modules = extractor.extract_modules().await.map_err(|err| {
+        eprintln!("Extractions-Fehler: Modules: \n{}", err);
+        ApiError::InternalError 
+    })?;
+    Ok(Json(json!({
+        "status": "success",
+        "data": {
+            "hosts": hosts,
+            "profiles": profiles,
+            "modules": modules,
+        }
+    })))
 }

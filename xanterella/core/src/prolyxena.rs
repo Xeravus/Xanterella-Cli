@@ -16,7 +16,7 @@ pub struct Nixtractor<'a> {
     pub prolyxena: &'a mut FsData,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CreateHost {
     pub hostname: String,
     pub ip: String,
@@ -79,14 +79,18 @@ impl<'a> Nixtractor<'a> {
             };
 
             let filtered_content = config_file.query_exact_mut(&["imports"]);
-            profiles.push(serde_json::json!(filtered_content[0].format_nix(0)));
+            if let Some(NixValue::List(list)) = filtered_content.first() {
+                for item in list.iter() {
+                    profiles.push(serde_json::json!(item));
+                }
+            }
 
             let host_app_file = app_files.iter().find(|f| f.contains(&i));
 
             if let Some(o) = host_app_file {
                 let file_path = format!("profiles/apps/{}", o);
                 if let Ok(file) = self.prolyxena.search_tree(&file_path) {
-                    let filtered_content = file.query_exact_mut(&["config.xanterella"]);
+                    let filtered_content = file.query_exact_mut(&["config", "xanterella"]);
                     if let Some(NixValue::AttrSet(map)) = filtered_content.first() {
                         options.push(serde_json::json!(map));
                     }
