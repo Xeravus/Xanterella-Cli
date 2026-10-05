@@ -12,8 +12,7 @@ use axum::{
 use serde_json::{Value, json};
 use tokio_stream::Stream;
 use tokio_stream::{StreamExt, wrappers::BroadcastStream};
-use xanterella_core::{Ping, Xanterella, XanterellaInstall};
-use xanterella_core::prolyxena::Nixtractor;
+use xanterella_core::{Ping, Xanterella, xanterella::{EventState, EventFormat}, XanterellaInstall, prolyxena::Nixtractor};
 use prolyxena::engine::lexer::vfs::*;
 
 use crate::{ApiError, AppState, hosts::*, modules::*, profiles::*};
@@ -78,6 +77,11 @@ pub async fn health_check() -> impl IntoResponse {
 }
 
 pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<Value>, ApiError> {
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Run,
+        step: "Extract of Files".to_string(),
+    });
+
     let mut fs_data = FsData::new("/home/cato/xanterella/config");
     fs_data.load().map_err(|err| {
         eprintln!("Extractions-Fehler: VFS Init Fehler: '{}'", err);
@@ -98,12 +102,42 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
         eprintln!("Extractions-Fehler: Modules: \n{}", err);
         ApiError::InternalError 
     })?;
+
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Finish,
+        step: "Extraction of Files".to_string(),
+    });
+
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Run,
+        step: "Synchronise Config with DB".to_string(),
+    });
+
+    for h in &hosts {
+        if let Err(e) = state.db.add_host(&h.hostname, &h.ip, h.profiles.clone(), h.options.clone()).await {
+            eprintln!("Sync-Fehler: Host '{}': {}", h.hostname, e);
+        }
+    }
+
+    for p in &profiles {
+        if let Err(e) = state.db.add_profile(&p.name, &p.dir, p.options.clone()).await {
+            eprintln!("Sync-Fehler: Profile '{}': {}", p.name, e);
+        }
+    }
+
+    for m in &modules {
+        if let Err(e) = state.db.add_modul(&m.name, &m.desc, &m.category, m.options.clone()).await {
+            eprintln!("Sync-Fehler: Modul '{}': {}", m.name, e);
+        }
+    }
+
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Finish,
+        step: "Synchronisation of Files".to_string(),
+    });
+
     Ok(Json(json!({
         "status": "success",
-        "data": {
-            "hosts": hosts,
-            "profiles": profiles,
-            "modules": modules,
-        }
+        "message": format!("Synchronisiert: {} Hosts, {} Profile, {} Module", hosts.len(), profiles.len(), modules.len())
     })))
 }
