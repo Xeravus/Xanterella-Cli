@@ -24,6 +24,7 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/ping/:ip", get(get_ping))
         .route("/stream", get(event_stream))
         .route("/extract", get(extract_configs))
+        .route("/clear", get(clear))
         .route("/hosts", get(list_hosts).post(create_host))
         .route("/hosts/:hostname", get(check_host).delete(delete_host))
         .route("/hosts/:hostname/profiles", post(host_add_profile).delete(host_remove_profile))
@@ -139,5 +140,26 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
     Ok(Json(json!({
         "status": "success",
         "message": format!("Synchronisiert: {} Hosts, {} Profile, {} Module", hosts.len(), profiles.len(), modules.len())
+    })))
+}
+
+pub async fn clear(State(state): State<Arc<AppState>>) -> Result<Json<Value>, ApiError> {
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Run,
+        step: "Clearing DB".to_string(),
+    });
+
+    let clear = state.db.clear().await.map_err(|err| {
+        eprintln!("Clearing-Fehler: {}", err);
+        ApiError::InternalError
+    })?;
+
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Finish,
+        step: "Cleared DB".to_string(),
+    });
+    Ok(Json(json!({
+        "status": "success",
+        "message": clear,
     })))
 }

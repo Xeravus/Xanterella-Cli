@@ -5,6 +5,8 @@ use sqlx::{
     types::Json,
 };
 
+use std::collections::HashMap;
+
 #[derive(Debug, Clone)]
 pub struct Database {
     pub pool: SqlitePool,
@@ -44,6 +46,20 @@ impl Database {
         Ok(Self {
             pool,
         })
+    }
+
+    pub async fn clear(&self) -> Result<HashMap<String, u64>, sqlx::Error> {
+        let mut result = HashMap::new();
+        if let Ok(hosts) = sqlx::query!("DELETE FROM hosts").execute(&self.pool).await {
+            result.insert("Hosts".to_string(), hosts.rows_affected());
+        }
+        if let Ok(profiles) = sqlx::query!("DELETE FROM profiles").execute(&self.pool).await {
+            result.insert("Profiles".to_string(), profiles.rows_affected());
+        }
+        if let Ok(modules) = sqlx::query!("DELETE FROM modules").execute(&self.pool).await {
+            result.insert("Modules".to_string(), modules.rows_affected());
+        }
+        Ok(result)
     }
 }
 
