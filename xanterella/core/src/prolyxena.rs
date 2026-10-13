@@ -63,7 +63,7 @@ impl<'a> Nixtractor<'a> {
             let mut profiles = Vec::new();
             let mut options = Vec::new();
 
-            let host_name = i.split('/').last().expect("Extracting Hosts: Konnte das letzte Element nicht extrahieren");
+            let host_name = i.split('/').next_back().expect("Extracting Hosts: Konnte das letzte Element nicht extrahieren");
             conf_file_path.clear();
             write!(&mut conf_file_path, "hosts/{}/configuration.nix", host_name).unwrap();
             let config_file = match self.prolyxena.search_tree(&conf_file_path) {
@@ -108,7 +108,7 @@ impl<'a> Nixtractor<'a> {
         Ok(hosts)
     }
 
-    fn list_hosts_apps_files<'b>(&'b mut self) -> Result<Vec<String>, String> {
+    fn list_hosts_apps_files(&mut self) -> Result<Vec<String>, String> {
         let mut dir = self.prolyxena.fsnodes.search_dir("apps")?;
         dir.retain(|f| f.contains("profiles"));
 
@@ -147,7 +147,7 @@ impl<'a> Nixtractor<'a> {
         for i in files_with_full_name {
             if i.ends_with(".nix") {
                 let mut options = Vec::new();
-                let name = match i.split('/').last() {
+                let name = match i.split('/').next_back() {
                     Some(p) => p.trim_end_matches(".nix"),
                     None => return Err(
                         "Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)"
@@ -175,9 +175,9 @@ impl<'a> Nixtractor<'a> {
                 for j in files_with_full_name_inner {
                     let mut options = Vec::new();
                     let dir =
-                        i.split('/').last().expect("Query-Fehler: Konnte die Kategory des Modules nicht extrahieren");
+                        i.split('/').next_back().expect("Query-Fehler: Konnte die Kategory des Modules nicht extrahieren");
 
-                    let name = match j.split('/').last() {
+                    let name = match j.split('/').next_back() {
                         Some(p) => p.trim_end_matches(".nix"),
                         None => return Err("Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)".to_string()),
                     };
@@ -228,7 +228,7 @@ impl<'a> Nixtractor<'a> {
                 let file_name = format!("{}/{}", full_dir_name, j);
                 if file_name.ends_with(".nix") {
                     let mut options = Vec::new();
-                    let name = match file_name.split('/').last() {
+                    let name = match file_name.split('/').next_back() {
                         Some(p) => p.trim_end_matches(".nix"),
                         None => return Err("Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)".to_string()),
                     };
@@ -250,7 +250,7 @@ impl<'a> Nixtractor<'a> {
                             continue;
                         }
                         let mut options = Vec::new();
-                        let name = match k.split('/').last() {
+                        let name = match k.split('/').next_back() {
                             Some(p) => p.trim_end_matches(".nix"),
                             None => return Err("Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)".to_string()),
                         };
