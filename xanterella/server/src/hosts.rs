@@ -4,7 +4,6 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use serde::Deserialize;
 use serde_json::{Value, json};
 use xanterella_core::{
     database::db::DBHost,
@@ -146,4 +145,73 @@ pub async fn host_remove_option(
         "status": "success",
         "hostname": hostname,
     })))
+}
+
+#[cfg(test)]
+mod tests {
+    use tokio::sync::broadcast;
+    use xanterella_core::database::db::Database;
+
+    use super::*;
+
+    async fn test_state() -> Arc<AppState> {
+        let (tx, _rx) = broadcast::channel(100);
+        let db = Database::init("sqlite::memory:").await.unwrap();
+        Arc::new(AppState {
+            tx,
+            db,
+        })
+    }
+
+    #[tokio::test]
+    async fn test_api_hosts_crud() {
+        let state = test_state().await;
+        let app_state = State(state.clone());
+
+        // 1. Create Host
+        let payload = Json(xanterella_core::prolyxena::CreateHost {
+            hostname: "api-host".to_string(),
+            ip: "10.0.0.1".to_string(),
+            profiles: vec![],
+            options: vec![],
+        });
+        let res_create = create_host(app_state.clone(), payload).await;
+        assert!(res_create.is_ok());
+
+        // 2. List Hosts
+        let list = list_hosts(app_state.clone()).await.unwrap();
+        assert_eq!(list.len(), 1);
+        assert_eq!(list[0].hostname, "api-host");
+
+        // 3. Check Host
+        let check = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
+        assert_eq!(check.hostname, "api-host");
+
+        // 4. Add & Remove Profile
+        let _ = host_add_profile(app_state.clone(), Path("api-host".to_string()), Json(json!({"path": "test"}))).await;
+        let check_prof = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
+        assert_eq!(check_prof.profiles.0.len(), 1);
+
+        let _ =
+            host_remove_profile(app_state.clone(), Path("api-host".to_string()), Json(json!({"path": "test"}))).await;
+        let check_prof_rm = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
+        assert!(check_prof_rm.profiles.0.is_empty());
+
+        // 5. Add & Remove Option
+        let _ = host_add_option(app_state.clone(), Path("api-host".to_string()), Json(json!({"port": 80}))).await;
+        let check_opt = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
+        assert_eq!(check_opt.options.0.len(), 1);
+
+        let _ = host_remove_option(app_state.clone(), Path("api-host".to_string()), Json(json!({"port": 80}))).await;
+        let check_opt_rm = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
+        assert!(check_opt_rm.options.0.is_empty());
+
+        // 6. Delete Host
+        let res_del = delete_host(app_state.clone(), Path("api-host".to_string())).await;
+        assert!(res_del.is_ok());
+
+        // 7. Verify Deletion (Not Found)
+        let not_found = check_host(app_state.clone(), Path("api-host".to_string())).await;
+        assert!(matches!(not_found, Err(ApiError::NotFound)));
+    }
 }

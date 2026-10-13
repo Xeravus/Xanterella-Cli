@@ -7,13 +7,17 @@ use axum::{
         Html, IntoResponse, Sse,
         sse::{Event, KeepAlive},
     },
-    routing::{delete, get, post},
+    routing::{get, post},
 };
+use prolyxena::engine::lexer::vfs::*;
 use serde_json::{Value, json};
 use tokio_stream::Stream;
 use tokio_stream::{StreamExt, wrappers::BroadcastStream};
-use xanterella_core::{Ping, Xanterella, xanterella::{EventState, EventFormat}, XanterellaInstall, prolyxena::Nixtractor};
-use prolyxena::engine::lexer::vfs::*;
+use xanterella_core::{
+    Ping, Xanterella, XanterellaInstall,
+    prolyxena::Nixtractor,
+    xanterella::{EventFormat, EventState},
+};
 
 use crate::{ApiError, AppState, hosts::*, modules::*, profiles::*};
 
@@ -93,15 +97,15 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
 
     let hosts = extractor.extract_hosts().await.map_err(|err| {
         eprintln!("Extractions-Fehler: Hosts: \n{}", err);
-        ApiError::InternalError 
+        ApiError::InternalError
     })?;
     let profiles = extractor.extract_profiles().await.map_err(|err| {
         eprintln!("Extractions-Fehler: Profiles: \n{}", err);
-        ApiError::InternalError 
+        ApiError::InternalError
     })?;
     let modules = extractor.extract_modules().await.map_err(|err| {
         eprintln!("Extractions-Fehler: Modules: \n{}", err);
-        ApiError::InternalError 
+        ApiError::InternalError
     })?;
 
     let _ = state.tx.send(EventFormat {
@@ -162,4 +166,39 @@ pub async fn clear(State(state): State<Arc<AppState>>) -> Result<Json<Value>, Ap
         "status": "success",
         "message": clear,
     })))
+}
+
+#[cfg(test)]
+mod tests {
+    use tokio::sync::broadcast;
+    use xanterella_core::database::db::Database;
+
+    use super::*;
+
+    async fn test_state() -> Arc<AppState> {
+        let (tx, _rx) = broadcast::channel(100);
+        let db = Database::init("sqlite::memory:").await.unwrap();
+        Arc::new(AppState {
+            tx,
+            db,
+        })
+    }
+
+    #[tokio::test]
+    async fn test_api_clear_db() {
+        let state = test_state().await;
+
+        // Füge einen Dummy-Host hinzu, um zu testen, ob er gelöscht wird
+        state.db.add_host("delete-me", "0.0.0.0", vec![], vec![]).await.unwrap();
+
+        // Clear aufrufen
+        let app_state = State(state.clone());
+        let res = clear(app_state).await;
+
+        assert!(res.is_ok());
+
+        // Prüfen ob die DB leer ist
+        let hosts = state.db.list_hosts().await.unwrap();
+        assert!(hosts.is_empty());
+    }
 }

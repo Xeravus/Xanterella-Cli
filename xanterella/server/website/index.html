@@ -85,8 +85,8 @@
                         <button class="del-btn" onclick="fetchAPI('/hosts/${h.hostname}', 'DELETE')">X</button>
                     </div>
                     <div style="margin-top: 8px; font-size: 0.85rem;">
-                        <div><strong>Profile:</strong> ${h.profiles.map(p => `<span class="badge">${p}</span>`).join('')}</div>
-                        <div><strong>Optionen:</strong> ${h.options.map(o => `<span class="badge">${o}</span>`).join('')}</div>
+			<div><strong>Profile:</strong> ${h.profiles.map(p => `<span class="badge">${JSON.stringify(p)}</span>`).join('')}</div>
+			<div><strong>Optionen:</strong> ${h.options.map(o => `<span class="badge">${JSON.stringify(o)}</span>`).join('')}</div>
                         <div style="margin-top: 5px;">
                             <input id="add-p-${h.hostname}" placeholder="Profil anhängen" style="width: 100px; font-size: 0.7rem;">
                             <button style="font-size: 0.7rem;" onclick="fetchAPI('/hosts/${h.hostname}/profiles', 'POST', document.getElementById('add-p-${h.hostname}').value)">Add</button>
