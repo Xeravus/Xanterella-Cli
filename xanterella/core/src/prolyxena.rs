@@ -280,9 +280,10 @@ impl<'a> Nixtractor<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use indexmap::IndexMap;
-    use prolyxena::engine::{lexer::vfs::FsNodes, core::NixValue};
+    use prolyxena::engine::{core::NixValue, lexer::vfs::FsNodes};
+
+    use super::*;
 
     fn dummy_file(name: &str, ast: NixValue) -> FsNodes {
         FsNodes::File {
@@ -299,19 +300,15 @@ mod tests {
         FsNodes::Dir(map)
     }
 
-    // --- Tests ---
-
     #[tokio::test]
     async fn test_nixtractor_extract_hosts_success() {
         let mut fs_data = FsData::new("/fake");
 
-        // Simuliert: imports = [ ./hardware.nix ];
         let config_ast = NixValue::AttrSet(IndexMap::from([(
             "imports".to_string(),
             NixValue::List(vec![NixValue::Path("./hardware.nix".to_string())]),
         )]));
 
-        // Simuliert: config.xanterella = { enable = true; };
         let app_ast = NixValue::AttrSet(IndexMap::from([(
             "config".to_string(),
             NixValue::AttrSet(IndexMap::from([(
@@ -320,7 +317,6 @@ mod tests {
             )])),
         )]));
 
-        // VFS-Struktur aufbauen
         fs_data.fsnodes = dummy_dir(vec![
             (
                 "hosts",
@@ -352,21 +348,16 @@ mod tests {
     async fn test_nixtractor_extract_profiles_success() {
         let mut fs_data = FsData::new("/fake");
 
-        // Simuliert: xanterella = { is_server = true; };
         let profile_ast = NixValue::AttrSet(IndexMap::from([(
             "xanterella".to_string(),
             NixValue::AttrSet(IndexMap::from([("is_server".to_string(), NixValue::Bool(true))])),
         )]));
 
-        // VFS-Struktur aufbauen
         fs_data.fsnodes = dummy_dir(vec![(
             "profiles",
             dummy_dir(vec![
                 ("base.nix", dummy_file("base.nix", profile_ast.clone())),
-                (
-                    "server",
-                    dummy_dir(vec![("web.nix", dummy_file("web.nix", profile_ast))]),
-                ),
+                ("server", dummy_dir(vec![("web.nix", dummy_file("web.nix", profile_ast))])),
             ]),
         )]);
 
@@ -374,7 +365,7 @@ mod tests {
         let profiles = extractor.extract_profiles().await.unwrap();
 
         assert_eq!(profiles.len(), 2);
-        
+
         let base = profiles.iter().find(|p| p.name == "base").unwrap();
         assert_eq!(base.dir, "base");
         assert_eq!(base.options.len(), 1);
@@ -388,23 +379,18 @@ mod tests {
     async fn test_nixtractor_extract_modules_success() {
         let mut fs_data = FsData::new("/fake");
 
-        // Simuliert: config = { sys = true; };
         let mod_ast = NixValue::AttrSet(IndexMap::from([(
             "config".to_string(),
             NixValue::AttrSet(IndexMap::from([("sys".to_string(), NixValue::Bool(true))])),
         )]));
 
-        // VFS-Struktur aufbauen
         fs_data.fsnodes = dummy_dir(vec![(
             "modules",
             dummy_dir(vec![(
                 "system",
                 dummy_dir(vec![
                     ("network.nix", dummy_file("network.nix", mod_ast.clone())),
-                    (
-                        "deep",
-                        dummy_dir(vec![("storage.nix", dummy_file("storage.nix", mod_ast))]),
-                    ),
+                    ("deep", dummy_dir(vec![("storage.nix", dummy_file("storage.nix", mod_ast))])),
                 ]),
             )]),
         )]);
@@ -413,7 +399,7 @@ mod tests {
         let modules = extractor.extract_modules().await.unwrap();
 
         assert_eq!(modules.len(), 2);
-        
+
         let network = modules.iter().find(|m| m.name == "network").unwrap();
         assert_eq!(network.category, "system");
         assert_eq!(network.options.len(), 1);
@@ -424,12 +410,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_nixtractor_empty_vfs_errors() {
-        // Testet, ob der Extractor saubere Fehlermeldungen wirft, wenn die Ordner fehlen
         let mut fs_data = FsData::new("/fake");
-        fs_data.fsnodes = dummy_dir(vec![]); 
+        fs_data.fsnodes = dummy_dir(vec![]);
 
         let mut extractor = Nixtractor::new(&mut fs_data).await;
-        
+
         let hosts_err = extractor.extract_hosts().await;
         assert!(hosts_err.is_err());
         assert!(hosts_err.unwrap_err().contains("Kein Pfad gefunden"));

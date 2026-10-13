@@ -98,12 +98,12 @@ impl Database {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
+
     use crate::database::tests_utils::setup_test_db;
 
     #[tokio::test]
     async fn db_add_host_and_list_hosts() {
         let db = setup_test_db().await;
-        // Nutze echte JSON-Objekte für den Test
         let profiles = vec![json!({"Path": "./hardware.nix"})];
         let options = vec![json!({"sys.enable": true})];
 
@@ -123,7 +123,7 @@ mod tests {
     async fn db_add_duplicate_host_fails() {
         let db = setup_test_db().await;
         db.add_host("dup-node", "1.1.1.1", vec![], vec![]).await.unwrap();
-        
+
         let result = db.add_host("dup-node", "2.2.2.2", vec![], vec![]).await;
         assert!(result.is_err(), "Das Hinzufügen eines Duplikats sollte einen Fehler werfen");
     }

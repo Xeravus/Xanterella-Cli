@@ -97,6 +97,7 @@ impl Database {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
+
     use crate::database::tests_utils::setup_test_db;
 
     #[tokio::test]
@@ -104,9 +105,7 @@ mod tests {
         let db = setup_test_db().await;
         let options = vec![json!({"sys.enable": true})];
 
-        db.add_profile("web-server", "profiles/server", options)
-            .await
-            .expect("Fehler beim Hinzufügen des Profils");
+        db.add_profile("web-server", "profiles/server", options).await.expect("Fehler beim Hinzufügen des Profils");
 
         let profiles = db.list_profiles().await.expect("Fehler beim Auslesen");
         assert_eq!(profiles.len(), 1);
@@ -144,18 +143,15 @@ mod tests {
         let db = setup_test_db().await;
         db.add_profile("options-profile", "dir", vec![]).await.unwrap();
 
-        // Option hinzufügen
         db.profile_add_option("options-profile", json!({"port": 8080})).await.unwrap();
         let profile = db.get_profile("options-profile").await.unwrap().unwrap();
         assert_eq!(profile.options.0.len(), 1);
         assert_eq!(profile.options.0[0], json!({"port": 8080}));
 
-        // Option entfernen
         db.profile_remove_option("options-profile", json!({"port": 8080})).await.unwrap();
         let profile_after = db.get_profile("options-profile").await.unwrap().unwrap();
         assert_eq!(profile_after.options.0.len(), 0);
 
-        // Fehlerfälle bei nicht existierendem Profil
         let err_add = db.profile_add_option("ghost-profile", json!({"port": 8080})).await;
         assert!(matches!(err_add, Err(sqlx::Error::RowNotFound)));
 
@@ -166,18 +162,15 @@ mod tests {
     #[tokio::test]
     async fn db_profile_get_hosts() {
         let db = setup_test_db().await;
-        
-        // Host mit spezifischem Profil anlegen
+
         let profiles = vec![json!("target-profile"), json!("other-profile")];
         db.add_host("test-node", "1.1.1.1", profiles, vec![]).await.unwrap();
         db.add_host("other-node", "2.2.2.2", vec![json!("other-profile")], vec![]).await.unwrap();
 
-        // Prüfen, ob der richtige Host anhand des Profils gefunden wird
         let hosts = db.profile_get_hosts("target-profile").await.unwrap();
         assert_eq!(hosts.len(), 1);
         assert_eq!(hosts[0].hostname, "test-node");
 
-        // Prüfen, ob ein ungenutztes Profil leere Ergebnisse liefert
         let empty_hosts = db.profile_get_hosts("\"ghost-profile\"").await.unwrap();
         assert_eq!(empty_hosts.len(), 0);
     }

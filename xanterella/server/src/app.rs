@@ -167,3 +167,38 @@ pub async fn clear(State(state): State<Arc<AppState>>) -> Result<Json<Value>, Ap
         "message": clear,
     })))
 }
+
+#[cfg(test)]
+mod tests {
+    use tokio::sync::broadcast;
+    use xanterella_core::database::db::Database;
+
+    use super::*;
+
+    async fn test_state() -> Arc<AppState> {
+        let (tx, _rx) = broadcast::channel(100);
+        let db = Database::init("sqlite::memory:").await.unwrap();
+        Arc::new(AppState {
+            tx,
+            db,
+        })
+    }
+
+    #[tokio::test]
+    async fn test_api_clear_db() {
+        let state = test_state().await;
+
+        // Füge einen Dummy-Host hinzu, um zu testen, ob er gelöscht wird
+        state.db.add_host("delete-me", "0.0.0.0", vec![], vec![]).await.unwrap();
+
+        // Clear aufrufen
+        let app_state = State(state.clone());
+        let res = clear(app_state).await;
+
+        assert!(res.is_ok());
+
+        // Prüfen ob die DB leer ist
+        let hosts = state.db.list_hosts().await.unwrap();
+        assert!(hosts.is_empty());
+    }
+}

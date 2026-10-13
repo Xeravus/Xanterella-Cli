@@ -75,3 +75,49 @@ pub async fn check_modul(
         None => Err(ApiError::NotFound),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use tokio::sync::broadcast;
+    use xanterella_core::database::db::Database;
+
+    use super::*;
+
+    async fn test_state() -> Arc<AppState> {
+        let (tx, _rx) = broadcast::channel(100);
+        let db = Database::init("sqlite::memory:").await.unwrap();
+        Arc::new(AppState {
+            tx,
+            db,
+        })
+    }
+
+    #[tokio::test]
+    async fn test_api_modules_crud() {
+        let state = test_state().await;
+        let app_state = State(state.clone());
+
+        // 1. Create Modul
+        let payload = Json(xanterella_core::prolyxena::CreateModul {
+            name: "api-modul".to_string(),
+            desc: "Test API Modul".to_string(),
+            category: "api-tests".to_string(),
+            options: vec![],
+        });
+        let res_create = create_modul(app_state.clone(), payload).await;
+        assert!(res_create.is_ok());
+
+        // 2. List Modules
+        let list = list_modules(app_state.clone()).await.unwrap();
+        assert_eq!(list.len(), 1);
+        assert_eq!(list[0].name, "api-modul");
+
+        // 3. Check Modul
+        let check = check_modul(app_state.clone(), Path("api-modul".to_string())).await.unwrap();
+        assert_eq!(check.name, "api-modul");
+
+        // 4. Delete Modul
+        let res_del = delete_modul(app_state.clone(), Path("api-modul".to_string())).await;
+        assert!(res_del.is_ok());
+    }
+}
