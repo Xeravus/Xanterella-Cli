@@ -226,6 +226,9 @@ impl<'a> Nixtractor<'a> {
             };
 
             for j in files {
+                if j.contains("default.nix") {
+                    continue;
+                }
                 let file_name = format!("{}/{}", full_dir_name, j);
                 if file_name.ends_with(".nix") {
                     let mut options = Vec::new();
@@ -247,6 +250,9 @@ impl<'a> Nixtractor<'a> {
                 } else {
                     let files_depth = self.prolyxena.fsnodes.dir_list_files(&file_name)?;
                     for k in files_depth {
+                        if k.contains("default.nix") {
+                            continue;
+                        }
                         let mut options = Vec::new();
                         let name = match k.split('/').last() {
                             Some(p) => p.trim_end_matches(".nix"),
