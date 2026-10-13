@@ -1,16 +1,12 @@
 use std::fmt::Write;
 
-use prolyxena::engine::core::LambdaTypes;
 use prolyxena::engine::core::NixValue;
-use prolyxena::engine::formater::core::Format;
 use prolyxena::engine::generator::query::Query;
 use prolyxena::engine::generator::query::{SearchContent, SearchObjekt};
 use prolyxena::engine::lexer::vfs::*;
-use prolyxena::*;
 use serde::*;
 use serde_json::Value;
 
-use crate::prelude::*;
 
 pub struct Nixtractor<'a> {
     pub prolyxena: &'a mut FsData,
