@@ -7,7 +7,7 @@ use axum::{
         Html, IntoResponse, Sse,
         sse::{Event, KeepAlive},
     },
-    routing::{delete, get, post},
+    routing::{get, post},
 };
 use prolyxena::engine::lexer::vfs::*;
 use serde_json::{Value, json};

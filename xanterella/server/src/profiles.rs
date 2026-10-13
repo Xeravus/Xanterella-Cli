@@ -4,7 +4,6 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use xanterella_core::prolyxena::CreateProfile;
 use xanterella_core::{

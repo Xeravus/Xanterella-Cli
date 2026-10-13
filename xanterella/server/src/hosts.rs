@@ -4,7 +4,6 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use serde::Deserialize;
 use serde_json::{Value, json};
 use xanterella_core::{
     database::db::DBHost,
