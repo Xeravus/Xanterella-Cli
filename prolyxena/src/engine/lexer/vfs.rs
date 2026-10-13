@@ -76,8 +76,8 @@ impl FsData {
     }
 
     pub fn load(&mut self) -> Result<(), String> {
-        let start = Instant::now();
         self.get_files();
+        let start = Instant::now();
         self.gen_tree()?;
         self.time = start.elapsed().as_secs_f64();
         if let Some(tx) = &self.trans {
@@ -228,7 +228,7 @@ impl FsNodes {
 
 #[cfg(test)]
 mod tests {
-    use std::env;
+
     use std::fs::{self, File};
     use std::io::Write;
 

@@ -1,5 +1,6 @@
 use std::io::Write as StdOut;
 use std::io::stdout;
+use std::process;
 
 use clap::{Parser as CalpParser, Subcommand};
 
@@ -143,8 +144,12 @@ pub fn prolyxena_format(
         data.set_flatten(flatten);
         if let Err(err) = data.load() {
             let _ = writeln!(writer, "{}", err);
+            process::exit(1);
         }
-        let _ = data.walk_tree();
+        if let Err(err) = data.walk_tree() {
+            let _ = writeln!(writer, "{}", err);
+            process::exit(2);
+        }
         if output {
             let _ = writeln!(writer, "{:#?}", data.fsnodes);
         }
