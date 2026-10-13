@@ -228,7 +228,7 @@ impl FsNodes {
 
 #[cfg(test)]
 mod tests {
-    
+
     use std::fs::{self, File};
     use std::io::Write;
 

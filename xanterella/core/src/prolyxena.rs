@@ -7,7 +7,6 @@ use prolyxena::engine::lexer::vfs::*;
 use serde::*;
 use serde_json::Value;
 
-
 pub struct Nixtractor<'a> {
     pub prolyxena: &'a mut FsData,
 }
@@ -63,7 +62,8 @@ impl<'a> Nixtractor<'a> {
             let mut profiles = Vec::new();
             let mut options = Vec::new();
 
-            let host_name = i.split('/').next_back().expect("Extracting Hosts: Konnte das letzte Element nicht extrahieren");
+            let host_name =
+                i.split('/').next_back().expect("Extracting Hosts: Konnte das letzte Element nicht extrahieren");
             conf_file_path.clear();
             write!(&mut conf_file_path, "hosts/{}/configuration.nix", host_name).unwrap();
             let config_file = match self.prolyxena.search_tree(&conf_file_path) {
@@ -174,8 +174,10 @@ impl<'a> Nixtractor<'a> {
 
                 for j in files_with_full_name_inner {
                     let mut options = Vec::new();
-                    let dir =
-                        i.split('/').next_back().expect("Query-Fehler: Konnte die Kategory des Modules nicht extrahieren");
+                    let dir = i
+                        .split('/')
+                        .next_back()
+                        .expect("Query-Fehler: Konnte die Kategory des Modules nicht extrahieren");
 
                     let name = match j.split('/').next_back() {
                         Some(p) => p.trim_end_matches(".nix"),

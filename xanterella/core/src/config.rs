@@ -72,14 +72,16 @@ impl Config for Xanterella {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    use super::*;
 
     #[test]
     fn test_config_lifecycle() {
         let mut x = Xanterella::new();
         // Temporären isolierten Ordner nutzen, um echte Configs nicht zu überschreiben
-        let temp_dir = std::env::temp_dir().join(format!("xant_{}", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()));
+        let temp_dir = std::env::temp_dir()
+            .join(format!("xant_{}", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()));
         x.set_home(temp_dir.to_str().unwrap());
 
         // 1. Ordner erstellen

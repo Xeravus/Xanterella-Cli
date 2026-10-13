@@ -169,29 +169,26 @@ impl SearchObjekt for FsNodes {
         let mut result = Vec::new();
         let mut path = Vec::new();
 
-        self.search_dir_inner(&name, &mut path, &mut result);
+        self.search_dir_inner(name, &mut path, &mut result);
 
         Ok(result)
     }
 
     fn search_dir_inner<'a>(&'a self, name: &str, path: &mut Vec<&'a str>, result: &mut Vec<String>) {
-        match self {
-            FsNodes::Dir(map) => {
-                if map.contains_key(name) {
-                    let mut full_path = path.join("/");
-                    if !full_path.is_empty() {
-                        full_path.push('/');
-                    }
-                    full_path.push_str(name);
-                    result.push(full_path);
+        if let FsNodes::Dir(map) = self {
+            if map.contains_key(name) {
+                let mut full_path = path.join("/");
+                if !full_path.is_empty() {
+                    full_path.push('/');
                 }
-                for (child_name, child_node) in map {
-                    path.push(&child_name);
-                    child_node.search_dir_inner(name, path, result);
-                    path.pop();
-                }
+                full_path.push_str(name);
+                result.push(full_path);
             }
-            _ => {}
+            for (child_name, child_node) in map {
+                path.push(child_name);
+                child_node.search_dir_inner(name, path, result);
+                path.pop();
+            }
         }
     }
 
@@ -217,7 +214,7 @@ impl SearchObjekt for FsNodes {
         if let FsNodes::Dir(map) = pointer {
             Ok(map.keys().map(|f| f.to_string()).collect())
         } else {
-            Err(format!("Search-Fehler: Ordner nicht gefunden"))
+            Err("Search-Fehler: Ordner nicht gefunden".to_string())
         }
     }
 
@@ -228,7 +225,7 @@ impl SearchObjekt for FsNodes {
         let mut result = Vec::new();
         let mut path = Vec::new();
 
-        self.search_file_inner(&name, &mut path, &mut result);
+        self.search_file_inner(name, &mut path, &mut result);
 
         Ok(result)
     }
@@ -245,7 +242,7 @@ impl SearchObjekt for FsNodes {
                     result.push(full_path);
                 }
                 for (child_name, child_node) in map {
-                    path.push(&child_name);
+                    path.push(child_name);
                     child_node.search_dir_inner(name, path, result);
                     path.pop();
                 }
