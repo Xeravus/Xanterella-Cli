@@ -112,7 +112,7 @@ impl<'a> Nixtractor<'a> {
         let mut dir = self.prolyxena.fsnodes.search_dir("apps")?;
         dir.retain(|f| f.contains("profiles"));
 
-        let mut path = "";
+        let path;
         if let Some(first) = dir.first() {
             if first.is_empty() {
                 return Err("Extracting Profiles: Keine Dateien in profiles/apps/ gefunden".to_string());
