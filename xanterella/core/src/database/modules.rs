@@ -22,7 +22,7 @@ impl Database {
     pub async fn list_modules(&self) -> Result<Vec<DBModul>, sqlx::Error> {
         let modules = sqlx::query_as!(
             DBModul,
-            "SELECT id as 'id!', name, desc, category, options as 'options: Json<Vec<String>>' FROM modules"
+            "SELECT id as 'id!', name, desc, category, options as 'options: Json<Vec<serde_json::Value>>' FROM modules"
         )
         .fetch_all(&self.pool)
         .await?;
@@ -30,12 +30,12 @@ impl Database {
     }
 
     pub async fn list_modules_category(&self, category: &str) -> Result<Vec<DBModul>, sqlx::Error> {
-        let modules = sqlx::query_as!(DBModul, "SELECT id as 'id!', name, desc, category, options as 'options: Json<Vec<String>>' FROM modules WHERE category = ?", category).fetch_all(&self.pool).await?;
+        let modules = sqlx::query_as!(DBModul, "SELECT id as 'id!', name, desc, category, options as 'options: Json<Vec<serde_json::Value>>' FROM modules WHERE category = ?", category).fetch_all(&self.pool).await?;
         Ok(modules)
     }
 
     pub async fn get_modul(&self, name: &str) -> Result<Option<DBModul>, sqlx::Error> {
-        let modul = sqlx::query_as!(DBModul, "SELECT id as 'id!', name, desc, category, options as 'options: Json<Vec<String>>' FROM modules WHERE name = ?", name)
+        let modul = sqlx::query_as!(DBModul, "SELECT id as 'id!', name, desc, category, options as 'options: Json<Vec<serde_json::Value>>' FROM modules WHERE name = ?", name)
             .fetch_optional(&self.pool).await?;
         Ok(modul)
     }

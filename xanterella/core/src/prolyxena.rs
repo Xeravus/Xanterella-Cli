@@ -70,7 +70,6 @@ impl<'a> Nixtractor<'a> {
             let host_name = i.split('/').last().expect("Extracting Hosts: Konnte das letzte Element nicht extrahieren");
             conf_file_path.clear();
             write!(&mut conf_file_path, "hosts/{}/configuration.nix", host_name).unwrap();
-            println!("{}", conf_file_path);
             let config_file = match self.prolyxena.search_tree(&conf_file_path) {
                 Ok(file) => file,
                 Err(e) => {
@@ -78,7 +77,6 @@ impl<'a> Nixtractor<'a> {
                     continue;
                 }
             };
-            println!("{:#?}", config_file);
 
             let filtered_content = config_file.query_exact_mut(&["imports"]);
             if let Some(NixValue::List(list)) = filtered_content.first() {
@@ -104,9 +102,6 @@ impl<'a> Nixtractor<'a> {
                 }
             }
 
-
-            println!("{:#?}", profiles);
-            println!("{:#?}", options);
             hosts.push(CreateHost {
                 hostname: host_name.to_string(),
                 ip: host_name.to_string(),

@@ -27,14 +27,14 @@ impl Database {
     }
 
     pub async fn get_host(&self, hostname: &str) -> Result<Option<DBHost>, sqlx::Error> {
-        let host = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, profiles as 'profiles: Json<Vec<String>>', options as 'options: Json<Vec<String>>' FROM hosts WHERE hostname = ?", hostname)
+        let host = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, profiles as 'profiles: Json<Vec<serde_json::Value>>', options as 'options: Json<Vec<serde_json::Value>>' FROM hosts WHERE hostname = ?", hostname)
             .fetch_optional(&self.pool)
             .await?;
         Ok(host)
     }
 
     pub async fn list_hosts(&self) -> Result<Vec<DBHost>, sqlx::Error> {
-        let hosts = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, profiles as 'profiles: Json<Vec<String>>', options as 'options: Json<Vec<String>>' FROM hosts").fetch_all(&self.pool).await?;
+        let hosts = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, profiles as 'profiles: Json<Vec<serde_json::Value>>', options as 'options: Json<Vec<serde_json::Value>>' FROM hosts").fetch_all(&self.pool).await?;
         Ok(hosts)
     }
 
@@ -43,7 +43,7 @@ impl Database {
             Some(h) => h,
             None => return Err(sqlx::Error::RowNotFound),
         };
-        host.profiles.0.push(profile.to_string());
+        host.profiles.0.push(profile);
         let json_host = Json(host.profiles.0);
         sqlx::query!("UPDATE hosts SET profiles = ? WHERE hostname = ?", json_host, hostname)
             .execute(&self.pool)
@@ -71,7 +71,7 @@ impl Database {
             Some(h) => h,
             None => return Err(sqlx::Error::RowNotFound),
         };
-        host.options.0.push(option.to_string());
+        host.options.0.push(option);
         let json_host = Json(host.options.0);
         sqlx::query!("UPDATE hosts SET options = ? WHERE hostname = ?", json_host, hostname)
             .execute(&self.pool)

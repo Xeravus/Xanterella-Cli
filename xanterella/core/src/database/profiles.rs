@@ -17,7 +17,7 @@ impl Database {
     pub async fn list_profiles(&self) -> Result<Vec<DBProfile>, sqlx::Error> {
         let profiles = sqlx::query_as!(
             DBProfile,
-            "SELECT id as 'id!', name, dir, options as 'options: Json<Vec<String>>' FROM profiles"
+            "SELECT id as 'id!', name, dir, options as 'options: Json<Vec<serde_json::Value>>' FROM profiles"
         )
         .fetch_all(&self.pool)
         .await?;
@@ -27,7 +27,7 @@ impl Database {
     pub async fn get_profile(&self, name: &str) -> Result<Option<DBProfile>, sqlx::Error> {
         let profile = sqlx::query_as!(
             DBProfile,
-            "SELECT id as 'id!', name, dir, options as 'options: Json<Vec<String>>' FROM profiles WHERE name = ?",
+            "SELECT id as 'id!', name, dir, options as 'options: Json<Vec<serde_json::Value>>' FROM profiles WHERE name = ?",
             name
         )
         .fetch_optional(&self.pool)
@@ -48,8 +48,8 @@ impl Database {
                 id as "id!", 
                 hostname, 
                 ip, 
-                profiles as "profiles: Json<Vec<String>>", 
-                options as "options: Json<Vec<String>>" 
+                profiles as "profiles: Json<Vec<serde_json::Value>>", 
+                options as "options: Json<Vec<serde_json::Value>>" 
             FROM hosts 
             WHERE EXISTS (
                 SELECT 1 FROM json_each(profiles) WHERE value = ?
@@ -68,7 +68,7 @@ impl Database {
             Some(p) => p,
             None => return Err(sqlx::Error::RowNotFound),
         };
-        profile.options.0.push(option.to_string());
+        profile.options.0.push(option);
         let json_profile = Json(profile.options.0);
         sqlx::query!("UPDATE profiles SET options = ? WHERE name = ?", json_profile, profile_name)
             .execute(&self.pool)

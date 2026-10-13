@@ -17,8 +17,8 @@ pub struct DBHost {
     pub id: i64,
     pub hostname: String,
     pub ip: String,
-    pub profiles: Json<Vec<String>>,
-    pub options: Json<Vec<String>>,
+    pub profiles: Json<Vec<serde_json::Value>>,
+    pub options: Json<Vec<serde_json::Value>>,
 }
 
 #[derive(Serialize, Deserialize, FromRow)]
@@ -27,7 +27,7 @@ pub struct DBModul {
     pub name: String,
     pub desc: String,
     pub category: String,
-    pub options: sqlx::types::Json<Vec<String>>,
+    pub options: sqlx::types::Json<Vec<serde_json::Value>>,
 }
 
 #[derive(Serialize, Deserialize, FromRow)]
@@ -35,7 +35,7 @@ pub struct DBProfile {
     pub id: i64,
     pub name: String,
     pub dir: String,
-    pub options: sqlx::types::Json<Vec<String>>,
+    pub options: sqlx::types::Json<Vec<serde_json::Value>>,
 }
 
 impl Database {
