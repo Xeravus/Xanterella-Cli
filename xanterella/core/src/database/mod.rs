@@ -7,7 +7,7 @@ use crate::database::db::Database;
 
 #[cfg(test)]
 mod tests_utils {
-    
+
     use sqlx::sqlite::SqlitePoolOptions;
 
     use super::*;

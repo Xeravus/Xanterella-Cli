@@ -7,6 +7,7 @@ edition = "2024"
 xanterella-core = { path = "../core" }
 
 axum = "0.7"
+prolyxena = { git = "https://github.com/Xeravus/Xanterella-Cli", branch = "final/staging" }
 tokio = { version = "1", features = ["full"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 serde_json = "1.0.149"

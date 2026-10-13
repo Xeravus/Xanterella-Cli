@@ -6,11 +6,11 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use xanterella_core::prolyxena::CreateModul;
 use xanterella_core::{
     database::db::DBModul,
     xanterella::{EventFormat, EventState},
 };
-use xanterella_core::prolyxena::CreateModul;
 
 use crate::{ApiError, AppState};
 

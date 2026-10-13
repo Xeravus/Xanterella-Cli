@@ -434,7 +434,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn setup_lexer(content: &str) -> Lexer {
+    fn setup_lexer(content: &str) -> Lexer<'_> {
         Lexer::new(content, String::from("path.nix"))
     }
 

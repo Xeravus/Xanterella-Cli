@@ -12,7 +12,8 @@ use axum::{
 use serde_json::{Value, json};
 use tokio_stream::Stream;
 use tokio_stream::{StreamExt, wrappers::BroadcastStream};
-use xanterella_core::{Ping, Xanterella, XanterellaInstall};
+use xanterella_core::{Ping, Xanterella, xanterella::{EventState, EventFormat}, XanterellaInstall, prolyxena::Nixtractor};
+use prolyxena::engine::lexer::vfs::*;
 
 use crate::{ApiError, AppState, hosts::*, modules::*, profiles::*};
 
@@ -22,6 +23,8 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/health", get(health_check))
         .route("/ping/:ip", get(get_ping))
         .route("/stream", get(event_stream))
+        .route("/extract", get(extract_configs))
+        .route("/clear", get(clear))
         .route("/hosts", get(list_hosts).post(create_host))
         .route("/hosts/:hostname", get(check_host).delete(delete_host))
         .route("/hosts/:hostname/profiles", post(host_add_profile).delete(host_remove_profile))
@@ -72,4 +75,91 @@ pub async fn health_check() -> impl IntoResponse {
         "status": "ok",
         "message": "Server is running",
     }))
+}
+
+pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<Value>, ApiError> {
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Run,
+        step: "Extract of Files".to_string(),
+    });
+
+    let mut fs_data = FsData::new("/home/cato/xanterella/config");
+    fs_data.load().map_err(|err| {
+        eprintln!("Extractions-Fehler: VFS Init Fehler: '{}'", err);
+        ApiError::InternalError
+    })?;
+
+    let mut extractor = Nixtractor::new(&mut fs_data).await;
+
+    let hosts = extractor.extract_hosts().await.map_err(|err| {
+        eprintln!("Extractions-Fehler: Hosts: \n{}", err);
+        ApiError::InternalError 
+    })?;
+    let profiles = extractor.extract_profiles().await.map_err(|err| {
+        eprintln!("Extractions-Fehler: Profiles: \n{}", err);
+        ApiError::InternalError 
+    })?;
+    let modules = extractor.extract_modules().await.map_err(|err| {
+        eprintln!("Extractions-Fehler: Modules: \n{}", err);
+        ApiError::InternalError 
+    })?;
+
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Finish,
+        step: "Extraction of Files".to_string(),
+    });
+
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Run,
+        step: "Synchronise Config with DB".to_string(),
+    });
+
+    for h in &hosts {
+        if let Err(e) = state.db.add_host(&h.hostname, &h.ip, h.profiles.clone(), h.options.clone()).await {
+            eprintln!("Sync-Fehler: Host '{}': {}", h.hostname, e);
+        }
+    }
+
+    for p in &profiles {
+        if let Err(e) = state.db.add_profile(&p.name, &p.dir, p.options.clone()).await {
+            eprintln!("Sync-Fehler: Profile '{}': {}", p.name, e);
+        }
+    }
+
+    for m in &modules {
+        if let Err(e) = state.db.add_modul(&m.name, &m.desc, &m.category, m.options.clone()).await {
+            eprintln!("Sync-Fehler: Modul '{}': {}", m.name, e);
+        }
+    }
+
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Finish,
+        step: "Synchronisation of Files".to_string(),
+    });
+
+    Ok(Json(json!({
+        "status": "success",
+        "message": format!("Synchronisiert: {} Hosts, {} Profile, {} Module", hosts.len(), profiles.len(), modules.len())
+    })))
+}
+
+pub async fn clear(State(state): State<Arc<AppState>>) -> Result<Json<Value>, ApiError> {
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Run,
+        step: "Clearing DB".to_string(),
+    });
+
+    let clear = state.db.clear().await.map_err(|err| {
+        eprintln!("Clearing-Fehler: {}", err);
+        ApiError::InternalError
+    })?;
+
+    let _ = state.tx.send(EventFormat {
+        state: EventState::Finish,
+        step: "Cleared DB".to_string(),
+    });
+    Ok(Json(json!({
+        "status": "success",
+        "message": clear,
+    })))
 }

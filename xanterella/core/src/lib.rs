@@ -4,9 +4,9 @@ pub mod get;
 pub mod git;
 pub mod install;
 pub mod nix;
+pub mod prolyxena;
 pub mod result;
 pub mod xanterella;
-pub mod prolyxena;
 
 pub mod prelude;
 

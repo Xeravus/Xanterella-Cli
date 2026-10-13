@@ -2,9 +2,8 @@ use std::iter::Peekable;
 use std::str::Chars;
 use std::sync::mpsc;
 
-use serde::{Serialize, Deserialize};
-
 use indexmap::IndexMap;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum NixValue {
