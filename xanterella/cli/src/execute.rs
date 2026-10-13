@@ -12,7 +12,7 @@ use xanterella_core::{
 };
 
 pub async fn execute_init_config() {
-    if let Err(_) = intro("Start Installer") {
+    if intro("Start Installer").is_err() {
         println!("CliClack could initialize");
         process::exit(2);
     };
@@ -51,14 +51,14 @@ pub async fn execute_init_config() {
         }
     }
 
-    if let Err(_) = outro("Finished Writing Config") {
+    if outro("Finished Writing Config").is_err() {
         println!("CliClack could end. \nDont worry writing the config is finished");
         process::exit(1);
     }
 }
 
 pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, flake: &str) {
-    if let Err(_) = intro("Start Installer") {
+    if intro("Start Installer").is_err() {
         println!("CliClack could not initialize");
         process::exit(2);
     };
@@ -132,7 +132,7 @@ pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, fl
 
     bar.stop("Installation complete");
 
-    if let Err(_) = outro("Finished Installer") {
+    if outro("Finished Installer").is_err() {
         println!("CliClack could end. \nDont worry the installer is finished");
         process::exit(1);
     }
@@ -167,18 +167,9 @@ pub async fn execute_extract(flake: &str) {
     let mut prolyxena1 = FsData::new(flake);
     let mut prolyxena2 = FsData::new(flake);
     let mut prolyxena3 = FsData::new(flake);
-    match prolyxena1.load() {
-        Err(e) => eprintln!("Excration-Error: '{}'", e),
-        _ => {}
-    }
-    match prolyxena2.load() {
-        Err(e) => eprintln!("Excration-Error: '{}'", e),
-        _ => {}
-    }
-    match prolyxena3.load() {
-        Err(e) => eprintln!("Excration-Error: '{}'", e),
-        _ => {}
-    }
+    if let Err(e) = prolyxena1.load() { eprintln!("Excration-Error: '{}'", e) }
+    if let Err(e) = prolyxena2.load() { eprintln!("Excration-Error: '{}'", e) }
+    if let Err(e) = prolyxena3.load() { eprintln!("Excration-Error: '{}'", e) }
     let extractor1 = Nixtractor::new(&mut prolyxena1);
     let extractor2 = Nixtractor::new(&mut prolyxena2);
     let extractor3 = Nixtractor::new(&mut prolyxena3);
