@@ -9,11 +9,15 @@ use axum::{
     },
     routing::{delete, get, post},
 };
+use prolyxena::engine::lexer::vfs::*;
 use serde_json::{Value, json};
 use tokio_stream::Stream;
 use tokio_stream::{StreamExt, wrappers::BroadcastStream};
-use xanterella_core::{Ping, Xanterella, xanterella::{EventState, EventFormat}, XanterellaInstall, prolyxena::Nixtractor};
-use prolyxena::engine::lexer::vfs::*;
+use xanterella_core::{
+    Ping, Xanterella, XanterellaInstall,
+    prolyxena::Nixtractor,
+    xanterella::{EventFormat, EventState},
+};
 
 use crate::{ApiError, AppState, hosts::*, modules::*, profiles::*};
 
@@ -93,15 +97,15 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
 
     let hosts = extractor.extract_hosts().await.map_err(|err| {
         eprintln!("Extractions-Fehler: Hosts: \n{}", err);
-        ApiError::InternalError 
+        ApiError::InternalError
     })?;
     let profiles = extractor.extract_profiles().await.map_err(|err| {
         eprintln!("Extractions-Fehler: Profiles: \n{}", err);
-        ApiError::InternalError 
+        ApiError::InternalError
     })?;
     let modules = extractor.extract_modules().await.map_err(|err| {
         eprintln!("Extractions-Fehler: Modules: \n{}", err);
-        ApiError::InternalError 
+        ApiError::InternalError
     })?;
 
     let _ = state.tx.send(EventFormat {

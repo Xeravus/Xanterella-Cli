@@ -1,11 +1,11 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use sqlx::{
     FromRow,
     sqlite::{SqlitePool, SqlitePoolOptions},
     types::Json,
 };
-
-use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Database {
