@@ -277,3 +277,167 @@ impl<'a> Nixtractor<'a> {
         Ok(modules)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use indexmap::IndexMap;
+    use prolyxena::engine::{lexer::vfs::FsNodes, core::NixValue};
+
+    fn dummy_file(name: &str, ast: NixValue) -> FsNodes {
+        FsNodes::File {
+            name: name.to_string(),
+            ast,
+        }
+    }
+
+    fn dummy_dir(items: Vec<(&str, FsNodes)>) -> FsNodes {
+        let mut map = IndexMap::new();
+        for (k, v) in items {
+            map.insert(k.to_string(), v);
+        }
+        FsNodes::Dir(map)
+    }
+
+    // --- Tests ---
+
+    #[tokio::test]
+    async fn test_nixtractor_extract_hosts_success() {
+        let mut fs_data = FsData::new("/fake");
+
+        // Simuliert: imports = [ ./hardware.nix ];
+        let config_ast = NixValue::AttrSet(IndexMap::from([(
+            "imports".to_string(),
+            NixValue::List(vec![NixValue::Path("./hardware.nix".to_string())]),
+        )]));
+
+        // Simuliert: config.xanterella = { enable = true; };
+        let app_ast = NixValue::AttrSet(IndexMap::from([(
+            "config".to_string(),
+            NixValue::AttrSet(IndexMap::from([(
+                "xanterella".to_string(),
+                NixValue::AttrSet(IndexMap::from([("enable".to_string(), NixValue::Bool(true))])),
+            )])),
+        )]));
+
+        // VFS-Struktur aufbauen
+        fs_data.fsnodes = dummy_dir(vec![
+            (
+                "hosts",
+                dummy_dir(vec![(
+                    "test-node",
+                    dummy_dir(vec![("configuration.nix", dummy_file("configuration.nix", config_ast))]),
+                )]),
+            ),
+            (
+                "profiles",
+                dummy_dir(vec![(
+                    "apps",
+                    dummy_dir(vec![("test-node-apps.nix", dummy_file("test-node-apps.nix", app_ast))]),
+                )]),
+            ),
+        ]);
+
+        let mut extractor = Nixtractor::new(&mut fs_data).await;
+        let hosts = extractor.extract_hosts().await.unwrap();
+
+        assert_eq!(hosts.len(), 1);
+        assert_eq!(hosts[0].hostname, "test-node");
+        assert_eq!(hosts[0].ip, "test-node");
+        assert_eq!(hosts[0].profiles.len(), 1);
+        assert_eq!(hosts[0].options.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_nixtractor_extract_profiles_success() {
+        let mut fs_data = FsData::new("/fake");
+
+        // Simuliert: xanterella = { is_server = true; };
+        let profile_ast = NixValue::AttrSet(IndexMap::from([(
+            "xanterella".to_string(),
+            NixValue::AttrSet(IndexMap::from([("is_server".to_string(), NixValue::Bool(true))])),
+        )]));
+
+        // VFS-Struktur aufbauen
+        fs_data.fsnodes = dummy_dir(vec![(
+            "profiles",
+            dummy_dir(vec![
+                ("base.nix", dummy_file("base.nix", profile_ast.clone())),
+                (
+                    "server",
+                    dummy_dir(vec![("web.nix", dummy_file("web.nix", profile_ast))]),
+                ),
+            ]),
+        )]);
+
+        let mut extractor = Nixtractor::new(&mut fs_data).await;
+        let profiles = extractor.extract_profiles().await.unwrap();
+
+        assert_eq!(profiles.len(), 2);
+        
+        let base = profiles.iter().find(|p| p.name == "base").unwrap();
+        assert_eq!(base.dir, "base");
+        assert_eq!(base.options.len(), 1);
+
+        let web = profiles.iter().find(|p| p.name == "web").unwrap();
+        assert_eq!(web.dir, "server");
+        assert_eq!(web.options.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_nixtractor_extract_modules_success() {
+        let mut fs_data = FsData::new("/fake");
+
+        // Simuliert: config = { sys = true; };
+        let mod_ast = NixValue::AttrSet(IndexMap::from([(
+            "config".to_string(),
+            NixValue::AttrSet(IndexMap::from([("sys".to_string(), NixValue::Bool(true))])),
+        )]));
+
+        // VFS-Struktur aufbauen
+        fs_data.fsnodes = dummy_dir(vec![(
+            "modules",
+            dummy_dir(vec![(
+                "system",
+                dummy_dir(vec![
+                    ("network.nix", dummy_file("network.nix", mod_ast.clone())),
+                    (
+                        "deep",
+                        dummy_dir(vec![("storage.nix", dummy_file("storage.nix", mod_ast))]),
+                    ),
+                ]),
+            )]),
+        )]);
+
+        let mut extractor = Nixtractor::new(&mut fs_data).await;
+        let modules = extractor.extract_modules().await.unwrap();
+
+        assert_eq!(modules.len(), 2);
+        
+        let network = modules.iter().find(|m| m.name == "network").unwrap();
+        assert_eq!(network.category, "system");
+        assert_eq!(network.options.len(), 1);
+
+        let storage = modules.iter().find(|m| m.name == "storage").unwrap();
+        assert_eq!(storage.options.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_nixtractor_empty_vfs_errors() {
+        // Testet, ob der Extractor saubere Fehlermeldungen wirft, wenn die Ordner fehlen
+        let mut fs_data = FsData::new("/fake");
+        fs_data.fsnodes = dummy_dir(vec![]); 
+
+        let mut extractor = Nixtractor::new(&mut fs_data).await;
+        
+        let hosts_err = extractor.extract_hosts().await;
+        assert!(hosts_err.is_err());
+        assert!(hosts_err.unwrap_err().contains("Kein Pfad gefunden"));
+
+        let profiles_err = extractor.extract_profiles().await;
+        assert!(profiles_err.is_err());
+
+        let modules_err = extractor.extract_modules().await;
+        assert!(modules_err.is_err());
+    }
+}
