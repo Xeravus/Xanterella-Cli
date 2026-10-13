@@ -167,9 +167,15 @@ pub async fn execute_extract(flake: &str) {
     let mut prolyxena1 = FsData::new(flake);
     let mut prolyxena2 = FsData::new(flake);
     let mut prolyxena3 = FsData::new(flake);
-    if let Err(e) = prolyxena1.load() { eprintln!("Excration-Error: '{}'", e) }
-    if let Err(e) = prolyxena2.load() { eprintln!("Excration-Error: '{}'", e) }
-    if let Err(e) = prolyxena3.load() { eprintln!("Excration-Error: '{}'", e) }
+    if let Err(e) = prolyxena1.load() {
+        eprintln!("Excration-Error: '{}'", e)
+    }
+    if let Err(e) = prolyxena2.load() {
+        eprintln!("Excration-Error: '{}'", e)
+    }
+    if let Err(e) = prolyxena3.load() {
+        eprintln!("Excration-Error: '{}'", e)
+    }
     let extractor1 = Nixtractor::new(&mut prolyxena1);
     let extractor2 = Nixtractor::new(&mut prolyxena2);
     let extractor3 = Nixtractor::new(&mut prolyxena3);

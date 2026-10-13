@@ -1273,7 +1273,7 @@ dependencies = [
 [[package]]
 name = "prolyxena"
 version = "0.1.0"
-source = "git+https://github.com/Xeravus/Xanterella-Cli?branch=final%2Fstaging#706f83b70a68c1e762ab784b5f853802c247b230"
+source = "git+https://github.com/Xeravus/Xanterella-Cli?branch=final%2Fstaging#475cbc4e95dc03d3ad59371a1f75994b291a494b"
 dependencies = [
  "clap",
  "crossterm",
