@@ -107,7 +107,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
         self.log_event(ParseEvent::StartPath);
         let mut string = String::new();
         while let Some(&c) = self.chars.peek() {
-            if c.is_whitespace() || c == ';' {
+            if c.is_whitespace() || c == ';' || c == ')' || c == '}' {
                 break;
             }
             string.push(c);
@@ -395,14 +395,6 @@ impl<'a> ParsePrimitves for Lexer<'a> {
             }
         }
 
-        if let Some(&';') = self.chars.peek() {
-        } else {
-            return Err(format!(
-                "Syntax-Fehler: Erwartet ';' nach dem Indented String \nDatei: {} \nErwartet: Indented String",
-                self.path
-            ));
-        }
-
         self.log_event(ParseEvent::EndIndentedString);
         Ok(NixValue::IndStr(output))
     }
@@ -442,7 +434,7 @@ impl<'a> ParsePrimitves for Lexer<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn setup_lexer(content: &str) -> Lexer {
+    fn setup_lexer(content: &str) -> Lexer<'_> {
         Lexer::new(content, String::from("path.nix"))
     }
 
@@ -517,6 +509,17 @@ mod tests {
         assert!(result1.is_ok());
         assert!(result2.is_ok());
         assert!(result3.is_ok());
+    }
+    #[test]
+    fn test_engine_lexer_primitives_parse_single_value_path_ending_correct() {
+        let mut data1 = setup_lexer(".test)");
+        let mut data2 = setup_lexer("/test}");
+
+        let result1 = data1.parse_single_value();
+        let result2 = data2.parse_single_value();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_ok());
     }
     #[test]
     fn test_engine_lexer_primitives_parse_single_value_group() {
@@ -889,14 +892,16 @@ mod tests {
         assert!(result3.is_ok());
         assert!(result4.is_ok());
         assert!(result5.is_ok());
-        assert!(result6.is_err());
-        assert!(result7.is_err());
+        assert!(result6.is_ok());
+        assert!(result7.is_ok());
 
         assert!(matches!(result1, Ok(NixValue::IndStr(_))));
         assert!(matches!(result2, Ok(NixValue::IndStr(_))));
         assert!(matches!(result3, Ok(NixValue::IndStr(_))));
         assert!(matches!(result4, Ok(NixValue::IndStr(_))));
         assert!(matches!(result5, Ok(NixValue::IndStr(_))));
+        assert!(matches!(result6, Ok(NixValue::IndStr(_))));
+        assert!(matches!(result7, Ok(NixValue::IndStr(_))));
     }
 
     #[test]

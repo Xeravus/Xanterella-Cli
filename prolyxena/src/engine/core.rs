@@ -3,8 +3,9 @@ use std::str::Chars;
 use std::sync::mpsc;
 
 use indexmap::IndexMap;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum NixValue {
     AttrSet(IndexMap<String, NixValue>),
     List(Vec<NixValue>),
@@ -24,7 +25,7 @@ pub enum NixValue {
     BinaryOp { left: Box<NixValue>, operator: Operator, right: Box<NixValue> },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum LambdaTypes {
     Nofix(Vec<String>, Box<NixValue>),
     Prefix(Vec<String>, String, Box<NixValue>),
@@ -32,7 +33,7 @@ pub enum LambdaTypes {
     Single(String, Box<NixValue>),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Operator {
     Add,
     Sub,
@@ -44,7 +45,7 @@ pub enum Operator {
     Divide,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum StringFragment {
     Text(String),
     Antiquotation(Box<NixValue>),
