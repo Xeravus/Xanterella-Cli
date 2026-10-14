@@ -6,6 +6,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum NixValue {
     AttrSet(IndexMap<String, NixValue>),
     List(Vec<NixValue>),
