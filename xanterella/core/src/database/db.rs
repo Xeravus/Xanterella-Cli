@@ -12,30 +12,32 @@ pub struct Database {
     pub pool: SqlitePool,
 }
 
-#[derive(Serialize, FromRow, Debug, Clone)]
+#[derive(Serialize, Deserialize, FromRow, Debug, Clone)]
 pub struct DBHost {
     pub id: i64,
     pub hostname: String,
     pub ip: String,
     pub profiles: Json<Vec<serde_json::Value>>,
+    pub hardware: Json<Vec<serde_json::Value>>,
     pub options: Json<Vec<serde_json::Value>>,
 }
 
-#[derive(Serialize, Deserialize, FromRow)]
+#[derive(Serialize, Deserialize, FromRow, Debug, Clone)]
 pub struct DBModul {
     pub id: i64,
     pub name: String,
     pub desc: String,
     pub category: String,
-    pub options: sqlx::types::Json<Vec<serde_json::Value>>,
+    pub options: Json<Vec<serde_json::Value>>,
+    pub config: Json<Vec<serde_json::Value>>,
 }
 
-#[derive(Serialize, Deserialize, FromRow)]
+#[derive(Serialize, Deserialize, FromRow, Debug, Clone)]
 pub struct DBProfile {
     pub id: i64,
     pub name: String,
     pub dir: String,
-    pub options: sqlx::types::Json<Vec<serde_json::Value>>,
+    pub options: Json<Vec<serde_json::Value>>,
 }
 
 impl Database {
@@ -73,7 +75,8 @@ mod tests {
     async fn db_add_modul_and_list_modul() {
         let db = setup_test_db().await;
         let options = vec![json!("sys.enable")];
-        db.add_modul("test-modul1", "test modul nr1", "test", options)
+        let config = vec![json!("sys.enable")];
+        db.add_modul("test-modul1", "test modul nr1", "test", options, config)
             .await
             .expect("Fehler beim Hinzufügen des Modules");
         let modules = db.list_modules().await.expect("Fehler beim Auslesen");
@@ -88,7 +91,7 @@ mod tests {
     #[tokio::test]
     async fn db_get_modul() {
         let db = setup_test_db().await;
-        db.add_modul("test", "1.1.1.1", "test", vec![]).await.unwrap();
+        db.add_modul("test", "1.1.1.1", "test", vec![], vec![]).await.unwrap();
         let get1 = db.get_modul("test");
         let get2 = db.get_modul("test");
 
@@ -99,7 +102,7 @@ mod tests {
     #[tokio::test]
     async fn db_delete_modul() {
         let db = setup_test_db().await;
-        db.add_modul("test", "test modul", "test", vec![]).await.unwrap();
+        db.add_modul("test", "test modul", "test", vec![], vec![]).await.unwrap();
         let affected_rows = db.delete_modul("test").await.unwrap();
         let modules = db.list_modules().await.unwrap();
         assert_eq!(affected_rows, 1);

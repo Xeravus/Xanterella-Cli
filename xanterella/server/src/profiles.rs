@@ -5,13 +5,51 @@ use axum::{
     extract::{Path, State},
 };
 use serde_json::{Value, json};
-use xanterella_core::prolyxena::CreateProfile;
+use indexmap::IndexMap;
+
 use xanterella_core::{
     database::db::DBProfile,
+    prolyxena::CreateProfile,
     xanterella::{EventFormat, EventState},
 };
 
 use crate::{ApiError, AppState};
+
+use prolyxena::engine::{formater::core::Format, core::NixValue};
+
+#[derive(serde::Serialize)]
+pub struct ProfileResponse {
+    pub id: i64,
+    pub name: String,
+    pub dir: String,
+    pub options: String,
+}
+
+impl From<DBProfile> for ProfileResponse {
+    fn from(db_profile: DBProfile) -> Self {
+        let process_values = |vec: &Vec<serde_json::Value>| {
+            vec.iter()
+                .map(|val| {
+                    if let Ok(nix_ast) = serde_json::from_value::<NixValue>(val.clone()) {
+                        return nix_ast.format_nix(0);
+                    }
+                    if let Ok(map) = serde_json::from_value::<IndexMap<String, NixValue>>(val.clone()) {
+                        return NixValue::AttrSet(map).format_nix(0);
+                    }
+                    format!("Deserialisierungs-Fehler beim Lesen. \n Ursprüngliches JSON: {} ", val)
+                })
+                .collect::<Vec<String>>()
+                .join("\n")
+        };
+
+        Self {
+            id: db_profile.id,
+            name: db_profile.name,
+            dir: db_profile.dir,
+            options: process_values(&db_profile.options.0),
+        }
+    }
+}
 
 pub async fn create_profile(
     State(state): State<Arc<AppState>>, Json(payload): Json<CreateProfile>,
@@ -56,9 +94,10 @@ pub async fn delete_profile(
     })))
 }
 
-pub async fn list_profiles(State(state): State<Arc<AppState>>) -> Result<Json<Vec<DBProfile>>, ApiError> {
+pub async fn list_profiles(State(state): State<Arc<AppState>>) -> Result<Json<Vec<ProfileResponse>>, ApiError> {
     let profiles = state.db.list_profiles().await.map_err(|_| ApiError::InternalError)?;
-    Ok(Json(profiles))
+    let response: Vec<ProfileResponse> = profiles.into_iter().map(ProfileResponse::from).collect();
+    Ok(Json(response))
 }
 
 pub async fn check_profile(

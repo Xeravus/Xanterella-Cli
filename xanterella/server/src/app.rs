@@ -38,6 +38,7 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/profiles/:name/option", post(profile_add_option).delete(profile_remove_option))
         .route("/modules", get(list_modules).post(create_modul))
         .route("/modules/:name", get(check_modul).delete(delete_modul))
+        // .route("/generate", get(generate_config))
         .with_state(state)
 }
 
@@ -119,7 +120,7 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
     });
 
     for h in &hosts {
-        if let Err(e) = state.db.add_host(&h.hostname, &h.ip, h.profiles.clone(), h.options.clone()).await {
+        if let Err(e) = state.db.add_host(&h.hostname, &h.ip, h.profiles.clone(), h.hardware.clone(), h.options.clone()).await {
             eprintln!("Sync-Fehler: Host '{}': {}", h.hostname, e);
         }
     }
@@ -131,7 +132,7 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
     }
 
     for m in &modules {
-        if let Err(e) = state.db.add_modul(&m.name, &m.desc, &m.category, m.options.clone()).await {
+        if let Err(e) = state.db.add_modul(&m.name, &m.desc, &m.category, m.options.clone(), m.config.clone()).await {
             eprintln!("Sync-Fehler: Modul '{}': {}", m.name, e);
         }
     }
@@ -189,7 +190,7 @@ mod tests {
         let state = test_state().await;
 
         // Füge einen Dummy-Host hinzu, um zu testen, ob er gelöscht wird
-        state.db.add_host("delete-me", "0.0.0.0", vec![], vec![]).await.unwrap();
+        state.db.add_host("delete-me", "0.0.0.0", vec![], vec![], vec![]).await.unwrap();
 
         // Clear aufrufen
         let app_state = State(state.clone());

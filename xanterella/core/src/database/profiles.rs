@@ -49,6 +49,7 @@ impl Database {
                 hostname, 
                 ip, 
                 profiles as "profiles: Json<Vec<serde_json::Value>>", 
+                hardware as "hardware: Json<Vec<serde_json::Value>>", 
                 options as "options: Json<Vec<serde_json::Value>>" 
             FROM hosts 
             WHERE EXISTS (
@@ -164,8 +165,8 @@ mod tests {
         let db = setup_test_db().await;
 
         let profiles = vec![json!("target-profile"), json!("other-profile")];
-        db.add_host("test-node", "1.1.1.1", profiles, vec![]).await.unwrap();
-        db.add_host("other-node", "2.2.2.2", vec![json!("other-profile")], vec![]).await.unwrap();
+        db.add_host("test-node", "1.1.1.1", profiles, vec![], vec![]).await.unwrap();
+        db.add_host("other-node", "2.2.2.2", vec![json!("other-profile")], vec![], vec![]).await.unwrap();
 
         let hosts = db.profile_get_hosts("target-profile").await.unwrap();
         assert_eq!(hosts.len(), 1);

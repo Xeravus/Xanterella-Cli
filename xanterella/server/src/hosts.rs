@@ -5,6 +5,8 @@ use axum::{
     extract::{Path, State},
 };
 use serde_json::{Value, json};
+use indexmap::IndexMap;
+
 use xanterella_core::{
     database::db::DBHost,
     prolyxena::CreateHost,
@@ -12,6 +14,46 @@ use xanterella_core::{
 };
 
 use crate::{ApiError, AppState};
+
+use prolyxena::engine::{formater::core::Format, core::NixValue};
+
+#[derive(serde::Serialize)]
+pub struct HostResponse {
+    pub id: i64,
+    pub hostname: String,
+    pub ip: String,
+    pub profiles: String,
+    pub hardware: String,
+    pub options: String,
+}
+
+impl From<DBHost> for HostResponse {
+    fn from(db_host: DBHost) -> Self {
+        let process_values = |vec: &Vec<serde_json::Value>| {
+            vec.iter()
+                .map(|val| {
+                    if let Ok(nix_ast) = serde_json::from_value::<NixValue>(val.clone()) {
+                        return nix_ast.format_nix(0);
+                    }
+                    if let Ok(map) = serde_json::from_value::<IndexMap<String, NixValue>>(val.clone()) {
+                        return NixValue::AttrSet(map).format_nix(0);
+                    }
+                    format!("Deserialisierungs-Fehler beim Lesen. \n Ursprüngliches JSON: {} ", val)
+                })
+                .collect::<Vec<String>>()
+                .join("\n")
+        };
+
+        Self {
+            id: db_host.id,
+            hostname: db_host.hostname,
+            ip: db_host.ip,
+            profiles: process_values(&db_host.profiles.0),
+            hardware: process_values(&db_host.hardware.0),
+            options:  process_values(&db_host.options.0),
+        }
+    }
+}
 
 pub async fn create_host(
     State(state): State<Arc<AppState>>, Json(payload): Json<CreateHost>,
@@ -22,7 +64,7 @@ pub async fn create_host(
     });
     state
         .db
-        .add_host(&payload.hostname, &payload.ip, payload.profiles.clone(), payload.options)
+        .add_host(&payload.hostname, &payload.ip, payload.profiles.clone(), payload.hardware.clone(), payload.options)
         .await
         .map_err(|_| ApiError::InternalError)?;
 
@@ -60,9 +102,10 @@ pub async fn delete_host(
     })))
 }
 
-pub async fn list_hosts(State(state): State<Arc<AppState>>) -> Result<Json<Vec<DBHost>>, ApiError> {
+pub async fn list_hosts(State(state): State<Arc<AppState>>) -> Result<Json<Vec<HostResponse>>, ApiError> {
     let hosts = state.db.list_hosts().await.map_err(|_| ApiError::InternalError)?;
-    Ok(Json(hosts))
+    let response: Vec<HostResponse> = hosts.into_iter().map(HostResponse::from).collect();
+    Ok(Json(response))
 }
 
 pub async fn check_host(
@@ -173,6 +216,7 @@ mod tests {
             hostname: "api-host".to_string(),
             ip: "10.0.0.1".to_string(),
             profiles: vec![],
+            hardware: vec![],
             options: vec![],
         });
         let res_create = create_host(app_state.clone(), payload).await;
@@ -192,8 +236,7 @@ mod tests {
         let check_prof = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
         assert_eq!(check_prof.profiles.0.len(), 1);
 
-        let _ =
-            host_remove_profile(app_state.clone(), Path("api-host".to_string()), Json(json!({"path": "test"}))).await;
+        let _ = host_remove_profile(app_state.clone(), Path("api-host".to_string()), Json(json!({"path": "test"}))).await;
         let check_prof_rm = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
         assert!(check_prof_rm.profiles.0.is_empty());
 
@@ -206,11 +249,9 @@ mod tests {
         let check_opt_rm = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
         assert!(check_opt_rm.options.0.is_empty());
 
-        // 6. Delete Host
         let res_del = delete_host(app_state.clone(), Path("api-host".to_string())).await;
         assert!(res_del.is_ok());
 
-        // 7. Verify Deletion (Not Found)
         let not_found = check_host(app_state.clone(), Path("api-host".to_string())).await;
         assert!(matches!(not_found, Err(ApiError::NotFound)));
     }

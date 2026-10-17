@@ -6,7 +6,7 @@
         body { font-family: system-ui, sans-serif; background: #f4f4f5; margin: 0; padding: 2rem; color: #18181b; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
         .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        pre { background: #09090b; color: #a3e635; padding: 1rem; border-radius: 6px; height: 180px; overflow-y: auto; }
+        .log-box { background: #09090b; color: #a3e635; padding: 1rem; border-radius: 6px; height: 180px; overflow-y: auto; font-family: monospace; }
         input, button { padding: 6px; margin: 4px 0; border: 1px solid #ccc; border-radius: 4px; }
         button { background: #3b82f6; color: white; border: none; cursor: pointer; }
         button:hover { background: #2563eb; }
@@ -14,7 +14,20 @@
         ul { list-style: none; padding: 0; }
         li { background: #f9fafb; margin-bottom: 8px; padding: 10px; border-radius: 4px; border: 1px solid #e4e4e7; display: flex; flex-direction: column; }
         .flex-row { display: flex; justify-content: space-between; align-items: center; }
-        .badge { background: #e4e4e7; font-size: 0.75rem; padding: 2px 6px; border-radius: 12px; margin: 2px; display: inline-block; }
+        .desc-text { color: #52525b; font-size: 0.85rem; margin-bottom: 4px; font-style: italic; }
+        
+        /* Neues Styling für unsere fertigen Nix-Strings */
+        .nix-code { 
+            background: #1e1e2e; 
+            color: #cdd6f4; 
+            padding: 8px; 
+            border-radius: 4px; 
+            font-size: 0.75rem; 
+            white-space: pre-wrap; 
+            margin: 4px 0 8px 0;
+            overflow-x: auto;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -22,7 +35,7 @@
     
     <div class="card" style="margin-bottom: 1.5rem;">
         <h3 style="margin-top: 0;">Live Event Stream</h3>
-        <pre id="stream-output">Verbunden... warte auf Events.</pre>
+        <div id="stream-output" class="log-box">Verbunden... warte auf Events.</div>
     </div>
 
     <div class="grid">
@@ -69,9 +82,15 @@
 
         async function fetchAPI(url, method = "GET", body = null) {
             const options = { method, headers: { "Content-Type": "application/json" } };
-            if (body) options.body = JSON.stringify(body);
+            if (body) options.body = typeof body === 'string' ? body : JSON.stringify(body);
             await fetch(url, options);
             loadData();
+        }
+
+        // Hilfsfunktion: Rendert den Nix-Code nur, wenn er nicht leer ist
+        function renderNix(title, codeString) {
+            if (!codeString || codeString.trim() === "") return "";
+            return `<div><strong>${title}:</strong><pre class="nix-code">${codeString}</pre></div>`;
         }
 
         async function loadData() {
@@ -85,8 +104,9 @@
                         <button class="del-btn" onclick="fetchAPI('/hosts/${h.hostname}', 'DELETE')">X</button>
                     </div>
                     <div style="margin-top: 8px; font-size: 0.85rem;">
-			<div><strong>Profile:</strong> ${h.profiles.map(p => `<span class="badge">${JSON.stringify(p)}</span>`).join('')}</div>
-			<div><strong>Optionen:</strong> ${h.options.map(o => `<span class="badge">${JSON.stringify(o)}</span>`).join('')}</div>
+                        ${renderNix("Profile", h.profiles)}
+                        ${renderNix("Hardware", h.hardware)}
+                        ${renderNix("Optionen", h.options)}
                         <div style="margin-top: 5px;">
                             <input id="add-p-${h.hostname}" placeholder="Profil anhängen" style="width: 100px; font-size: 0.7rem;">
                             <button style="font-size: 0.7rem;" onclick="fetchAPI('/hosts/${h.hostname}/profiles', 'POST', document.getElementById('add-p-${h.hostname}').value)">Add</button>
@@ -101,6 +121,9 @@
                         <strong>${p.name}</strong> <span>${p.dir}</span>
                         <button class="del-btn" onclick="fetchAPI('/profiles/${p.name}', 'DELETE')">X</button>
                     </div>
+                    <div style="margin-top: 8px; font-size: 0.85rem;">
+                        ${renderNix("Optionen", p.options)}
+                    </div>
                 </li>
             `).join("");
 
@@ -110,6 +133,11 @@
                         <strong>${m.name}</strong> <span>${m.category}</span>
                         <button class="del-btn" onclick="fetchAPI('/modules/${m.name}', 'DELETE')">X</button>
                     </div>
+                    <div style="margin-top: 8px; font-size: 0.85rem;">
+                        ${m.desc ? `<div class="desc-text">${m.desc}</div>` : ''}
+                        ${renderNix("Optionen", m.options)}
+                        ${renderNix("Config", m.config)}
+                    </div>
                 </li>
             `).join("");
         }
@@ -118,7 +146,7 @@
             fetchAPI("/hosts", "POST", { 
                 hostname: document.getElementById("h-name").value, 
                 ip: document.getElementById("h-ip").value, 
-                profiles: [], options: [] 
+                profiles: [], hardware: [], options: [] 
             });
         }
 
@@ -135,7 +163,7 @@
                 name: document.getElementById("m-name").value, 
                 desc: document.getElementById("m-desc").value, 
                 category: document.getElementById("m-cat").value, 
-                options: [] 
+                options: [], config: []
             });
         }
 

@@ -5,13 +5,56 @@ use axum::{
     extract::{Path, State},
 };
 use serde_json::{Value, json};
-use xanterella_core::prolyxena::CreateModul;
+use indexmap::IndexMap;
+
 use xanterella_core::{
     database::db::DBModul,
+    prolyxena::CreateModul,
     xanterella::{EventFormat, EventState},
 };
 
 use crate::{ApiError, AppState};
+
+use prolyxena::engine::{formater::core::Format, core::NixValue};
+
+#[derive(serde::Serialize)]
+pub struct ModulResponse {
+    pub id: i64,
+    pub name: String,
+    pub desc: String,
+    pub category: String,
+    pub options: String,
+    pub config: String,
+}
+
+impl From<DBModul> for ModulResponse {
+    fn from(db_modul: DBModul) -> Self {
+        let process_values = |vec: &Vec<serde_json::Value>| {
+            vec.iter()
+                .map(|val| {
+                    if let Ok(nix_ast) = serde_json::from_value::<NixValue>(val.clone()) {
+                        return nix_ast.format_nix(0);
+                    }
+                    if let Ok(map) = serde_json::from_value::<IndexMap<String, NixValue>>(val.clone()) {
+                        return NixValue::AttrSet(map).format_nix(0);
+                    }
+                    format!("Deserialisierungs-Fehler beim Lesen. \n Ursprüngliches JSON: {} ", val)
+                })
+                .collect::<Vec<String>>()
+                .join("\n")
+        };
+
+        Self {
+            id: db_modul.id,
+            name: db_modul.name,
+            desc: db_modul.desc,
+            category: db_modul.category,
+            options: process_values(&db_modul.options.0),
+            config: process_values(&db_modul.config.0),
+        }
+    }
+}
+
 
 pub async fn create_modul(
     State(state): State<Arc<AppState>>, Json(payload): Json<CreateModul>,
@@ -22,7 +65,7 @@ pub async fn create_modul(
     });
     state
         .db
-        .add_modul(&payload.name, &payload.desc, &payload.category, payload.options)
+        .add_modul(&payload.name, &payload.desc, &payload.category, payload.options, payload.config)
         .await
         .map_err(|_| ApiError::InternalError)?;
 
@@ -60,9 +103,10 @@ pub async fn delete_modul(
     })))
 }
 
-pub async fn list_modules(State(state): State<Arc<AppState>>) -> Result<Json<Vec<DBModul>>, ApiError> {
+pub async fn list_modules(State(state): State<Arc<AppState>>) -> Result<Json<Vec<ModulResponse>>, ApiError> {
     let modules = state.db.list_modules().await.map_err(|_| ApiError::InternalError)?;
-    Ok(Json(modules))
+    let response: Vec<ModulResponse> = modules.into_iter().map(ModulResponse::from).collect();
+    Ok(Json(response))
 }
 
 pub async fn check_modul(
@@ -102,6 +146,7 @@ mod tests {
             desc: "Test API Modul".to_string(),
             category: "api-tests".to_string(),
             options: vec![],
+            config: vec![],
         });
         let res_create = create_modul(app_state.clone(), payload).await;
         assert!(res_create.is_ok());
