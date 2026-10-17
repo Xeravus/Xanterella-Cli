@@ -6,7 +6,6 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
 pub enum NixValue {
     AttrSet(IndexMap<String, NixValue>),
     List(Vec<NixValue>),
@@ -27,7 +26,6 @@ pub enum NixValue {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
 pub enum LambdaTypes {
     Nofix(Vec<String>, Box<NixValue>),
     Prefix(Vec<String>, String, Box<NixValue>),
@@ -36,7 +34,6 @@ pub enum LambdaTypes {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
 pub enum Operator {
     Add,
     Sub,
