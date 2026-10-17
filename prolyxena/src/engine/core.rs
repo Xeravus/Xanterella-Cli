@@ -27,6 +27,7 @@ pub enum NixValue {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum LambdaTypes {
     Nofix(Vec<String>, Box<NixValue>),
     Prefix(Vec<String>, String, Box<NixValue>),
@@ -35,6 +36,7 @@ pub enum LambdaTypes {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum Operator {
     Add,
     Sub,
@@ -47,6 +49,7 @@ pub enum Operator {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum StringFragment {
     Text(String),
     Antiquotation(Box<NixValue>),
