@@ -19,6 +19,7 @@ pub struct CreateHost {
     pub profiles: Vec<Value>,
     pub hardware: Vec<Value>,
     pub options: Vec<Value>,
+    pub config: Vec<Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -65,6 +66,7 @@ impl<'a> Nixtractor<'a> {
             let mut profiles = Vec::new();
             let mut hardware = Vec::new();
             let mut options = Vec::new();
+            let mut config = Vec::new();
 
             let host_name =
                 i.split('/').next_back().expect("Extracting Hosts: Konnte das letzte Element nicht extrahieren");
@@ -78,6 +80,7 @@ impl<'a> Nixtractor<'a> {
                 }
             };
 
+            config.push(serde_json::json!(config_file.clone()));
             let filtered_content = config_file.query_exact_mut(&["imports"]);
             if let Some(NixValue::List(list)) = filtered_content.first() {
                 for item in list.iter() {
@@ -122,6 +125,7 @@ impl<'a> Nixtractor<'a> {
                 profiles,
                 hardware,
                 options,
+                config,
             });
         }
         Ok(hosts)
@@ -267,6 +271,7 @@ impl<'a> Nixtractor<'a> {
                         if k.contains("default.nix") {
                             continue;
                         }
+                        let category = format!("{}/{}", i, j);
                         let mut options = Vec::new();
                         let mut config = Vec::new();
                         let name = match k.split('/').next_back() {
@@ -283,7 +288,7 @@ impl<'a> Nixtractor<'a> {
                         modules.push(CreateModul {
                             name: name.to_string(),
                             desc: String::new(),
-                            category: j.to_string(),
+                            category,
                             options,
                             config,
                         });

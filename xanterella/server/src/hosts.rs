@@ -16,16 +16,17 @@ use xanterella_core::{
 use crate::{ApiError, AppState};
 
 #[derive(serde::Serialize)]
-pub struct HostResponse {
+pub struct HostsResponse {
     pub id: i64,
     pub hostname: String,
     pub ip: String,
     pub profiles: String,
     pub hardware: String,
     pub options: String,
+    pub config: String,
 }
 
-impl From<DBHost> for HostResponse {
+impl From<DBHost> for HostsResponse {
     fn from(db_host: DBHost) -> Self {
         let process_values = |vec: &Vec<serde_json::Value>| {
             vec.iter()
@@ -49,6 +50,7 @@ impl From<DBHost> for HostResponse {
             profiles: process_values(&db_host.profiles.0),
             hardware: process_values(&db_host.hardware.0),
             options: process_values(&db_host.options.0),
+            config: process_values(&db_host.config.0),
         }
     }
 }
@@ -62,7 +64,14 @@ pub async fn create_host(
     });
     state
         .db
-        .add_host(&payload.hostname, &payload.ip, payload.profiles.clone(), payload.hardware.clone(), payload.options)
+        .add_host(
+            &payload.hostname,
+            &payload.ip,
+            payload.profiles.clone(),
+            payload.hardware.clone(),
+            payload.options.clone(),
+            payload.config,
+        )
         .await
         .map_err(|_| ApiError::InternalError)?;
 
@@ -100,9 +109,9 @@ pub async fn delete_host(
     })))
 }
 
-pub async fn list_hosts(State(state): State<Arc<AppState>>) -> Result<Json<Vec<HostResponse>>, ApiError> {
+pub async fn list_hosts(State(state): State<Arc<AppState>>) -> Result<Json<Vec<HostsResponse>>, ApiError> {
     let hosts = state.db.list_hosts().await.map_err(|_| ApiError::InternalError)?;
-    let response: Vec<HostResponse> = hosts.into_iter().map(HostResponse::from).collect();
+    let response: Vec<HostsResponse> = hosts.into_iter().map(HostsResponse::from).collect();
     Ok(Json(response))
 }
 

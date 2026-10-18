@@ -20,6 +20,7 @@ pub struct DBHost {
     pub profiles: Json<Vec<serde_json::Value>>,
     pub hardware: Json<Vec<serde_json::Value>>,
     pub options: Json<Vec<serde_json::Value>>,
+    pub config: Json<Vec<serde_json::Value>>,
 }
 
 #[derive(Serialize, Deserialize, FromRow, Debug, Clone)]

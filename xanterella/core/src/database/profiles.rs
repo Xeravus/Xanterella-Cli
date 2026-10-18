@@ -50,7 +50,8 @@ impl Database {
                 ip, 
                 profiles as "profiles: Json<Vec<serde_json::Value>>", 
                 hardware as "hardware: Json<Vec<serde_json::Value>>", 
-                options as "options: Json<Vec<serde_json::Value>>" 
+                options as "options: Json<Vec<serde_json::Value>>",
+                config as "config: Json<Vec<serde_json::Value>>" 
             FROM hosts 
             WHERE EXISTS (
                 SELECT 1 FROM json_each(profiles) WHERE value = ?
