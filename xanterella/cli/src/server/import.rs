@@ -1,11 +1,9 @@
+use std::process;
+
+use prolyxena::engine::lexer::vfs::FsData;
 use serde::Serialize;
 use serde_json::Value;
-
-use std::process;
-use prolyxena::engine::lexer::vfs::FsData;
-use xanterella_core::prolyxena::Nixtractor;
-
-use xanterella_core::prolyxena::{CreateHost, CreateProfile, CreateModul};
+use xanterella_core::prolyxena::{CreateHost, CreateModul, CreateProfile, Nixtractor};
 
 trait ApiSend: Serialize {
     fn endpoint(&self) -> &str;
