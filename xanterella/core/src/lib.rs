@@ -10,7 +10,7 @@ pub mod xanterella;
 
 pub mod prelude;
 
-pub use config::{Config, Data};
+pub use config::{Config};
 pub use get::{Paths, User};
 pub use git::{Branches, Git, PrType};
 pub use install::install::XanterellaInstall;

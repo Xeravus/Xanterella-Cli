@@ -1,4 +1,4 @@
-use std::{collections::HashSet, env};
+use std::collections::HashSet;
 
 use crate::prelude::*;
 
@@ -29,26 +29,11 @@ pub struct DeviceInfo {
 }
 
 pub trait Get {
-    fn get_path(&mut self, path: Paths) -> String;
     fn get_taildevices(&self) -> Result<Taildevices, EventsFailed>;
     fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String>;
 }
 
 impl Get for Xanterella {
-    fn get_path(&mut self, path: Paths) -> String {
-        let home = if self.home.is_empty() {
-            env::var("HOME").expect("Konnte die Home Varialbe nichht extrahieren")
-        } else {
-            self.home.clone()
-        };
-        let config = PathBuf::from(&home).join(".config").join("xanterella");
-        let result: PathBuf = match path {
-            Paths::Nixconf => self.path.as_str().into(),
-            Paths::Config => config,
-        };
-        result.to_str().expect("[ FAILED ] - Get Path is fehlgeschlagen").to_string()
-    }
-
     fn get_taildevices(&self) -> Result<Taildevices, EventsFailed> {
         let cmd = Command::new("tailscale")
             .args(["status", "--json"])

@@ -30,7 +30,7 @@ impl Git for Xanterella {
         if !self.debug {
             let cmd = Command::new("git")
                 .args(["commit", "-am", msg])
-                .current_dir(self.get_path(Paths::Nixconf))
+                .current_dir(self.load_config().target_directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
@@ -54,7 +54,7 @@ impl Git for Xanterella {
         if !self.debug {
             let cmd = Command::new("git")
                 .args(["checkout", br_name])
-                .current_dir(self.get_path(Paths::Nixconf))
+                .current_dir(self.load_config().target_directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
@@ -63,7 +63,7 @@ impl Git for Xanterella {
 
                 let create = Command::new("git")
                     .args(["checkout", "-b", br_name])
-                    .current_dir(self.get_path(Paths::Nixconf))
+                    .current_dir(self.load_config().target_directory)
                     .output()
                     .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
@@ -87,7 +87,7 @@ impl Git for Xanterella {
 
             let cmd = Command::new("git")
                 .args(["merge", "--ff-only", "-n", "main"])
-                .current_dir(self.get_path(Paths::Nixconf))
+                .current_dir(self.load_config().target_directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
@@ -125,7 +125,7 @@ impl Git for Xanterella {
                 .args(["-B", "main"])
                 .args(["-t", &title])
                 .args(["-b", &body])
-                .current_dir(self.get_path(Paths::Nixconf))
+                .current_dir(self.load_config().target_directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
@@ -156,7 +156,7 @@ impl Git for Xanterella {
         if !self.debug {
             let cmd = Command::new("git")
                 .args(["reset", "--hard", &commit])
-                .current_dir(self.get_path(Paths::Nixconf))
+                .current_dir(self.load_config().target_directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 

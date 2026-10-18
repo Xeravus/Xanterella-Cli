@@ -24,6 +24,7 @@ pub enum EventsFailed {
     /// utils/Config.rs
     ConfigCreateDir(String),
     ConfigGenBasic(String),
+    ConfigSave(String),
 
     /// Installer
     /// installer/Ping.rs
@@ -51,10 +52,6 @@ pub enum EventsFailed {
     /// installer/Helper.rs
     GetHardware(String),
     GetDrives(String),
-
-    /// installer/Inject.rs
-    InjectTailscale(String),
-    InjectWifi(String),
 
     /// Prolyxena
     Prolyxena(String),
@@ -153,11 +150,4 @@ pub enum Events {
 
     OkGetHardware,
     OkGetDrives,
-
-    /// installer/Inject.rs
-    RunInjectTailscale,
-    RunInjectWifi,
-
-    OkInjectTailscale,
-    OkInjectWifi,
 }

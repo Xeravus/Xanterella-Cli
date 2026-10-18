@@ -8,7 +8,7 @@ use prolyxena::engine::{
     lexer::vfs::FsData,
 };
 
-use crate::{XanterellaInstall, install::helper::Helper, prelude::*};
+use crate::{XanterellaInstall, config::Config, install::helper::Helper, prelude::*};
 
 pub trait Edit {
     fn crylia_edit_start(&mut self) -> Result<(), EventsFailed>;
@@ -22,7 +22,7 @@ pub trait Edit {
 
 impl Edit for XanterellaInstall {
     fn crylia_edit_start(&mut self) -> Result<(), EventsFailed> {
-        let mut config = FsData::new(&self.xanterella.path);
+        let mut config = FsData::new(&self.xanterella.load_config().target_directory);
         self.crylia_add_hardware_conf(&mut config)?;
         self.crylia_add_hardware_link(&mut config)?;
         config.walk_tree().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
@@ -51,7 +51,7 @@ impl Edit for XanterellaInstall {
     }
 
     fn crylia_edit_finish(&mut self) -> Result<(), EventsFailed> {
-        let mut config = FsData::new(&self.xanterella.path);
+        let mut config = FsData::new(&self.xanterella.load_config().target_directory);
         self.crylia_remove_hardware_conf(&mut config)?;
         self.crylia_remove_hardware_link(&mut config)?;
         config.walk_tree().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;

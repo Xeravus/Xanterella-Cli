@@ -17,7 +17,7 @@ impl Deploy for XanterellaInstall {
         if !self.xanterella.debug {
             let cmd = Command::new("nix")
                 .args(["build", ".#nixosConfigurations.crylia.config.system.build.toplevel"])
-                .current_dir(self.xanterella.get_path(Paths::Nixconf))
+                .current_dir(self.xanterella.load_config().target_directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
@@ -42,7 +42,7 @@ impl Deploy for XanterellaInstall {
             let cmd = Command::new("sh")
                 .arg("-c")
                 .arg(fast_cmd)
-                .current_dir(self.xanterella.get_path(Paths::Nixconf))
+                .current_dir(self.xanterella.load_config().target_directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
@@ -59,7 +59,7 @@ impl Deploy for XanterellaInstall {
         self.xanterella.log_event(Events::RunCreateProfile);
 
         if !self.xanterella.debug {
-            let sys_path = fs::read_link(format!("{}/result", self.xanterella.get_path(Paths::Nixconf)))
+            let sys_path = fs::read_link(format!("{}/result", self.xanterella.load_config().target_directory))
                 .map_err(|err| EventsFailed::ReadSymLink(err.to_string()))?
                 .to_string_lossy()
                 .into_owned();

@@ -8,7 +8,7 @@ use std::sync::Arc;
 use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde_json::json;
 use tokio::sync::broadcast;
-use xanterella_core::{database::db::Database, xanterella::EventFormat};
+use xanterella_core::{config::AppPaths, database::db::Database, xanterella::EventFormat};
 
 use crate::app::*;
 
@@ -43,9 +43,9 @@ impl IntoResponse for ApiError {
 #[tokio::main]
 async fn main() {
     let (tx, _rx) = broadcast::channel::<EventFormat>(100);
-    let db = Database::init("sqlite://../../xanterella.db?mode=rwc")
-        .await
-        .expect("Datenkbank konnte nicht initialisiert werden");
+    let paths = AppPaths::init();
+    let db =
+        Database::init(&paths.database_url).await.expect("Init-Fehler: Datenkbank konnte nicht initialisiert werden");
 
     let state = Arc::new(AppState {
         tx,

@@ -1,6 +1,6 @@
 use crate::{
     git::Git,
-    install::{deploy::Deploy, drives::Drives, inject::Inject, ping::Ping},
+    install::{deploy::Deploy, drives::Drives, ping::Ping},
     nix::{check::Check, edit::Edit},
     prelude::*,
 };
@@ -71,8 +71,6 @@ impl XanterellaInstall {
         self.prep_sys()?;
         self.activate_sys()?;
         self.activate_bootloader()?;
-        self.inject_tailscale()?;
-        self.inject_wifi()?;
         self.reboot_sys()?;
 
         self.xanterella.log_event(Events::OkRemoteInstall);
