@@ -173,15 +173,19 @@ pub async fn clear(State(state): State<Arc<AppState>>) -> Result<Json<Value>, Ap
 mod tests {
     use tokio::sync::broadcast;
     use xanterella_core::database::db::Database;
+    use xanterella_core::config::AppConfig;
+
 
     use super::*;
 
     async fn test_state() -> Arc<AppState> {
         let (tx, _rx) = broadcast::channel(100);
         let db = Database::init("sqlite::memory:").await.unwrap();
+        let config = AppConfig { target_directory: String::new(), port: 0, };
         Arc::new(AppState {
             tx,
             db,
+            config,
         })
     }
 

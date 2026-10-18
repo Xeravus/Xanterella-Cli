@@ -172,8 +172,7 @@ mod tests {
         assert!(matches!(
             data,
             Xanterella {
-                path: _,
-                home: _,
+                config: _,
                 fast: _,
                 debug: _,
                 automate: _,
