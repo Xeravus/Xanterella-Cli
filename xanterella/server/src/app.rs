@@ -24,7 +24,6 @@ pub fn create_app(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/", get(dashboard))
         .route("/health", get(health_check))
-        //.route("/reload",
         .route("/ping/:ip", get(get_ping))
         .route("/stream", get(event_stream))
         .route("/extract", get(extract_configs))
