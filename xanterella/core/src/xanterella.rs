@@ -1,9 +1,7 @@
 use serde::Serialize;
 use tokio::sync::broadcast::*;
 
-use crate::config::AppPaths;
-
-use crate::prelude::*;
+use crate::{config::AppPaths, prelude::*};
 
 #[derive(Debug, Clone)]
 pub struct Xanterella {

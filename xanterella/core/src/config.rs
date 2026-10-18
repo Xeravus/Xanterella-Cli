@@ -1,6 +1,10 @@
-use std::{env, fs::create_dir_all, fs::write, fs::read_to_string, path::PathBuf};
+use std::{
+    env,
+    fs::{create_dir_all, read_to_string, write},
+    path::PathBuf,
+};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
@@ -60,7 +64,10 @@ impl AppConfig {
             match toml::from_str(&content) {
                 Ok(c) => c,
                 Err(e) => {
-                    eprintln!("Config-Fehler: Config.toml enthält nicht korrektes toml. \n{} \nFallback auf Standartwerte", e);
+                    eprintln!(
+                        "Config-Fehler: Config.toml enthält nicht korrektes toml. \n{} \nFallback auf Standartwerte",
+                        e
+                    );
                     Self::default()
                 }
             }

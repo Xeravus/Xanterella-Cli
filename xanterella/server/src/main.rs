@@ -8,13 +8,18 @@ use std::sync::Arc;
 use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde_json::json;
 use tokio::sync::broadcast;
-use xanterella_core::{config::AppPaths, database::db::Database, xanterella::EventFormat};
+use xanterella_core::{
+    config::{AppConfig, AppPaths},
+    database::db::Database,
+    xanterella::EventFormat,
+};
 
 use crate::app::*;
 
 pub struct AppState {
     pub tx: broadcast::Sender<EventFormat>,
     pub db: Database,
+    pub config: AppConfig,
 }
 
 #[allow(unused)]
@@ -44,12 +49,14 @@ impl IntoResponse for ApiError {
 async fn main() {
     let (tx, _rx) = broadcast::channel::<EventFormat>(100);
     let paths = AppPaths::init();
+    let config = AppConfig::load(&paths);
     let db =
         Database::init(&paths.database_url).await.expect("Init-Fehler: Datenkbank konnte nicht initialisiert werden");
 
     let state = Arc::new(AppState {
         tx,
         db,
+        config,
     });
 
     let app = create_app(state);
