@@ -87,7 +87,6 @@
             loadData();
         }
 
-        // Hilfsfunktion: Rendert den Nix-Code nur, wenn er nicht leer ist
         function renderNix(title, codeString) {
             if (!codeString || codeString.trim() === "") return "";
             return `<div><strong>${title}:</strong><pre class="nix-code">${codeString}</pre></div>`;

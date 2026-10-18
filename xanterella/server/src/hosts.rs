@@ -4,9 +4,9 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use serde_json::{Value, json};
 use indexmap::IndexMap;
-
+use prolyxena::engine::{core::NixValue, formater::core::Format};
+use serde_json::{Value, json};
 use xanterella_core::{
     database::db::DBHost,
     prolyxena::CreateHost,
@@ -14,8 +14,6 @@ use xanterella_core::{
 };
 
 use crate::{ApiError, AppState};
-
-use prolyxena::engine::{formater::core::Format, core::NixValue};
 
 #[derive(serde::Serialize)]
 pub struct HostResponse {
@@ -50,7 +48,7 @@ impl From<DBHost> for HostResponse {
             ip: db_host.ip,
             profiles: process_values(&db_host.profiles.0),
             hardware: process_values(&db_host.hardware.0),
-            options:  process_values(&db_host.options.0),
+            options: process_values(&db_host.options.0),
         }
     }
 }
@@ -211,7 +209,6 @@ mod tests {
         let state = test_state().await;
         let app_state = State(state.clone());
 
-        // 1. Create Host
         let payload = Json(xanterella_core::prolyxena::CreateHost {
             hostname: "api-host".to_string(),
             ip: "10.0.0.1".to_string(),
@@ -222,25 +219,22 @@ mod tests {
         let res_create = create_host(app_state.clone(), payload).await;
         assert!(res_create.is_ok());
 
-        // 2. List Hosts
         let list = list_hosts(app_state.clone()).await.unwrap();
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].hostname, "api-host");
 
-        // 3. Check Host
         let check = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
         assert_eq!(check.hostname, "api-host");
 
-        // 4. Add & Remove Profile
         let _ = host_add_profile(app_state.clone(), Path("api-host".to_string()), Json(json!({"path": "test"}))).await;
         let check_prof = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
         assert_eq!(check_prof.profiles.0.len(), 1);
 
-        let _ = host_remove_profile(app_state.clone(), Path("api-host".to_string()), Json(json!({"path": "test"}))).await;
+        let _ =
+            host_remove_profile(app_state.clone(), Path("api-host".to_string()), Json(json!({"path": "test"}))).await;
         let check_prof_rm = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
         assert!(check_prof_rm.profiles.0.is_empty());
 
-        // 5. Add & Remove Option
         let _ = host_add_option(app_state.clone(), Path("api-host".to_string()), Json(json!({"port": 80}))).await;
         let check_opt = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
         assert_eq!(check_opt.options.0.len(), 1);
@@ -254,5 +248,30 @@ mod tests {
 
         let not_found = check_host(app_state.clone(), Path("api-host".to_string())).await;
         assert!(matches!(not_found, Err(ApiError::NotFound)));
+    }
+
+    #[tokio::test]
+    async fn test_host_response_dto_fallbacks() {
+        let tagged_val = json!({"Bool": true});
+        let naked_map = json!({"enable": {"Bool": true}});
+        let invalid_val = json!("unparsable_nonsense");
+
+        let db_host = DBHost {
+            id: 1,
+            hostname: "coverage-host".to_string(),
+            ip: "127.0.0.1".to_string(),
+            profiles: sqlx::types::Json(vec![tagged_val]),
+            hardware: sqlx::types::Json(vec![naked_map]),
+            options: sqlx::types::Json(vec![invalid_val]),
+        };
+
+        let response = HostResponse::from(db_host);
+        assert_eq!(response.profiles.trim(), "true");
+        assert!(response.hardware.contains("enable"));
+        assert!(response.hardware.contains("true"));
+        assert!(response.hardware.contains('='));
+        assert!(response.hardware.contains(';'));
+        assert!(response.options.contains("Deserialisierungs-Fehler"));
+        assert!(response.options.contains("unparsable_nonsense"));
     }
 }

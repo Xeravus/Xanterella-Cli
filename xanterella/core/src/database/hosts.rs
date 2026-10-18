@@ -1,11 +1,11 @@
 use sqlx::types::Json;
 
-use crate::database::db::DBHost;
-use crate::database::db::Database;
+use crate::database::db::{DBHost, Database};
 
 impl Database {
     pub async fn add_host(
-        &self, hostname: &str, ip: &str, profiles: Vec<serde_json::Value>, hardware: Vec<serde_json::Value>, options: Vec<serde_json::Value>,
+        &self, hostname: &str, ip: &str, profiles: Vec<serde_json::Value>, hardware: Vec<serde_json::Value>,
+        options: Vec<serde_json::Value>,
     ) -> Result<(), sqlx::Error> {
         let json_profiles = Json(profiles);
         let json_hardware = Json(hardware);

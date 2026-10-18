@@ -4,7 +4,7 @@ use crate::database::{Database, db::DBModul};
 
 impl Database {
     pub async fn add_modul(
-        &self, name: &str, desc: &str, category: &str, options: Vec<serde_json::Value>, config: Vec<serde_json::Value>
+        &self, name: &str, desc: &str, category: &str, options: Vec<serde_json::Value>, config: Vec<serde_json::Value>,
     ) -> Result<(), sqlx::Error> {
         let json_options = Json(options);
         let json_config = Json(config);

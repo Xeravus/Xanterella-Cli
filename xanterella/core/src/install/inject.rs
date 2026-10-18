@@ -1,5 +1,4 @@
-use crate::config::Config;
-use crate::prelude::*;
+use crate::{config::Config, prelude::*};
 
 pub trait Inject {
     fn inject_tailscale(&mut self) -> Result<(), EventsFailed>;

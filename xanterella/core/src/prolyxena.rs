@@ -1,9 +1,10 @@
 use std::fmt::Write;
 
-use prolyxena::engine::core::NixValue;
-use prolyxena::engine::generator::query::Query;
-use prolyxena::engine::generator::query::{SearchContent, SearchObjekt};
-use prolyxena::engine::lexer::vfs::*;
+use prolyxena::engine::{
+    core::NixValue,
+    generator::query::{Query, SearchContent, SearchObjekt},
+    lexer::vfs::*,
+};
 use serde::*;
 use serde_json::Value;
 
@@ -65,7 +66,8 @@ impl<'a> Nixtractor<'a> {
             let mut hardware = Vec::new();
             let mut options = Vec::new();
 
-            let host_name = i.split('/').next_back().expect("Extracting Hosts: Konnte das letzte Element nicht extrahieren");
+            let host_name =
+                i.split('/').next_back().expect("Extracting Hosts: Konnte das letzte Element nicht extrahieren");
             conf_file_path.clear();
             write!(&mut conf_file_path, "hosts/{}/configuration.nix", host_name).unwrap();
             let config_file = match self.prolyxena.search_tree(&conf_file_path) {
@@ -88,7 +90,10 @@ impl<'a> Nixtractor<'a> {
             let hardware_file = match self.prolyxena.search_tree(&conf_file_path) {
                 Ok(file) => file,
                 Err(e) => {
-                    eprintln!("Extraction-Fehler: Keine Hardware-Configuration File found for Host: '{}'. {}", host_name, e);
+                    eprintln!(
+                        "Extraction-Fehler: Keine Hardware-Configuration File found for Host: '{}'. {}",
+                        host_name, e
+                    );
                     continue;
                 }
             };

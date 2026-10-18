@@ -11,8 +11,7 @@ use axum::{
 };
 use prolyxena::engine::lexer::vfs::*;
 use serde_json::{Value, json};
-use tokio_stream::Stream;
-use tokio_stream::{StreamExt, wrappers::BroadcastStream};
+use tokio_stream::{Stream, StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{
     Ping, Xanterella, XanterellaInstall,
     prolyxena::Nixtractor,
@@ -38,7 +37,6 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/profiles/:name/option", post(profile_add_option).delete(profile_remove_option))
         .route("/modules", get(list_modules).post(create_modul))
         .route("/modules/:name", get(check_modul).delete(delete_modul))
-        // .route("/generate", get(generate_config))
         .with_state(state)
 }
 
@@ -120,7 +118,9 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
     });
 
     for h in &hosts {
-        if let Err(e) = state.db.add_host(&h.hostname, &h.ip, h.profiles.clone(), h.hardware.clone(), h.options.clone()).await {
+        if let Err(e) =
+            state.db.add_host(&h.hostname, &h.ip, h.profiles.clone(), h.hardware.clone(), h.options.clone()).await
+        {
             eprintln!("Sync-Fehler: Host '{}': {}", h.hostname, e);
         }
     }
@@ -189,16 +189,13 @@ mod tests {
     async fn test_api_clear_db() {
         let state = test_state().await;
 
-        // Füge einen Dummy-Host hinzu, um zu testen, ob er gelöscht wird
         state.db.add_host("delete-me", "0.0.0.0", vec![], vec![], vec![]).await.unwrap();
 
-        // Clear aufrufen
         let app_state = State(state.clone());
         let res = clear(app_state).await;
 
         assert!(res.is_ok());
 
-        // Prüfen ob die DB leer ist
         let hosts = state.db.list_hosts().await.unwrap();
         assert!(hosts.is_empty());
     }

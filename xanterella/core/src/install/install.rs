@@ -1,11 +1,9 @@
-use crate::git::Git;
-use crate::install::deploy::Deploy;
-use crate::install::drives::Drives;
-use crate::install::inject::Inject;
-use crate::install::ping::Ping;
-use crate::nix::check::Check;
-use crate::nix::edit::Edit;
-use crate::prelude::*;
+use crate::{
+    git::Git,
+    install::{deploy::Deploy, drives::Drives, inject::Inject, ping::Ping},
+    nix::{check::Check, edit::Edit},
+    prelude::*,
+};
 
 pub struct XanterellaInstall {
     pub xanterella: Xanterella,

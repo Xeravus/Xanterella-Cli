@@ -4,9 +4,9 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use serde_json::{Value, json};
 use indexmap::IndexMap;
-
+use prolyxena::engine::{core::NixValue, formater::core::Format};
+use serde_json::{Value, json};
 use xanterella_core::{
     database::db::DBProfile,
     prolyxena::CreateProfile,
@@ -14,8 +14,6 @@ use xanterella_core::{
 };
 
 use crate::{ApiError, AppState};
-
-use prolyxena::engine::{formater::core::Format, core::NixValue};
 
 #[derive(serde::Serialize)]
 pub struct ProfileResponse {
@@ -167,7 +165,6 @@ mod tests {
         let state = test_state().await;
         let app_state = State(state.clone());
 
-        // 1. Create Profile
         let payload = Json(xanterella_core::prolyxena::CreateProfile {
             name: "api-profile".to_string(),
             dir: "server".to_string(),
@@ -176,29 +173,24 @@ mod tests {
         let res_create = create_profile(app_state.clone(), payload).await;
         assert!(res_create.is_ok());
 
-        // 2. List Profiles
         let list = list_profiles(app_state.clone()).await.unwrap();
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].name, "api-profile");
 
-        // 3. Check Profile
         let check = check_profile(app_state.clone(), Path("api-profile".to_string())).await.unwrap();
         assert_eq!(check.name, "api-profile");
 
-        // 4. Add Option
         let _ =
             profile_add_option(app_state.clone(), Path("api-profile".to_string()), Json(json!({"enable": true}))).await;
         let check_opt = check_profile(app_state.clone(), Path("api-profile".to_string())).await.unwrap();
         assert_eq!(check_opt.options.0.len(), 1);
 
-        // 5. Remove Option
         let _ =
             profile_remove_option(app_state.clone(), Path("api-profile".to_string()), Json(json!({"enable": true})))
                 .await;
         let check_opt_rm = check_profile(app_state.clone(), Path("api-profile".to_string())).await.unwrap();
         assert!(check_opt_rm.options.0.is_empty());
 
-        // 6. Delete Profile
         let res_del = delete_profile(app_state.clone(), Path("api-profile".to_string())).await;
         assert!(res_del.is_ok());
     }

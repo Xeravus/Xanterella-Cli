@@ -2388,6 +2388,7 @@ dependencies = [
  "prolyxena",
  "serde",
  "serde_json",
+ "sqlx",
  "tokio",
  "tokio-stream",
  "xanterella-core",

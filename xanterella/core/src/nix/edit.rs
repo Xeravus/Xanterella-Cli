@@ -1,14 +1,14 @@
-use prolyxena::engine::formater::write::Write;
-use prolyxena::engine::generator::generate::Generate;
-use prolyxena::engine::generator::generate::Modify;
-use prolyxena::engine::generator::query::SearchContent;
-use prolyxena::engine::generator::remove::Delete;
-use prolyxena::engine::generator::remove::Remove;
-use prolyxena::engine::lexer::vfs::FsData;
+use prolyxena::engine::{
+    formater::write::Write,
+    generator::{
+        generate::{Generate, Modify},
+        query::SearchContent,
+        remove::{Delete, Remove},
+    },
+    lexer::vfs::FsData,
+};
 
-use crate::XanterellaInstall;
-use crate::install::helper::Helper;
-use crate::prelude::*;
+use crate::{XanterellaInstall, install::helper::Helper, prelude::*};
 
 pub trait Edit {
     fn crylia_edit_start(&mut self) -> Result<(), EventsFailed>;

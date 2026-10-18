@@ -4,9 +4,9 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use serde_json::{Value, json};
 use indexmap::IndexMap;
-
+use prolyxena::engine::{core::NixValue, formater::core::Format};
+use serde_json::{Value, json};
 use xanterella_core::{
     database::db::DBModul,
     prolyxena::CreateModul,
@@ -14,8 +14,6 @@ use xanterella_core::{
 };
 
 use crate::{ApiError, AppState};
-
-use prolyxena::engine::{formater::core::Format, core::NixValue};
 
 #[derive(serde::Serialize)]
 pub struct ModulResponse {
@@ -54,7 +52,6 @@ impl From<DBModul> for ModulResponse {
         }
     }
 }
-
 
 pub async fn create_modul(
     State(state): State<Arc<AppState>>, Json(payload): Json<CreateModul>,
@@ -140,7 +137,6 @@ mod tests {
         let state = test_state().await;
         let app_state = State(state.clone());
 
-        // 1. Create Modul
         let payload = Json(xanterella_core::prolyxena::CreateModul {
             name: "api-modul".to_string(),
             desc: "Test API Modul".to_string(),
@@ -151,16 +147,13 @@ mod tests {
         let res_create = create_modul(app_state.clone(), payload).await;
         assert!(res_create.is_ok());
 
-        // 2. List Modules
         let list = list_modules(app_state.clone()).await.unwrap();
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].name, "api-modul");
 
-        // 3. Check Modul
         let check = check_modul(app_state.clone(), Path("api-modul".to_string())).await.unwrap();
         assert_eq!(check.name, "api-modul");
 
-        // 4. Delete Modul
         let res_del = delete_modul(app_state.clone(), Path("api-modul".to_string())).await;
         assert!(res_del.is_ok());
     }

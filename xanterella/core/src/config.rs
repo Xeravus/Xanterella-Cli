@@ -79,31 +79,24 @@ mod tests {
     #[test]
     fn test_config_lifecycle() {
         let mut x = Xanterella::new();
-        // Temporären isolierten Ordner nutzen, um echte Configs nicht zu überschreiben
         let temp_dir = std::env::temp_dir()
             .join(format!("xant_{}", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()));
         x.set_home(temp_dir.to_str().unwrap());
 
-        // 1. Ordner erstellen
         assert!(x.config_create_dir().is_ok());
         assert!(temp_dir.join(".config").join("xanterella").exists());
 
-        // 2. Standard-Config generieren
         assert!(x.config_gen_basic().is_ok());
 
-        // 3. Config einlesen
         let parsed = x.config_parse().expect("Sollte parsen können");
         assert_eq!(parsed.flake, "flake/flake.nix");
 
-        // 4. Config ändern und speichern
         let new_data = x.config_set_tailkey("test-key-123".to_string()).unwrap();
         assert!(x.config_write(new_data).is_ok());
 
-        // 5. Änderung verifizieren
         let verified = x.config_parse().unwrap();
         assert_eq!(verified.tailkey, "test-key-123");
 
-        // Cleanup
         let _ = std::fs::remove_dir_all(temp_dir);
     }
 }

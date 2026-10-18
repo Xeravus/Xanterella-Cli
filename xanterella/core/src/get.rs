@@ -1,5 +1,4 @@
-use std::collections::HashSet;
-use std::env;
+use std::{collections::HashSet, env};
 
 use crate::prelude::*;
 
