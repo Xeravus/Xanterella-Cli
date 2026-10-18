@@ -13,7 +13,6 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    Init,
     Ping {
         ip: String,
     },
@@ -35,9 +34,6 @@ pub enum Commands {
 pub async fn cli_parse() {
     let cli = Cli::parse();
     match &cli.command {
-        Commands::Init => {
-            execute_init_config().await;
-        }
         Commands::Ping {
             ip,
         } => {
