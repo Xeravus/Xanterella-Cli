@@ -56,13 +56,14 @@ async fn main() {
     let state = Arc::new(AppState {
         tx,
         db,
-        config,
+        config: config.clone(),
     });
 
     let app = create_app(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.expect("Failed to bind Tcp Listener");
-    println!("Server running on http://0.0.0.0:3000");
+    let ip = format!("0.0.0.0:{}", config.port);
+    let listener = tokio::net::TcpListener::bind(&ip).await.expect("Failed to bind Tcp Listener");
+    println!("Server running on http://{}", ip);
 
     axum::serve(listener, app).await.expect("Failed to start Server");
 }
