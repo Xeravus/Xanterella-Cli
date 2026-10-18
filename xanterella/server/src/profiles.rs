@@ -16,14 +16,14 @@ use xanterella_core::{
 use crate::{ApiError, AppState};
 
 #[derive(serde::Serialize)]
-pub struct ProfileResponse {
+pub struct ProfilesResponse {
     pub id: i64,
     pub name: String,
     pub dir: String,
     pub options: String,
 }
 
-impl From<DBProfile> for ProfileResponse {
+impl From<DBProfile> for ProfilesResponse {
     fn from(db_profile: DBProfile) -> Self {
         let process_values = |vec: &Vec<serde_json::Value>| {
             vec.iter()
@@ -92,9 +92,9 @@ pub async fn delete_profile(
     })))
 }
 
-pub async fn list_profiles(State(state): State<Arc<AppState>>) -> Result<Json<Vec<ProfileResponse>>, ApiError> {
+pub async fn list_profiles(State(state): State<Arc<AppState>>) -> Result<Json<Vec<ProfilesResponse>>, ApiError> {
     let profiles = state.db.list_profiles().await.map_err(|_| ApiError::InternalError)?;
-    let response: Vec<ProfileResponse> = profiles.into_iter().map(ProfileResponse::from).collect();
+    let response: Vec<ProfilesResponse> = profiles.into_iter().map(ProfilesResponse::from).collect();
     Ok(Json(response))
 }
 

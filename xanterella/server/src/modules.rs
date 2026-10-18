@@ -16,7 +16,7 @@ use xanterella_core::{
 use crate::{ApiError, AppState};
 
 #[derive(serde::Serialize)]
-pub struct ModulResponse {
+pub struct ModulesResponse {
     pub id: i64,
     pub name: String,
     pub desc: String,
@@ -25,7 +25,7 @@ pub struct ModulResponse {
     pub config: String,
 }
 
-impl From<DBModul> for ModulResponse {
+impl From<DBModul> for ModulesResponse {
     fn from(db_modul: DBModul) -> Self {
         let process_values = |vec: &Vec<serde_json::Value>| {
             vec.iter()
@@ -100,9 +100,9 @@ pub async fn delete_modul(
     })))
 }
 
-pub async fn list_modules(State(state): State<Arc<AppState>>) -> Result<Json<Vec<ModulResponse>>, ApiError> {
+pub async fn list_modules(State(state): State<Arc<AppState>>) -> Result<Json<Vec<ModulesResponse>>, ApiError> {
     let modules = state.db.list_modules().await.map_err(|_| ApiError::InternalError)?;
-    let response: Vec<ModulResponse> = modules.into_iter().map(ModulResponse::from).collect();
+    let response: Vec<ModulesResponse> = modules.into_iter().map(ModulesResponse::from).collect();
     Ok(Json(response))
 }
 
