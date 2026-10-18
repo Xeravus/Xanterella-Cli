@@ -1,6 +1,8 @@
 use clap::{Parser, Subcommand};
 use xanterella_core::{Ping, Xanterella, XanterellaInstall};
 
+use crate::server::import::{import_all, import_hosts, import_modules, import_profiles};
+
 use crate::execute::*;
 
 #[derive(Parser)]
@@ -29,6 +31,19 @@ pub enum Commands {
     Extract {
         flake: String,
     },
+    Import {
+        #[arg(short = 'H', long)]
+        hosts: bool,
+        #[arg(short, long)]
+        profiles: bool,
+        #[arg(short, long)]
+        modules: bool,
+        #[arg(short, long)]
+        all: bool,
+
+        flake: String,
+        url: String,
+    }
 }
 
 pub async fn cli_parse() {
@@ -55,6 +70,18 @@ pub async fn cli_parse() {
         } => {
             execute_extract(flake).await;
         }
+        Commands::Import {
+            flake, url, hosts, profiles, modules, all} => {
+                if *hosts {
+                    import_hosts(&flake, &url).await;
+                } else if *profiles {
+                    import_profiles(&flake, &url).await;
+                } else if *modules{
+                    import_modules(&flake, &url).await;
+                } else {
+                    import_all(&flake, &url).await;
+                }
+            }
     }
 }
 
