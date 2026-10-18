@@ -65,6 +65,13 @@ impl Xanterella {
         self.sender = Some(value);
     }
 
+    pub fn set_flake_path(&mut self, value: &str) -> Result<(), EventsFailed> {
+        let mut pre_change = self.load_config();
+        pre_change.target_directory = value.to_string();
+        self.save_config(pre_change)?;
+        Ok(())
+    }
+
     pub fn log_event(&mut self, event: Events) {
         let (state, name): (EventState, &str) = match event {
             // Utils

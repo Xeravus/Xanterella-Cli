@@ -11,7 +11,7 @@ use xanterella_core::{
     xanterella::{EventFormat, EventState},
 };
 
-pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, _flake: &str) {
+pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, flake: &str) {
     if intro("Start Installer").is_err() {
         println!("CliClack could not initialize");
         process::exit(2);
@@ -21,7 +21,11 @@ pub async fn execute_remote_install(automate: bool, speed: bool, debug: bool, _f
     let (tx, mut rx) = broadcast::channel::<EventFormat>(100);
 
     init_spinner.start("Init");
-    let xanterella = Xanterella::new();
+    let mut xanterella = Xanterella::new();
+    if let Err(err) = xanterella.set_flake_path(flake) {
+        println!("Error: {:#?}", err);
+        process::exit(1);
+    };
     let mut installer = XanterellaInstall::new(xanterella.clone());
     installer.xanterella.set_automate(automate);
     installer.xanterella.set_fast(speed);
