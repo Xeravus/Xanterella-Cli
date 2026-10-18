@@ -46,6 +46,7 @@ impl AppPaths {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct AppConfig {
     pub target_directory: String,
+    pub ip: String,
     pub port: u64,
 }
 
@@ -53,6 +54,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         AppConfig {
             target_directory: "/etc/nixos".to_string(),
+            ip: "0.0.0.0".to_string(),
             port: 3000,
         }
     }

@@ -24,6 +24,7 @@ pub fn create_app(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/", get(dashboard))
         .route("/health", get(health_check))
+        //.route("/reload",
         .route("/ping/:ip", get(get_ping))
         .route("/stream", get(event_stream))
         .route("/extract", get(extract_configs))
@@ -86,7 +87,7 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
         step: "Extract of Files".to_string(),
     });
 
-    let mut fs_data = FsData::new("/home/cato/xanterella/config");
+    let mut fs_data = FsData::new(&state.config.target_directory);
     fs_data.load().map_err(|err| {
         eprintln!("Extractions-Fehler: VFS Init Fehler: '{}'", err);
         ApiError::InternalError
@@ -171,23 +172,9 @@ pub async fn clear(State(state): State<Arc<AppState>>) -> Result<Json<Value>, Ap
 
 #[cfg(test)]
 mod tests {
-    use tokio::sync::broadcast;
-    use xanterella_core::database::db::Database;
-    use xanterella_core::config::AppConfig;
-
 
     use super::*;
-
-    async fn test_state() -> Arc<AppState> {
-        let (tx, _rx) = broadcast::channel(100);
-        let db = Database::init("sqlite::memory:").await.unwrap();
-        let config = AppConfig { target_directory: String::new(), port: 0, };
-        Arc::new(AppState {
-            tx,
-            db,
-            config,
-        })
-    }
+    use crate::test_helper::tests_utils::test_state;
 
     #[tokio::test]
     async fn test_api_clear_db() {

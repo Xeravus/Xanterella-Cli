@@ -2,6 +2,7 @@ pub mod app;
 pub mod hosts;
 pub mod modules;
 pub mod profiles;
+pub mod test_helper;
 
 use std::sync::Arc;
 
@@ -61,7 +62,7 @@ async fn main() {
 
     let app = create_app(state);
 
-    let ip = format!("0.0.0.0:{}", config.port);
+    let ip = format!("{}:{}", config.ip, config.port);
     let listener = tokio::net::TcpListener::bind(&ip).await.expect("Failed to bind Tcp Listener");
     println!("Server running on http://{}", ip);
 
