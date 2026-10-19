@@ -57,7 +57,11 @@ impl Query for NixValue {
                     i.query_exact_inner(path, result);
                 }
             }
-            NixValue::Apply(_, right) | NixValue::Group(right) => {
+            NixValue::Apply(left, right) => {
+                left.query_exact_inner(path, result);
+                right.query_exact_inner(path, result);
+            }
+            NixValue::Group(right) => {
                 right.query_exact_inner(path, result);
             }
             _ => {}
