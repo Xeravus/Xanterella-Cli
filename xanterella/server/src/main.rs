@@ -1,4 +1,5 @@
 pub mod app;
+pub mod generate;
 pub mod hosts;
 pub mod modules;
 pub mod profiles;
