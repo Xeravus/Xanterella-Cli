@@ -77,7 +77,7 @@ pub async fn cli_parse() {
             hosts,
             profiles,
             modules,
-            all,
+            all: _,
         } => {
             if *hosts {
                 import_hosts(&flake, &url).await;

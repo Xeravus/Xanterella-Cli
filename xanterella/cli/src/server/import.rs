@@ -2,7 +2,6 @@ use std::process;
 
 use prolyxena::engine::lexer::vfs::FsData;
 use serde::Serialize;
-use serde_json::Value;
 use xanterella_core::prolyxena::{CreateHost, CreateModul, CreateProfile, Nixtractor};
 
 trait ApiSend: Serialize {
@@ -90,7 +89,7 @@ pub async fn import_modules(flake: &str, url: &str) {
     }
 }
 
-pub async fn send_to_api<I: ApiSend>(data: Vec<I>, url: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn send_to_api<I: ApiSend>(data: Vec<I>, url: &str) -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let full_url = format!("http://{}{}", url, &data.first().expect("Nichts zu versenden").endpoint());
     for i in data {
