@@ -4,21 +4,25 @@ use crate::database::db::{DBHost, Database};
 
 impl Database {
     pub async fn add_host(
-        &self, hostname: &str, ip: &str, profiles: Vec<serde_json::Value>, hardware: Vec<serde_json::Value>,
-        options: Vec<serde_json::Value>, config: Vec<serde_json::Value>,
+        &self, hostname: &str, ip: &str, system: String, remote_deploy: bool, profiles: Vec<serde_json::Value>, hardware: Vec<serde_json::Value>,
+        options: Vec<serde_json::Value>, config: Vec<serde_json::Value>, imports: Vec<serde_json::Value>
     ) -> Result<(), sqlx::Error> {
         let json_profiles = Json(profiles);
         let json_hardware = Json(hardware);
         let json_options = Json(options);
         let json_config = Json(config);
+        let json_imports = Json(imports);
         sqlx::query!(
-            "INSERT INTO hosts (hostname, ip, profiles, hardware, options, config) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO hosts (hostname, ip, system, remote_deploy, profiles, hardware, options, config, imports) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             hostname,
             ip,
+            system,
+            remote_deploy,
             json_profiles,
             json_hardware,
             json_options,
-            json_config
+            json_config,
+            json_imports
         )
         .execute(&self.pool)
         .await?;
@@ -31,14 +35,14 @@ impl Database {
     }
 
     pub async fn get_host(&self, hostname: &str) -> Result<Option<DBHost>, sqlx::Error> {
-        let host = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, profiles as 'profiles: Json<Vec<serde_json::Value>>', hardware as 'hardware: Json<Vec<serde_json::Value>>', options as 'options: Json<Vec<serde_json::Value>>', config as 'config: Json<Vec<serde_json::Value>>' FROM hosts WHERE hostname = ?", hostname)
+        let host = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, system, remote_deploy, profiles as 'profiles: Json<Vec<serde_json::Value>>', hardware as 'hardware: Json<Vec<serde_json::Value>>', options as 'options: Json<Vec<serde_json::Value>>', config as 'config: Json<Vec<serde_json::Value>>', imports as 'imports: Json<Vec<serde_json::Value>>' FROM hosts WHERE hostname = ?", hostname)
             .fetch_optional(&self.pool)
             .await?;
         Ok(host)
     }
 
     pub async fn list_hosts(&self) -> Result<Vec<DBHost>, sqlx::Error> {
-        let hosts = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, profiles as 'profiles: Json<Vec<serde_json::Value>>', hardware as 'hardware: Json<Vec<serde_json::Value>>', options as 'options: Json<Vec<serde_json::Value>>', config as 'config: Json<Vec<serde_json::Value>>' FROM hosts").fetch_all(&self.pool).await?;
+        let hosts = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, system, remote_deploy, profiles as 'profiles: Json<Vec<serde_json::Value>>', hardware as 'hardware: Json<Vec<serde_json::Value>>', options as 'options: Json<Vec<serde_json::Value>>', config as 'config: Json<Vec<serde_json::Value>>', imports as 'imports: Json<Vec<serde_json::Value>>' FROM hosts").fetch_all(&self.pool).await?;
         Ok(hosts)
     }
 

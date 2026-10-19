@@ -20,10 +20,13 @@ pub struct HostsResponse {
     pub id: i64,
     pub hostname: String,
     pub ip: String,
+    pub system: String,
+    pub remote_deploy: bool,
     pub profiles: String,
     pub hardware: String,
     pub options: String,
     pub config: String,
+    pub imports: String,
 }
 
 impl From<DBHost> for HostsResponse {
@@ -47,10 +50,13 @@ impl From<DBHost> for HostsResponse {
             id: db_host.id,
             hostname: db_host.hostname,
             ip: db_host.ip,
+            system: db_host.system,
+            remote_deploy: db_host.remote_deploy,
             profiles: process_values(&db_host.profiles.0),
             hardware: process_values(&db_host.hardware.0),
             options: process_values(&db_host.options.0),
             config: process_values(&db_host.config.0),
+            imports: process_values(&db_host.imports.0),
         }
     }
 }
@@ -67,10 +73,13 @@ pub async fn create_host(
         .add_host(
             &payload.hostname,
             &payload.ip,
+            payload.system,
+            payload.remote_deploy,
             payload.profiles.clone(),
             payload.hardware.clone(),
             payload.options.clone(),
-            payload.config,
+            payload.config.clone(),
+            payload.imports,
         )
         .await
         .map_err(|_| ApiError::InternalError)?;

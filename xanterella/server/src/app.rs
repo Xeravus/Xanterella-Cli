@@ -121,7 +121,7 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
     for h in &hosts {
         if let Err(e) = state
             .db
-            .add_host(&h.hostname, &h.ip, h.profiles.clone(), h.hardware.clone(), h.options.clone(), h.config.clone())
+            .add_host(&h.hostname, &h.ip, h.system.clone(), h.remote_deploy, h.profiles.clone(), h.hardware.clone(), h.options.clone(), h.config.clone(), h.imports.clone())
             .await
         {
             eprintln!("Sync-Fehler: Host '{}': {}", h.hostname, e);

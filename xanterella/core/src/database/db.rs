@@ -17,10 +17,13 @@ pub struct DBHost {
     pub id: i64,
     pub hostname: String,
     pub ip: String,
+    pub system: String,
+    pub remote_deploy: bool,
     pub profiles: Json<Vec<serde_json::Value>>,
     pub hardware: Json<Vec<serde_json::Value>>,
     pub options: Json<Vec<serde_json::Value>>,
     pub config: Json<Vec<serde_json::Value>>,
+    pub imports: Json<Vec<serde_json::Value>>,
 }
 
 #[derive(Serialize, Deserialize, FromRow, Debug, Clone)]
