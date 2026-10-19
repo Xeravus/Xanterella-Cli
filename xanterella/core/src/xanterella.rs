@@ -1,13 +1,11 @@
 use serde::Serialize;
 use tokio::sync::broadcast::*;
 
-use crate::config::Config;
-use crate::prelude::*;
+use crate::{config::AppPaths, prelude::*};
 
 #[derive(Debug, Clone)]
 pub struct Xanterella {
-    pub path: String,
-    pub home: String,
+    pub config: AppPaths,
     pub fast: bool,
     pub debug: bool,
     pub automate: bool,
@@ -16,8 +14,7 @@ pub struct Xanterella {
 
 impl PartialEq for Xanterella {
     fn eq(&self, other: &Self) -> bool {
-        self.path == other.path
-            && self.home == other.home
+        self.config == other.config
             && self.fast == other.fast
             && self.debug == other.debug
             && self.automate == other.automate
@@ -41,26 +38,15 @@ impl Xanterella {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Xanterella {
-            path: String::new(),
-            home: String::new(),
+            config: AppPaths {
+                config_file: PathBuf::new(),
+                database_url: String::new(),
+            },
             fast: false,
             debug: false,
             automate: false,
             sender: None,
         }
-    }
-
-    pub fn set_path(&mut self, value: &str) -> Result<(), EventsFailed> {
-        if !value.is_empty() {
-            self.path = value.to_string();
-        } else {
-            self.path = self.config_parse()?.flake;
-        }
-        Ok(())
-    }
-
-    pub fn set_home(&mut self, value: &str) {
-        self.home = value.to_string();
     }
 
     pub fn set_fast(&mut self, value: bool) {
@@ -77,6 +63,13 @@ impl Xanterella {
 
     pub fn set_sender(&mut self, value: Sender<EventFormat>) {
         self.sender = Some(value);
+    }
+
+    pub fn set_flake_path(&mut self, value: &str) -> Result<(), EventsFailed> {
+        let mut pre_change = self.load_config();
+        pre_change.target_directory = value.to_string();
+        self.save_config(pre_change)?;
+        Ok(())
     }
 
     pub fn log_event(&mut self, event: Events) {
@@ -165,12 +158,6 @@ impl Xanterella {
 
             Events::OkGetHardware => (EventState::Finish, "Get Hardware"),
             Events::OkGetDrives => (EventState::Finish, "Get Drives"),
-            // installer/Inject.rs
-            Events::RunInjectTailscale => (EventState::Run, "Inject Tailscale"),
-            Events::RunInjectWifi => (EventState::Run, "Inject Wifi"),
-
-            Events::OkInjectTailscale => (EventState::Finish, "Inject Tailscale"),
-            Events::OkInjectWifi => (EventState::Finish, "Inject Wifi"),
         };
 
         if let Some(ref tx) = self.sender {
@@ -192,41 +179,18 @@ mod tests {
         assert!(matches!(
             data,
             Xanterella {
-                path: _,
-                home: _,
+                config: _,
                 fast: _,
                 debug: _,
                 automate: _,
                 sender: _,
             }
         ));
-        assert!(data.path.is_empty());
-        assert!(data.home.is_empty());
         assert!(data.sender.is_none());
 
         assert_eq!(data.fast, false);
         assert_eq!(data.debug, false);
         assert_eq!(data.automate, false);
-    }
-
-    #[test]
-    fn test_core_xanterella_set_path() {
-        let mut data = Xanterella::new();
-
-        let _ = data.set_path("test.path");
-
-        assert!(!data.path.is_empty());
-        assert_eq!(data.path, String::from("test.path"));
-    }
-
-    #[test]
-    fn test_core_xanterella_set_home() {
-        let mut data = Xanterella::new();
-
-        data.set_home("test.path");
-
-        assert!(!data.home.is_empty());
-        assert_eq!(data.home, String::from("test.path"));
     }
 
     #[test]

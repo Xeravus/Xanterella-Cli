@@ -1,11 +1,9 @@
-use crate::git::Git;
-use crate::install::deploy::Deploy;
-use crate::install::drives::Drives;
-use crate::install::inject::Inject;
-use crate::install::ping::Ping;
-use crate::nix::check::Check;
-use crate::nix::edit::Edit;
-use crate::prelude::*;
+use crate::{
+    git::Git,
+    install::{deploy::Deploy, drives::Drives, ping::Ping},
+    nix::{check::Check, edit::Edit},
+    prelude::*,
+};
 
 pub struct XanterellaInstall {
     pub xanterella: Xanterella,
@@ -73,8 +71,6 @@ impl XanterellaInstall {
         self.prep_sys()?;
         self.activate_sys()?;
         self.activate_bootloader()?;
-        self.inject_tailscale()?;
-        self.inject_wifi()?;
         self.reboot_sys()?;
 
         self.xanterella.log_event(Events::OkRemoteInstall);
@@ -118,8 +114,7 @@ mod tests {
         assert!(matches!(
             install.xanterella,
             Xanterella {
-                path: _,
-                home: _,
+                config: _,
                 fast: _,
                 debug: _,
                 automate: _,

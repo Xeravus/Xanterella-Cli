@@ -1,7 +1,10 @@
 use clap::{Parser, Subcommand};
 use xanterella_core::{Ping, Xanterella, XanterellaInstall};
 
-use crate::execute::*;
+use crate::{
+    execute::*,
+    server::import::{import_all, import_hosts, import_modules, import_profiles},
+};
 
 #[derive(Parser)]
 #[command(name = "Xanterella")]
@@ -13,7 +16,6 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    Init,
     Ping {
         ip: String,
     },
@@ -30,14 +32,24 @@ pub enum Commands {
     Extract {
         flake: String,
     },
+    Import {
+        #[arg(short = 'H', long)]
+        hosts: bool,
+        #[arg(short, long)]
+        profiles: bool,
+        #[arg(short, long)]
+        modules: bool,
+        #[arg(short, long)]
+        all: bool,
+
+        flake: String,
+        url: String,
+    },
 }
 
 pub async fn cli_parse() {
     let cli = Cli::parse();
     match &cli.command {
-        Commands::Init => {
-            execute_init_config().await;
-        }
         Commands::Ping {
             ip,
         } => {
@@ -58,6 +70,24 @@ pub async fn cli_parse() {
             flake,
         } => {
             execute_extract(flake).await;
+        }
+        Commands::Import {
+            flake,
+            url,
+            hosts,
+            profiles,
+            modules,
+            all: _,
+        } => {
+            if *hosts {
+                import_hosts(&flake, &url).await;
+            } else if *profiles {
+                import_profiles(&flake, &url).await;
+            } else if *modules {
+                import_modules(&flake, &url).await;
+            } else {
+                import_all(&flake, &url).await;
+            }
         }
     }
 }

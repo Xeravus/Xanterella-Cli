@@ -1,20 +1,28 @@
 use sqlx::types::Json;
 
-use crate::database::db::DBHost;
-use crate::database::db::Database;
+use crate::database::db::{DBHost, Database};
 
 impl Database {
     pub async fn add_host(
-        &self, hostname: &str, ip: &str, profiles: Vec<serde_json::Value>, options: Vec<serde_json::Value>,
+        &self, hostname: &str, ip: &str, system: String, remote_deploy: bool, profiles: Vec<serde_json::Value>, hardware: Vec<serde_json::Value>,
+        options: Vec<serde_json::Value>, config: Vec<serde_json::Value>, imports: Vec<serde_json::Value>
     ) -> Result<(), sqlx::Error> {
         let json_profiles = Json(profiles);
+        let json_hardware = Json(hardware);
         let json_options = Json(options);
+        let json_config = Json(config);
+        let json_imports = Json(imports);
         sqlx::query!(
-            "INSERT INTO hosts (hostname, ip, profiles, options) VALUES (?, ?, ?, ?)",
+            "INSERT INTO hosts (hostname, ip, system, remote_deploy, profiles, hardware, options, config, imports) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             hostname,
             ip,
+            system,
+            remote_deploy,
             json_profiles,
-            json_options
+            json_hardware,
+            json_options,
+            json_config,
+            json_imports
         )
         .execute(&self.pool)
         .await?;
@@ -27,14 +35,14 @@ impl Database {
     }
 
     pub async fn get_host(&self, hostname: &str) -> Result<Option<DBHost>, sqlx::Error> {
-        let host = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, profiles as 'profiles: Json<Vec<serde_json::Value>>', options as 'options: Json<Vec<serde_json::Value>>' FROM hosts WHERE hostname = ?", hostname)
+        let host = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, system, remote_deploy, profiles as 'profiles: Json<Vec<serde_json::Value>>', hardware as 'hardware: Json<Vec<serde_json::Value>>', options as 'options: Json<Vec<serde_json::Value>>', config as 'config: Json<Vec<serde_json::Value>>', imports as 'imports: Json<Vec<serde_json::Value>>' FROM hosts WHERE hostname = ?", hostname)
             .fetch_optional(&self.pool)
             .await?;
         Ok(host)
     }
 
     pub async fn list_hosts(&self) -> Result<Vec<DBHost>, sqlx::Error> {
-        let hosts = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, profiles as 'profiles: Json<Vec<serde_json::Value>>', options as 'options: Json<Vec<serde_json::Value>>' FROM hosts").fetch_all(&self.pool).await?;
+        let hosts = sqlx::query_as!(DBHost, "SELECT id as 'id!', hostname, ip, system, remote_deploy, profiles as 'profiles: Json<Vec<serde_json::Value>>', hardware as 'hardware: Json<Vec<serde_json::Value>>', options as 'options: Json<Vec<serde_json::Value>>', config as 'config: Json<Vec<serde_json::Value>>', imports as 'imports: Json<Vec<serde_json::Value>>' FROM hosts").fetch_all(&self.pool).await?;
         Ok(hosts)
     }
 
@@ -105,9 +113,11 @@ mod tests {
     async fn db_add_host_and_list_hosts() {
         let db = setup_test_db().await;
         let profiles = vec![json!({"Path": "./hardware.nix"})];
+        let hardware = vec![json!({"Path": "./hardware.nix"})];
         let options = vec![json!({"sys.enable": true})];
+        let config = vec![json!({"sys.enable": true})];
 
-        db.add_host("test-node-01", "100.100.100.1", profiles, options)
+        db.add_host("test-node-01", "100.100.100.1", profiles, hardware, options, config)
             .await
             .expect("Fehler beim Hinzufügen des Hosts");
 
@@ -116,22 +126,24 @@ mod tests {
         assert_eq!(hosts[0].hostname, "test-node-01");
         assert_eq!(hosts[0].ip, "100.100.100.1");
         assert_eq!(hosts[0].profiles.0[0], json!({"Path": "./hardware.nix"}));
+        assert_eq!(hosts[0].hardware.0[0], json!({"Path": "./hardware.nix"}));
         assert_eq!(hosts[0].options.0[0], json!({"sys.enable": true}));
+        assert_eq!(hosts[0].config.0[0], json!({"sys.enable": true}));
     }
 
     #[tokio::test]
     async fn db_add_duplicate_host_fails() {
         let db = setup_test_db().await;
-        db.add_host("dup-node", "1.1.1.1", vec![], vec![]).await.unwrap();
+        db.add_host("dup-node", "1.1.1.1", vec![], vec![], vec![], vec![]).await.unwrap();
 
-        let result = db.add_host("dup-node", "2.2.2.2", vec![], vec![]).await;
+        let result = db.add_host("dup-node", "2.2.2.2", vec![], vec![], vec![], vec![]).await;
         assert!(result.is_err(), "Das Hinzufügen eines Duplikats sollte einen Fehler werfen");
     }
 
     #[tokio::test]
     async fn db_get_host_edge_cases() {
         let db = setup_test_db().await;
-        db.add_host("test", "1.1.1.1", vec![], vec![]).await.unwrap();
+        db.add_host("test", "1.1.1.1", vec![], vec![], vec![], vec![]).await.unwrap();
 
         let exist = db.get_host("test").await.unwrap();
         assert!(exist.is_some());
@@ -143,7 +155,7 @@ mod tests {
     #[tokio::test]
     async fn db_delete_host_edge_cases() {
         let db = setup_test_db().await;
-        db.add_host("delete-me", "1.1.1.1", vec![], vec![]).await.unwrap();
+        db.add_host("delete-me", "1.1.1.1", vec![], vec![], vec![], vec![]).await.unwrap();
 
         let affected = db.delete_host("delete-me").await.unwrap();
         assert_eq!(affected, 1);
@@ -155,7 +167,7 @@ mod tests {
     #[tokio::test]
     async fn db_profiles_crud() {
         let db = setup_test_db().await;
-        db.add_host("profile-node", "10.0.0.1", vec![], vec![]).await.unwrap();
+        db.add_host("profile-node", "10.0.0.1", vec![], vec![], vec![], vec![]).await.unwrap();
 
         db.host_add_profile("profile-node", json!("web-server")).await.unwrap();
         let host = db.get_host("profile-node").await.unwrap().unwrap();
@@ -176,7 +188,7 @@ mod tests {
     #[tokio::test]
     async fn db_options_crud() {
         let db = setup_test_db().await;
-        db.add_host("options-node", "10.0.0.2", vec![], vec![]).await.unwrap();
+        db.add_host("options-node", "10.0.0.2", vec![], vec![], vec![], vec![]).await.unwrap();
 
         db.host_add_option("options-node", json!({"port": 80})).await.unwrap();
         let host = db.get_host("options-node").await.unwrap().unwrap();

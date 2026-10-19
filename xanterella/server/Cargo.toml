@@ -1,6 +1,6 @@
 [package]
 name = "xanterella-server"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 
 [dependencies]
@@ -11,3 +11,8 @@ prolyxena = { git = "https://github.com/Xeravus/Xanterella-Cli", branch = "final
 tokio = { version = "1", features = ["full"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 serde_json = "1.0.149"
+serde = { version = "1.0", features = ["derive"] }
+indexmap = { version = "2", features = ["serde"] }
+
+[dev-dependencies]
+sqlx = { version = "0.8.1", features = ["sqlite", "runtime-tokio", "macros"] }

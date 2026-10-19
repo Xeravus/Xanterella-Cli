@@ -1,20 +1,27 @@
 pub mod app;
+pub mod generate;
 pub mod hosts;
 pub mod modules;
 pub mod profiles;
+pub mod test_helper;
 
 use std::sync::Arc;
 
 use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde_json::json;
 use tokio::sync::broadcast;
-use xanterella_core::{database::db::Database, xanterella::EventFormat};
+use xanterella_core::{
+    config::{AppConfig, AppPaths},
+    database::db::Database,
+    xanterella::EventFormat,
+};
 
 use crate::app::*;
 
 pub struct AppState {
     pub tx: broadcast::Sender<EventFormat>,
     pub db: Database,
+    pub config: AppConfig,
 }
 
 #[allow(unused)]
@@ -43,19 +50,22 @@ impl IntoResponse for ApiError {
 #[tokio::main]
 async fn main() {
     let (tx, _rx) = broadcast::channel::<EventFormat>(100);
-    let db = Database::init("sqlite://../../xanterella.db?mode=rwc")
-        .await
-        .expect("Datenkbank konnte nicht initialisiert werden");
+    let paths = AppPaths::init();
+    let config = AppConfig::load(&paths);
+    let db =
+        Database::init(&paths.database_url).await.expect("Init-Fehler: Datenkbank konnte nicht initialisiert werden");
 
     let state = Arc::new(AppState {
         tx,
         db,
+        config: config.clone(),
     });
 
     let app = create_app(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.expect("Failed to bind Tcp Listener");
-    println!("Server running on http://0.0.0.0:3000");
+    let ip = format!("{}:{}", config.ip, config.port);
+    let listener = tokio::net::TcpListener::bind(&ip).await.expect("Failed to bind Tcp Listener");
+    println!("Server running on http://{}", ip);
 
     axum::serve(listener, app).await.expect("Failed to start Server");
 }

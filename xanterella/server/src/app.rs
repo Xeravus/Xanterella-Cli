@@ -11,15 +11,14 @@ use axum::{
 };
 use prolyxena::engine::lexer::vfs::*;
 use serde_json::{Value, json};
-use tokio_stream::Stream;
-use tokio_stream::{StreamExt, wrappers::BroadcastStream};
+use tokio_stream::{Stream, StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{
     Ping, Xanterella, XanterellaInstall,
     prolyxena::Nixtractor,
     xanterella::{EventFormat, EventState},
 };
 
-use crate::{ApiError, AppState, hosts::*, modules::*, profiles::*};
+use crate::{ApiError, AppState, generate::generate_config, hosts::*, modules::*, profiles::*};
 
 pub fn create_app(state: Arc<AppState>) -> Router {
     Router::new()
@@ -38,6 +37,7 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/profiles/:name/option", post(profile_add_option).delete(profile_remove_option))
         .route("/modules", get(list_modules).post(create_modul))
         .route("/modules/:name", get(check_modul).delete(delete_modul))
+        .route("/generate", get(generate_config))
         .with_state(state)
 }
 
@@ -87,7 +87,7 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
         step: "Extract of Files".to_string(),
     });
 
-    let mut fs_data = FsData::new("/home/cato/xanterella/config");
+    let mut fs_data = FsData::new(&state.config.target_directory);
     fs_data.load().map_err(|err| {
         eprintln!("Extractions-Fehler: VFS Init Fehler: '{}'", err);
         ApiError::InternalError
@@ -119,7 +119,11 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
     });
 
     for h in &hosts {
-        if let Err(e) = state.db.add_host(&h.hostname, &h.ip, h.profiles.clone(), h.options.clone()).await {
+        if let Err(e) = state
+            .db
+            .add_host(&h.hostname, &h.ip, h.system.clone(), h.remote_deploy, h.profiles.clone(), h.hardware.clone(), h.options.clone(), h.config.clone(), h.imports.clone())
+            .await
+        {
             eprintln!("Sync-Fehler: Host '{}': {}", h.hostname, e);
         }
     }
@@ -131,7 +135,7 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
     }
 
     for m in &modules {
-        if let Err(e) = state.db.add_modul(&m.name, &m.desc, &m.category, m.options.clone()).await {
+        if let Err(e) = state.db.add_modul(&m.name, &m.desc, &m.category, m.options.clone(), m.config.clone()).await {
             eprintln!("Sync-Fehler: Modul '{}': {}", m.name, e);
         }
     }
@@ -170,34 +174,21 @@ pub async fn clear(State(state): State<Arc<AppState>>) -> Result<Json<Value>, Ap
 
 #[cfg(test)]
 mod tests {
-    use tokio::sync::broadcast;
-    use xanterella_core::database::db::Database;
 
     use super::*;
-
-    async fn test_state() -> Arc<AppState> {
-        let (tx, _rx) = broadcast::channel(100);
-        let db = Database::init("sqlite::memory:").await.unwrap();
-        Arc::new(AppState {
-            tx,
-            db,
-        })
-    }
+    use crate::test_helper::tests_utils::test_state;
 
     #[tokio::test]
     async fn test_api_clear_db() {
         let state = test_state().await;
 
-        // Füge einen Dummy-Host hinzu, um zu testen, ob er gelöscht wird
-        state.db.add_host("delete-me", "0.0.0.0", vec![], vec![]).await.unwrap();
+        state.db.add_host("delete-me", "0.0.0.0", vec![], vec![], vec![]).await.unwrap();
 
-        // Clear aufrufen
         let app_state = State(state.clone());
         let res = clear(app_state).await;
 
         assert!(res.is_ok());
 
-        // Prüfen ob die DB leer ist
         let hosts = state.db.list_hosts().await.unwrap();
         assert!(hosts.is_empty());
     }

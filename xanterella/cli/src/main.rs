@@ -1,5 +1,6 @@
-mod commands;
-mod execute;
+pub mod commands;
+pub mod execute;
+pub mod server;
 
 use commands::cli_parse;
 

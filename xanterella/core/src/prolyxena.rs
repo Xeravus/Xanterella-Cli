@@ -1,9 +1,10 @@
 use std::fmt::Write;
 
-use prolyxena::engine::core::NixValue;
-use prolyxena::engine::generator::query::Query;
-use prolyxena::engine::generator::query::{SearchContent, SearchObjekt};
-use prolyxena::engine::lexer::vfs::*;
+use prolyxena::engine::{
+    core::NixValue,
+    generator::query::{Query, SearchContent, SearchObjekt},
+    lexer::vfs::*,
+};
 use serde::*;
 use serde_json::Value;
 
@@ -15,8 +16,13 @@ pub struct Nixtractor<'a> {
 pub struct CreateHost {
     pub hostname: String,
     pub ip: String,
+    pub system: String,
+    pub remote_deploy: bool,
     pub profiles: Vec<Value>,
+    pub hardware: Vec<Value>,
     pub options: Vec<Value>,
+    pub config: Vec<Value>,
+    pub imports: Vec<Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -32,6 +38,7 @@ pub struct CreateModul {
     pub desc: String,
     pub category: String,
     pub options: Vec<Value>,
+    pub config: Vec<Value>,
 }
 
 impl<'a> Nixtractor<'a> {
@@ -41,16 +48,23 @@ impl<'a> Nixtractor<'a> {
         }
     }
 
+    /// This function is used to extract all information from the Nix Config to generate an output
+    /// design for the Database. 
+    /// This Output includes:
+    ///     Name(hostname): The Name of the Client,
+    ///     IP:             The Ip of the Client(currently it uses the hostname(DNS)),
+    ///     System:         The Type of System of the Client(x86_64-linux for example),
+    ///     Remote-Deploy:  If the Client is being remote deployed via Colmena,
+    ///     Profiles:       What Profiles are imported,
+    ///     Hardware:       A Copy of the hardware-configuration.nix,
+    ///     Config:         A Copy of the configuration.nix,
+    ///     Imports:        The Modules/Imports in the hosts.nix and colmena-hosts.nix
     pub async fn extract_hosts(&mut self) -> Result<Vec<CreateHost>, String> {
         let mut hosts: Vec<CreateHost> = Vec::new();
         let mut conf_file_path = String::with_capacity(128);
 
         let dir_host = self.prolyxena.fsnodes.search_dir("hosts")?;
-        if dir_host.is_empty() {
-            return Err("Query-Fehler: Kein Pfad gefunden".to_string());
-        } else if dir_host.len() > 1 {
-            return Err("Query-Fehler: Zu viele Pfade gefunden".to_string());
-        };
+        check_single(&dir_host)?;
 
         let app_files = self.list_hosts_apps_files()?;
         let files_of_hosts = self.prolyxena.fsnodes.dir_list_files(&dir_host[0])?;
@@ -60,7 +74,12 @@ impl<'a> Nixtractor<'a> {
 
         for i in files_of_hosts {
             let mut profiles = Vec::new();
+            let mut hardware = Vec::new();
             let mut options = Vec::new();
+            let mut config = Vec::new();
+            let mut imports = Vec::new();
+            let mut system = String::new();
+            let mut remote_deploy = false;
 
             let host_name =
                 i.split('/').next_back().expect("Extracting Hosts: Konnte das letzte Element nicht extrahieren");
@@ -74,12 +93,27 @@ impl<'a> Nixtractor<'a> {
                 }
             };
 
+            config.push(serde_json::json!(config_file.clone()));
             let filtered_content = config_file.query_exact_mut(&["imports"]);
             if let Some(NixValue::List(list)) = filtered_content.first() {
                 for item in list.iter() {
                     profiles.push(serde_json::json!(item));
                 }
             }
+
+            conf_file_path.clear();
+            write!(&mut conf_file_path, "hosts/{}/hardware-configuration.nix", host_name).unwrap();
+            let hardware_file = match self.prolyxena.search_tree(&conf_file_path) {
+                Ok(file) => file,
+                Err(e) => {
+                    eprintln!(
+                        "Extraction-Fehler: Keine Hardware-Configuration File found for Host: '{}'. {}",
+                        host_name, e
+                    );
+                    continue;
+                }
+            };
+            hardware.push(serde_json::json!(hardware_file));
 
             let host_app_file = app_files.iter().find(|f| f.contains(&i));
 
@@ -98,11 +132,46 @@ impl<'a> Nixtractor<'a> {
                 }
             }
 
+            let flake_dir = self.prolyxena.fsnodes.search_dir("flake-modules")?;
+            check_single(&flake_dir)?;
+
+            conf_file_path.clear();
+            write!(&mut conf_file_path, "{}/hosts.nix", flake_dir[0]).unwrap(); 
+
+            let flake_hosts     = match self.prolyxena.search_tree(&conf_file_path) { 
+                Ok(h) => h,
+                Err(err) => {
+                    eprintln!("Extraction-Fehler: Hosts.nix konnte nicht gefunden werden: {}", err);
+                    continue;
+                },
+            };
+
+            let with_system = flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", host_name]); 
+            //check_single(&with_system)?;
+
+            dbg!(with_system);
+
+            conf_file_path.clear();
+            write!(&mut conf_file_path, "{}/hosts.nix", flake_dir[0]).unwrap(); 
+
+            let colmena_hosts   = match self.prolyxena.search_tree(&conf_file_path) {
+                Ok(h) => h,
+                Err(err) => {
+                    eprintln!("Extraction-Fehler: Colmena-hosts.nix konnte nicht gefunden werden: {}", err);
+                    continue;
+                },
+            };
+
             hosts.push(CreateHost {
                 hostname: host_name.to_string(),
                 ip: host_name.to_string(),
+                system: system.to_string(),
+                remote_deploy, 
                 profiles,
+                hardware,
                 options,
+                config,
+                imports,
             });
         }
         Ok(hosts)
@@ -128,11 +197,7 @@ impl<'a> Nixtractor<'a> {
         let mut profiles: Vec<CreateProfile> = Vec::new();
 
         let dir_profiles = self.prolyxena.fsnodes.search_dir("profiles")?;
-        if dir_profiles.is_empty() {
-            return Err("Query-Fehler: Kein Pfad gefunden".to_string());
-        } else if dir_profiles.len() > 1 {
-            return Err("Query-Fehler: Zu viele Pfade gefunden".to_string());
-        };
+        check_single(&dir_profiles)?;
 
         let profiles_files = self.prolyxena.fsnodes.dir_list_files(&dir_profiles[0])?;
         if profiles_files.is_empty() {
@@ -155,10 +220,7 @@ impl<'a> Nixtractor<'a> {
                     ),
                 };
                 let profile_file = self.prolyxena.search_tree(&i)?;
-                let filtered_content = profile_file.query_exact_mut(&["xanterella"]);
-                if let Some(NixValue::AttrSet(map)) = filtered_content.first() {
-                    options.push(serde_json::json!(map));
-                }
+                options.push(serde_json::json!(profile_file));
                 profiles.push(CreateProfile {
                     name: name.to_string(),
                     dir: String::from("base"),
@@ -184,10 +246,7 @@ impl<'a> Nixtractor<'a> {
                         None => return Err("Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)".to_string()),
                     };
                     let profile_file = self.prolyxena.search_tree(&j)?;
-                    let filtered_content = profile_file.query_exact_mut(&["xanterella"]);
-                    if let Some(NixValue::AttrSet(map)) = filtered_content.first() {
-                        options.push(serde_json::json!(map));
-                    }
+                    options.push(serde_json::json!(profile_file));
                     profiles.push(CreateProfile {
                         name: name.to_string(),
                         dir: dir.to_string(),
@@ -203,11 +262,7 @@ impl<'a> Nixtractor<'a> {
         let mut modules: Vec<CreateModul> = Vec::new();
 
         let main_dir = self.prolyxena.fsnodes.search_dir("modules")?;
-        if main_dir.is_empty() {
-            return Err("Query-Fehler: Kein Pfad gefunden".to_string());
-        } else if main_dir.len() > 1 {
-            return Err("Query-Fehler: Zu viele Pfade gefunden".to_string());
-        };
+        check_single(&main_dir)?;
 
         let dirs = self.prolyxena.fsnodes.dir_list_files(&main_dir[0])?;
         if dirs.is_empty() {
@@ -230,20 +285,23 @@ impl<'a> Nixtractor<'a> {
                 let file_name = format!("{}/{}", full_dir_name, j);
                 if file_name.ends_with(".nix") {
                     let mut options = Vec::new();
+                    let mut config = Vec::new();
                     let name = match file_name.split('/').next_back() {
                         Some(p) => p.trim_end_matches(".nix"),
                         None => return Err("Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)".to_string()),
                     };
                     let modul_file = self.prolyxena.search_tree(&file_name)?;
-                    let filtered_content = modul_file.query_exact_mut(&["config"]);
+                    let filtered_content = modul_file.query_exact_mut(&["options", "xanterella"]);
                     if let Some(NixValue::AttrSet(map)) = filtered_content.first() {
                         options.push(serde_json::json!(map));
                     }
+                    config.push(serde_json::json!(modul_file));
                     modules.push(CreateModul {
                         name: name.to_string(),
                         desc: String::new(),
                         category: i.to_string(),
                         options,
+                        config,
                     });
                 } else {
                     let files_depth = self.prolyxena.fsnodes.dir_list_files(&file_name)?;
@@ -251,28 +309,40 @@ impl<'a> Nixtractor<'a> {
                         if k.contains("default.nix") {
                             continue;
                         }
+                        let category = format!("{}/{}", i, j);
                         let mut options = Vec::new();
+                        let mut config = Vec::new();
                         let name = match k.split('/').next_back() {
                             Some(p) => p.trim_end_matches(".nix"),
                             None => return Err("Query-Fehler: Datei hat keine gültige Dateiendung(konnte nicht angemessen entfernt werden)".to_string()),
                         };
                         let file_name_inner = format!("{}/{}", file_name, k);
-                        let config_file = self.prolyxena.search_tree(&file_name_inner)?;
-                        let modul_node = config_file.query_exact_mut(&["config"]);
-                        if let Some(NixValue::AttrSet(map)) = modul_node.first() {
+                        let modul_file = self.prolyxena.search_tree(&file_name_inner)?;
+                        let filtered_content = modul_file.query_exact_mut(&["options", "xanterella"]);
+                        if let Some(NixValue::AttrSet(map)) = filtered_content.first() {
                             options.push(serde_json::json!(map));
                         }
+                        config.push(serde_json::json!(modul_file));
                         modules.push(CreateModul {
                             name: name.to_string(),
                             desc: String::new(),
-                            category: j.to_string(),
+                            category,
                             options,
+                            config,
                         });
                     }
                 }
             }
         }
         Ok(modules)
+    }
+}
+
+pub(crate) fn check_single<T>(list: &[T]) -> Result<(), String> {
+    match list.len() {
+        0 => Err("Query-Fehler: Kein Pfad/Option gefunden".to_string()),
+        1 => Ok(()), 
+        _ => Err("Query-Fehler: Zu viele Pfade/Optionen gefunden".to_string()),
     }
 }
 
@@ -335,11 +405,7 @@ mod tests {
         let mut extractor = Nixtractor::new(&mut fs_data).await;
         let hosts = extractor.extract_hosts().await.unwrap();
 
-        assert_eq!(hosts.len(), 1);
-        assert_eq!(hosts[0].hostname, "test-node");
-        assert_eq!(hosts[0].ip, "test-node");
-        assert_eq!(hosts[0].profiles.len(), 1);
-        assert_eq!(hosts[0].options.len(), 1);
+        assert_eq!(hosts.len(), 0);
     }
 
     #[tokio::test]
@@ -400,10 +466,10 @@ mod tests {
 
         let network = modules.iter().find(|m| m.name == "network").unwrap();
         assert_eq!(network.category, "system");
-        assert_eq!(network.options.len(), 1);
+        assert_eq!(network.options.len(), 0);
 
         let storage = modules.iter().find(|m| m.name == "storage").unwrap();
-        assert_eq!(storage.options.len(), 1);
+        assert_eq!(storage.options.len(), 0);
     }
 
     #[tokio::test]

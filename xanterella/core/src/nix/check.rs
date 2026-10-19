@@ -11,7 +11,7 @@ impl Check for Xanterella {
         if !self.debug {
             let cmd = Command::new("nixos-rebuild")
                 .args(["dry-build", "--flake", ".#crylia"])
-                .current_dir(self.get_path(Paths::Nixconf))
+                .current_dir(self.load_config().target_directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 

@@ -1,14 +1,14 @@
-use prolyxena::engine::formater::write::Write;
-use prolyxena::engine::generator::generate::Generate;
-use prolyxena::engine::generator::generate::Modify;
-use prolyxena::engine::generator::query::SearchContent;
-use prolyxena::engine::generator::remove::Delete;
-use prolyxena::engine::generator::remove::Remove;
-use prolyxena::engine::lexer::vfs::FsData;
+use prolyxena::engine::{
+    formater::write::Write,
+    generator::{
+        generate::{Generate, Modify},
+        query::SearchContent,
+        remove::{Delete, Remove},
+    },
+    lexer::vfs::FsData,
+};
 
-use crate::XanterellaInstall;
-use crate::install::helper::Helper;
-use crate::prelude::*;
+use crate::{XanterellaInstall, config::Config, install::helper::Helper, prelude::*};
 
 pub trait Edit {
     fn crylia_edit_start(&mut self) -> Result<(), EventsFailed>;
@@ -22,7 +22,7 @@ pub trait Edit {
 
 impl Edit for XanterellaInstall {
     fn crylia_edit_start(&mut self) -> Result<(), EventsFailed> {
-        let mut config = FsData::new(&self.xanterella.path);
+        let mut config = FsData::new(&self.xanterella.load_config().target_directory);
         self.crylia_add_hardware_conf(&mut config)?;
         self.crylia_add_hardware_link(&mut config)?;
         config.walk_tree().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
@@ -51,7 +51,7 @@ impl Edit for XanterellaInstall {
     }
 
     fn crylia_edit_finish(&mut self) -> Result<(), EventsFailed> {
-        let mut config = FsData::new(&self.xanterella.path);
+        let mut config = FsData::new(&self.xanterella.load_config().target_directory);
         self.crylia_remove_hardware_conf(&mut config)?;
         self.crylia_remove_hardware_link(&mut config)?;
         config.walk_tree().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
