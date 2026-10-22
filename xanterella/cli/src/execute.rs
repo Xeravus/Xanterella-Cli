@@ -139,10 +139,10 @@ pub async fn execute_extract(flake: &str) {
     };
     match extractor2.await.extract_profiles().await {
         Ok(_) => println!("Profiles OK"),
-        Err(err) => panic!("Error while extracting the Hosts: \n '{}'", err),
+        Err(err) => panic!("Error while extracting the Profiles: \n '{}'", err),
     };
     match extractor3.await.extract_modules().await {
         Ok(_) => println!("Modules OK"),
-        Err(err) => panic!("Error while extracting the Hosts: \n '{}'", err),
+        Err(err) => panic!("Error while extracting the Modules: \n '{}'", err),
     };
 }
