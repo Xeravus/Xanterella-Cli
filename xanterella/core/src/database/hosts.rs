@@ -4,8 +4,9 @@ use crate::database::db::{DBHost, Database};
 
 impl Database {
     pub async fn add_host(
-        &self, hostname: &str, ip: &str, system: String, remote_deploy: bool, profiles: Vec<serde_json::Value>, hardware: Vec<serde_json::Value>,
-        options: Vec<serde_json::Value>, config: Vec<serde_json::Value>, imports: Vec<serde_json::Value>
+        &self, hostname: &str, ip: &str, system: String, remote_deploy: bool, profiles: Vec<serde_json::Value>,
+        hardware: Vec<serde_json::Value>, options: Vec<serde_json::Value>, config: Vec<serde_json::Value>,
+        imports: Vec<serde_json::Value>,
     ) -> Result<(), sqlx::Error> {
         let json_profiles = Json(profiles);
         let json_hardware = Json(hardware);
