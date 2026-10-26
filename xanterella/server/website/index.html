@@ -1,172 +1,1111 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-    <title>Xanterella Control Center</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xanterella - Arcane UI</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: system-ui, sans-serif; background: #f4f4f5; margin: 0; padding: 2rem; color: #18181b; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
-        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        .log-box { background: #09090b; color: #a3e635; padding: 1rem; border-radius: 6px; height: 180px; overflow-y: auto; font-family: monospace; }
-        input, button { padding: 6px; margin: 4px 0; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: #3b82f6; color: white; border: none; cursor: pointer; }
-        button:hover { background: #2563eb; }
-        .del-btn { background: #ef4444; padding: 2px 6px; font-size: 0.8rem; margin-left: auto; }
-        ul { list-style: none; padding: 0; }
-        li { background: #f9fafb; margin-bottom: 8px; padding: 10px; border-radius: 4px; border: 1px solid #e4e4e7; display: flex; flex-direction: column; }
-        .flex-row { display: flex; justify-content: space-between; align-items: center; }
-        .desc-text { color: #52525b; font-size: 0.85rem; margin-bottom: 4px; font-style: italic; }
-        
-        /* Neues Styling für unsere fertigen Nix-Strings */
-        .nix-code { 
-            background: #1e1e2e; 
-            color: #cdd6f4; 
-            padding: 8px; 
-            border-radius: 4px; 
-            font-size: 0.75rem; 
-            white-space: pre-wrap; 
-            margin: 4px 0 8px 0;
-            overflow-x: auto;
-            font-family: monospace;
+        /* ==========================================================================
+           CSS VARIABLES (ARCANE THEME)
+           ========================================================================== */
+        :root {
+            /* Colors */
+            --bg-base: #0B0D17;       /* Deep slate/black */
+            --bg-surface: #151828;    /* Lighter slate for cards */
+            --bg-surface-hover: #1E2235;
+            --bg-sidebar: #0D0F1A;
+            
+            /* Accents */
+            --accent-primary: #6C5CE7; /* Purple */
+            --accent-primary-glow: rgba(108, 92, 231, 0.4);
+            --accent-secondary: #00CEC9; /* Cyan */
+            --accent-danger: #FF7675;
+            --accent-success: #00B894;
+            
+            /* Text */
+            --text-main: #FFFFFF;
+            --text-muted: #8F95B2;
+            
+            /* Borders & Shadows */
+            --border-color: rgba(255, 255, 255, 0.08);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+            
+            /* Typography */
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            /* Transitions */
+            --transition-speed: 0.2s;
         }
+
+        /* ==========================================================================
+           RESET & GLOBAL
+           ========================================================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-base);
+            color: var(--text-muted);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-surface-hover); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+        /* ==========================================================================
+           LAYOUT
+           ========================================================================== */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            margin-right: 12px;
+            box-shadow: 0 0 15px var(--accent-primary-glow);
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #FFF, var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-menu {
+            padding: 24px 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            border-radius: 10px;
+            transition: all var(--transition-speed);
+            font-weight: 500;
+        }
+
+        .nav-item i {
+            width: 24px;
+            font-size: 18px;
+            margin-right: 12px;
+            transition: color var(--transition-speed);
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background-color: var(--accent-primary-glow);
+            color: var(--text-main);
+            border: 1px solid rgba(108, 92, 231, 0.5);
+            box-shadow: inset 0 0 20px rgba(108, 92, 231, 0.1);
+        }
+
+        .nav-item.active i {
+            color: var(--accent-secondary);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            position: relative;
+        }
+
+        .topbar {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            background-color: rgba(11, 13, 23, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 5;
+        }
+
+        .page-title {
+            font-size: 22px;
+            letter-spacing: -0.5px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* ==========================================================================
+           COMPONENTS
+           ========================================================================== */
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all var(--transition-speed);
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), #5a4bcf);
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-primary-glow);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-primary-glow);
+            background: linear-gradient(135deg, #7b6df2, var(--accent-primary));
+        }
+
+        .btn-danger {
+            background: rgba(255, 118, 117, 0.1);
+            color: var(--accent-danger);
+            border: 1px solid rgba(255, 118, 117, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 118, 117, 0.2);
+        }
+
+        .btn-icon-danger {
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .btn-icon-danger:hover {
+            color: var(--accent-danger);
+            background: rgba(255, 118, 117, 0.1);
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-card);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-title i {
+            color: var(--accent-primary);
+        }
+
+        /* Stat Grid (Dashboard) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--accent-primary);
+        }
+
+        .stat-card:nth-child(2)::before { background: var(--accent-secondary); }
+        .stat-card:nth-child(3)::before { background: #FDCB6E; }
+        .stat-card:nth-child(4)::before { background: var(--accent-success); }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 8px;
+        }
+
+        /* Tables */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 16px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            color: var(--text-main);
+            font-size: 14px;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: var(--accent-secondary);
+        }
+
+        .badge-success { color: var(--accent-success); border-color: rgba(0, 184, 148, 0.3); background: rgba(0, 184, 148, 0.1); }
+        .badge-disabled { color: var(--text-muted); }
+
+        /* Console */
+        .console-container {
+            background-color: #05060A;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: inset 0 2px 20px rgba(0,0,0,0.5);
+        }
+
+        .console-header {
+            padding: 12px 16px;
+            background-color: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .console-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            background-color: var(--accent-success);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; box-shadow: 0 0 8px var(--accent-success); }
+            50% { opacity: 0.5; box-shadow: 0 0 2px var(--accent-success); }
+            100% { opacity: 1; box-shadow: 0 0 8px var(--accent-success); }
+        }
+
+        .console-output {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .log-line { display: flex; margin-bottom: 4px; }
+        .log-time { color: #5C6370; margin-right: 12px; }
+        .log-state { width: 90px; flex-shrink: 0; font-weight: bold; }
+        .log-msg { color: #ABB2BF; word-break: break-all; }
+        
+        .state-run { color: var(--accent-secondary); }
+        .state-finish { color: var(--accent-success); }
+        .state-error { color: var(--accent-danger); }
+        .state-info { color: var(--text-muted); }
+
+        /* Tabs Logic */
+        .tab-content {
+            display: none;
+            animation: fadeUp 0.3s ease forwards;
+        }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==========================================================================
+           MODALS & TOASTS
+           ========================================================================== */
+        
+        /* Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-speed);
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            transform: scale(0.95);
+            transition: transform var(--transition-speed);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        /* Toasts */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 16px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow-card);
+            transform: translateX(120%);
+            animation: slideInToast 0.3s forwards;
+            max-width: 350px;
+        }
+
+        .toast.closing {
+            animation: slideOutToast 0.3s forwards;
+        }
+
+        .toast-success i { color: var(--accent-success); }
+        .toast-error i { color: var(--accent-danger); }
+        .toast-info i { color: var(--accent-secondary); }
+
+        @keyframes slideInToast {
+            to { transform: translateX(0); }
+        }
+        @keyframes slideOutToast {
+            to { transform: translateX(120%); opacity: 0; }
+        }
+
+        /* Utilities */
+        .text-center { text-align: center; }
+        .py-5 { padding: 40px 0; }
+        .empty-state { color: var(--text-muted); opacity: 0.6; font-style: italic; }
     </style>
 </head>
 <body>
-    <h1 style="margin-top: 0;">Xanterella Control</h1>
-    
-    <div class="card" style="margin-bottom: 1.5rem;">
-        <h3 style="margin-top: 0;">Live Event Stream</h3>
-        <div id="stream-output" class="log-box">Verbunden... warte auf Events.</div>
-    </div>
 
-    <div class="grid">
-        <!-- HOSTS -->
-        <div class="card">
-            <h3>Hosts</h3>
-            <ul id="hosts-list"></ul>
-            <hr>
-            <input id="h-name" placeholder="Hostname (z.B. node-1)"><br>
-            <input id="h-ip" placeholder="IP Adresse"><br>
-            <button onclick="addHost()">+ Host erstellen</button>
-        </div>
+    <!-- App Wrapper -->
+    <div class="app-container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon"><i class="fa-solid fa-snowflake"></i></div>
+                <div class="logo-text">Xanterella</div>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" onclick="switchTab('dashboard')" id="nav-dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    Dashboard
+                </button>
+                <button class="nav-item" onclick="switchTab('hosts')" id="nav-hosts">
+                    <i class="fa-solid fa-server"></i>
+                    Hosts
+                </button>
+                <button class="nav-item" onclick="switchTab('profiles')" id="nav-profiles">
+                    <i class="fa-solid fa-layer-group"></i>
+                    Profiles
+                </button>
+                <button class="nav-item" onclick="switchTab('modules')" id="nav-modules">
+                    <i class="fa-solid fa-cubes"></i>
+                    Modules
+                </button>
+                <button class="nav-item" onclick="switchTab('templates')" id="nav-templates">
+                    <i class="fa-solid fa-file-code"></i>
+                    Templates
+                </button>
+            </nav>
+        </aside>
 
-        <!-- PROFILES -->
-        <div class="card">
-            <h3>Profile</h3>
-            <ul id="profiles-list"></ul>
-            <hr>
-            <input id="p-name" placeholder="Profilname (z.B. web-server)"><br>
-            <input id="p-dir" placeholder="Verzeichnis"><br>
-            <button onclick="addProfile()">+ Profil erstellen</button>
-        </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Topbar -->
+            <header class="topbar">
+                <h1 class="page-title" id="page-title">Overview</h1>
+                <div class="topbar-actions">
+                    <button class="btn btn-danger" onclick="confirmClearDatabase()">
+                        <i class="fa-solid fa-trash-can"></i> Clear DB
+                    </button>
+                </div>
+            </header>
 
-        <!-- MODULES -->
-        <div class="card">
-            <h3>Module</h3>
-            <ul id="modules-list"></ul>
-            <hr>
-            <input id="m-name" placeholder="Modulname"><br>
-            <input id="m-desc" placeholder="Beschreibung"><br>
-            <input id="m-cat" placeholder="Kategorie"><br>
-            <button onclick="addModule()">+ Modul erstellen</button>
-        </div>
-    </div>
-
-    <script>
-        const sse = new EventSource("/stream");
-        sse.onmessage = (e) => {
-            const out = document.getElementById("stream-output");
-            let data = JSON.parse(e.data);
-            out.innerText += `\n[${data.state}] ${data.step}`;
-            out.scrollTop = out.scrollHeight;
-        };
-
-        async function fetchAPI(url, method = "GET", body = null) {
-            const options = { method, headers: { "Content-Type": "application/json" } };
-            if (body) options.body = typeof body === 'string' ? body : JSON.stringify(body);
-            await fetch(url, options);
-            loadData();
-        }
-
-        function renderNix(title, codeString) {
-            if (!codeString || codeString.trim() === "") return "";
-            return `<div><strong>${title}:</strong><pre class="nix-code">${codeString}</pre></div>`;
-        }
-
-        async function loadData() {
-            const [hRes, pRes, mRes] = await Promise.all([fetch("/hosts"), fetch("/profiles"), fetch("/modules")]);
-            const [hosts, profiles, modules] = await Promise.all([hRes.json(), pRes.json(), mRes.json()]);
-
-            document.getElementById("hosts-list").innerHTML = hosts.map(h => `
-                <li>
-                    <div class="flex-row">
-                        <strong>${h.hostname}</strong> <span>${h.ip}</span>
-                        <button class="del-btn" onclick="fetchAPI('/hosts/${h.hostname}', 'DELETE')">X</button>
-                    </div>
-                    <div style="margin-top: 8px; font-size: 0.85rem;">
-                        ${renderNix("Profile", h.profiles)}
-                        ${renderNix("Hardware", h.hardware)}
-                        ${renderNix("Optionen", h.options)}
-                        <div style="margin-top: 5px;">
-                            <input id="add-p-${h.hostname}" placeholder="Profil anhängen" style="width: 100px; font-size: 0.7rem;">
-                            <button style="font-size: 0.7rem;" onclick="fetchAPI('/hosts/${h.hostname}/profiles', 'POST', document.getElementById('add-p-${h.hostname}').value)">Add</button>
+            <!-- Content Area (Tabs container) -->
+            <div class="content-area">
+                
+                <!-- TAB: Dashboard -->
+                <div id="tab-dashboard" class="tab-content active">
+                    
+                    <div class="card" style="background: linear-gradient(135deg, var(--bg-surface), #1A1D36); border: 1px solid rgba(108, 92, 231, 0.2);">
+                        <div class="card-header" style="margin-bottom: 0;">
+                            <div>
+                                <h2 class="card-title" style="font-size: 24px; color: white;">System Architecture</h2>
+                                <p style="margin-top: 8px;">Compile and deploy the NixOS configuration across all nodes.</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="triggerAction('/generate', 'Generating Configurations...')" style="padding: 14px 28px; font-size: 16px;">
+                                <i class="fa-solid fa-bolt"></i> Generate Config
+                            </button>
                         </div>
                     </div>
-                </li>
-            `).join("");
 
-            document.getElementById("profiles-list").innerHTML = profiles.map(p => `
-                <li>
-                    <div class="flex-row">
-                        <strong>${p.name}</strong> <span>${p.dir}</span>
-                        <button class="del-btn" onclick="fetchAPI('/profiles/${p.name}', 'DELETE')">X</button>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span>Total Hosts</span>
+                            <div class="stat-value" id="stat-hosts">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <span>Profiles</span>
+                            <div class="stat-value" id="stat-profiles">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <span>Modules</span>
+                            <div class="stat-value" id="stat-modules">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <span>Templates</span>
+                            <div class="stat-value" id="stat-templates">-</div>
+                        </div>
                     </div>
-                    <div style="margin-top: 8px; font-size: 0.85rem;">
-                        ${renderNix("Optionen", p.options)}
-                    </div>
-                </li>
-            `).join("");
 
-            document.getElementById("modules-list").innerHTML = modules.map(m => `
-                <li>
-                    <div class="flex-row">
-                        <strong>${m.name}</strong> <span>${m.category}</span>
-                        <button class="del-btn" onclick="fetchAPI('/modules/${m.name}', 'DELETE')">X</button>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fa-solid fa-terminal"></i> Build Output Console</h3>
+                            <button class="btn" style="background: rgba(255,255,255,0.05); color: var(--text-muted);" onclick="clearConsole()">
+                                <i class="fa-solid fa-eraser"></i> Clear
+                            </button>
+                        </div>
+                        <div class="console-container">
+                            <div class="console-header">
+                                <div class="console-title">
+                                    <div class="status-dot"></div> Live Event Stream
+                                </div>
+                            </div>
+                            <div class="console-output" id="console-logs">
+                                <!-- Logs injected here -->
+                                <div class="log-line text-muted">Awaiting events from server...</div>
+                            </div>
+                        </div>
                     </div>
-                    <div style="margin-top: 8px; font-size: 0.85rem;">
-                        ${m.desc ? `<div class="desc-text">${m.desc}</div>` : ''}
-                        ${renderNix("Optionen", m.options)}
-                        ${renderNix("Config", m.config)}
+                </div>
+
+                <!-- TAB: Hosts -->
+                <div id="tab-hosts" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fa-solid fa-server"></i> Managed Hosts</h3>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Hostname</th>
+                                        <th>IP Address</th>
+                                        <th>System</th>
+                                        <th>Deployment</th>
+                                        <th style="text-align: right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hosts-table-body">
+                                    <tr><td colspan="5" class="text-center py-5">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </li>
-            `).join("");
+                </div>
+
+                <!-- TAB: Profiles -->
+                <div id="tab-profiles" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fa-solid fa-layer-group"></i> Configuration Profiles</h3>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Profile Name</th>
+                                        <th>Directory</th>
+                                        <th style="text-align: right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="profiles-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Modules -->
+                <div id="tab-modules" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fa-solid fa-cubes"></i> Nix Modules</h3>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Module Name</th>
+                                        <th>Category</th>
+                                        <th>Description</th>
+                                        <th style="text-align: right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modules-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Templates -->
+                <div id="tab-templates" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fa-solid fa-file-code"></i> File Templates</h3>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Template Name</th>
+                                        <th>Target Path</th>
+                                        <th style="text-align: right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="templates-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals & Toasts Containers -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modal-title" style="margin-bottom: 12px; font-size: 20px;">Confirm</h3>
+            <p id="modal-desc" style="color: var(--text-muted); line-height: 1.5; font-size: 15px;">Are you sure?</p>
+            <div class="modal-actions">
+                <button class="btn" style="background: rgba(255,255,255,0.05); color: white;" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" id="modal-confirm-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         JAVASCRIPT LOGIC
+         ========================================================================== -->
+    <script>
+        // Configuration
+        const apiBase = ''; // Assumes served from same origin
+        let currentTab = 'dashboard';
+        let deleteTarget = null; // Stores item info pending deletion
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('dashboard');
+            setupSSE();
+            refreshStats(); // Initial stats load
+        });
+
+        // --- Navigation Logic ---
+        function switchTab(tabId) {
+            currentTab = tabId;
+            
+            // Handle Navigation Highlights
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`nav-${tabId}`).classList.add('active');
+
+            // Handle Title
+            const titles = {
+                dashboard: 'Overview',
+                hosts: 'Host Management',
+                profiles: 'Profiles',
+                modules: 'Module Registry',
+                templates: 'Templates'
+            };
+            document.getElementById('page-title').textContent = titles[tabId];
+
+            // Handle Content Visibility
+            document.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            // Fetch specific data
+            if (tabId !== 'dashboard') {
+                loadData(tabId);
+            } else {
+                refreshStats();
+            }
         }
 
-        function addHost() {
-            fetchAPI("/hosts", "POST", { 
-                hostname: document.getElementById("h-name").value, 
-                ip: document.getElementById("h-ip").value, 
-                profiles: [], hardware: [], options: [] 
-            });
+        // --- Data Fetching ---
+        function loadData(type) {
+            switch(type) {
+                case 'hosts': fetchHosts(); break;
+                case 'profiles': fetchProfiles(); break;
+                case 'modules': fetchModules(); break;
+                case 'templates': fetchTemplates(); break;
+            }
         }
 
-        function addProfile() {
-            fetchAPI("/profiles", "POST", { 
-                name: document.getElementById("p-name").value, 
-                dir: document.getElementById("p-dir").value, 
-                options: [] 
-            });
+        async function fetchHosts() {
+            renderLoading('hosts-table-body', 5);
+            try {
+                const res = await fetch(`${apiBase}/hosts`);
+                if (!res.ok) throw new Error('Failed to fetch hosts');
+                const data = await res.json();
+                renderHosts(data.hosts || []);
+                document.getElementById('stat-hosts').textContent = data.len || data.hosts.length;
+            } catch (err) {
+                renderError('hosts-table-body', 5, err.message);
+                showToast(err.message, 'error');
+            }
         }
 
-        function addModule() {
-            fetchAPI("/modules", "POST", { 
-                name: document.getElementById("m-name").value, 
-                desc: document.getElementById("m-desc").value, 
-                category: document.getElementById("m-cat").value, 
-                options: [], config: []
-            });
+        async function fetchProfiles() {
+            renderLoading('profiles-table-body', 3);
+            try {
+                const res = await fetch(`${apiBase}/profiles`);
+                if (!res.ok) throw new Error('Failed to fetch profiles');
+                const data = await res.json();
+                renderProfiles(data.profiles || []);
+                document.getElementById('stat-profiles').textContent = data.len || data.profiles.length;
+            } catch (err) {
+                renderError('profiles-table-body', 3, err.message);
+                showToast(err.message, 'error');
+            }
         }
 
-        loadData();
+        async function fetchModules() {
+            renderLoading('modules-table-body', 4);
+            try {
+                const res = await fetch(`${apiBase}/modules`);
+                if (!res.ok) throw new Error('Failed to fetch modules');
+                const data = await res.json();
+                renderModules(data.modules || []);
+                document.getElementById('stat-modules').textContent = data.len || data.modules.length;
+            } catch (err) {
+                renderError('modules-table-body', 4, err.message);
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function fetchTemplates() {
+            renderLoading('templates-table-body', 3);
+            try {
+                const res = await fetch(`${apiBase}/templates`);
+                if (!res.ok) throw new Error('Failed to fetch templates');
+                const data = await res.json();
+                renderTemplates(data.templates || []);
+                document.getElementById('stat-templates').textContent = data.len || data.templates.length;
+            } catch (err) {
+                renderError('templates-table-body', 3, err.message);
+                showToast(err.message, 'error');
+            }
+        }
+
+        // A quick way to refresh the dashboard numbers without rendering all tables
+        async function refreshStats() {
+            try {
+                fetch(`${apiBase}/hosts`).then(r => r.json()).then(d => document.getElementById('stat-hosts').textContent = d.len || d.hosts.length).catch(()=>{});
+                fetch(`${apiBase}/profiles`).then(r => r.json()).then(d => document.getElementById('stat-profiles').textContent = d.len || d.profiles.length).catch(()=>{});
+                fetch(`${apiBase}/modules`).then(r => r.json()).then(d => document.getElementById('stat-modules').textContent = d.len || d.modules.length).catch(()=>{});
+                fetch(`${apiBase}/templates`).then(r => r.json()).then(d => document.getElementById('stat-templates').textContent = d.len || d.templates.length).catch(()=>{});
+            } catch(e) {}
+        }
+
+        // --- Renderers ---
+        function renderHosts(data) {
+            const tbody = document.getElementById('hosts-table-body');
+            if (data.length === 0) return renderEmpty(tbody, 5, "No hosts managed.");
+            
+            tbody.innerHTML = data.map(h => `
+                <tr>
+                    <td><span style="color: white; font-weight: 500;">${h.hostname}</span></td>
+                    <td style="font-family: var(--font-mono); font-size: 13px;">${h.ip}</td>
+                    <td><span class="badge">${h.system}</span></td>
+                    <td>${h.remote_deploy ? '<span class="badge badge-disabled">Local</span>' : '<span class="badge badge-success">Remote</span>' }</td>
+                    <td style="text-align: right;">
+                        <button class="btn-icon-danger" onclick="confirmDelete('hosts', '${h.hostname}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderProfiles(data) {
+            const tbody = document.getElementById('profiles-table-body');
+            if (data.length === 0) return renderEmpty(tbody, 3, "No profiles found.");
+            
+            tbody.innerHTML = data.map(p => `
+                <tr>
+                    <td><span style="color: white; font-weight: 500;">${p.name}</span></td>
+                    <td style="font-family: var(--font-mono); font-size: 13px;">${p.dir}</td>
+                    <td style="text-align: right;">
+                        <button class="btn-icon-danger" onclick="confirmDelete('profiles', '${p.name}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderModules(data) {
+            const tbody = document.getElementById('modules-table-body');
+            if (data.length === 0) return renderEmpty(tbody, 4, "No modules found.");
+            
+            tbody.innerHTML = data.map(m => `
+                <tr>
+                    <td><span style="color: white; font-weight: 500;">${m.name}</span></td>
+                    <td><span class="badge">${m.category || 'misc'}</span></td>
+                    <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${m.desc}</td>
+                    <td style="text-align: right;">
+                        <button class="btn-icon-danger" onclick="confirmDelete('modules', '${m.name}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderTemplates(data) {
+            const tbody = document.getElementById('templates-table-body');
+            if (data.length === 0) return renderEmpty(tbody, 3, "No templates found.");
+            
+            tbody.innerHTML = data.map(t => `
+                <tr>
+                    <td><span style="color: white; font-weight: 500;">${t.name}</span></td>
+                    <td style="font-family: var(--font-mono); font-size: 13px;">${t.path}</td>
+                    <td style="text-align: right;">
+                        <button class="btn-icon-danger" onclick="confirmDelete('templates', '${t.name}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Table UI Helpers
+        function renderLoading(id, cols) {
+            document.getElementById(id).innerHTML = `<tr><td colspan="${cols}" class="text-center py-5"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>`;
+        }
+        function renderEmpty(tbody, cols, msg) {
+            tbody.innerHTML = `<tr><td colspan="${cols}" class="text-center py-5 empty-state">${msg}</td></tr>`;
+        }
+        function renderError(id, cols, err) {
+            document.getElementById(id).innerHTML = `<tr><td colspan="${cols}" class="text-center py-5" style="color: var(--accent-danger);">${err}</td></tr>`;
+        }
+
+        // --- Actions & API Calls ---
+        async function triggerAction(endpoint, loadingMsg) {
+            showToast(loadingMsg, 'info');
+            try {
+                const res = await fetch(`${apiBase}${endpoint}`);
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showToast(data.message || 'Operation successful', 'success');
+                    if (endpoint === '/clear') {
+                        refreshStats();
+                        if (currentTab !== 'dashboard') loadData(currentTab);
+                    }
+                } else {
+                    throw new Error(data.error || 'Server error');
+                }
+            } catch (err) {
+                showToast(`Failed: ${err.message}`, 'error');
+            }
+        }
+
+        // --- Modal (Deletion & Clear) ---
+        function confirmDelete(type, id) {
+            deleteTarget = { type, id };
+            const typeStr = type.slice(0, -1);
+            
+            document.getElementById('modal-title').textContent = `Delete ${typeStr}`;
+            document.getElementById('modal-desc').innerHTML = `This will permanently delete <strong>${id}</strong>. Proceed?`;
+            
+            document.getElementById('modal-confirm-btn').onclick = executeDelete;
+            openModal();
+        }
+
+        async function executeDelete() {
+            if(!deleteTarget) return;
+            closeModal();
+            const { type, id } = deleteTarget;
+            
+            try {
+                const res = await fetch(`${apiBase}/${type}/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast(`${id} deleted.`, 'success');
+                    loadData(currentTab);
+                    refreshStats();
+                } else {
+                    const data = await res.json();
+                    throw new Error(data.error || 'Deletion failed');
+                }
+            } catch(err) {
+                showToast(err.message, 'error');
+            } finally {
+                deleteTarget = null;
+            }
+        }
+
+        function confirmClearDatabase() {
+            deleteTarget = null;
+            document.getElementById('modal-title').textContent = 'Clear Database';
+            document.getElementById('modal-desc').innerHTML = 'Wipe all Hosts, Profiles, Modules, and Templates? This action is irreversible.';
+            document.getElementById('modal-confirm-btn').onclick = () => {
+                closeModal();
+                triggerAction('/clear', 'Clearing database...');
+            };
+            openModal();
+        }
+
+        function openModal() { document.getElementById('modal-overlay').classList.add('active'); }
+        function closeModal() { document.getElementById('modal-overlay').classList.remove('active'); }
+
+        // --- Toasts ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let icon = 'fa-circle-info';
+            toast.className = `toast toast-${type}`;
+            
+            if(type === 'success') icon = 'fa-check-circle';
+            if(type === 'error') icon = 'fa-triangle-exclamation';
+
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <div>${message}</div>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('closing');
+                toast.addEventListener('animationend', () => toast.remove());
+            }, 4000);
+        }
+
+        // --- Server-Sent Events (Live Console) ---
+        function setupSSE() {
+            const logContainer = document.getElementById('console-logs');
+            
+            try {
+                const evtSource = new EventSource(`${apiBase}/stream`);
+                
+                evtSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        appendLog(data.state, data.step);
+                    } catch(e) {
+                        appendLog('Info', event.data);
+                    }
+                };
+            } catch (err) {
+                appendLog('Error', 'Failed to connect to event stream.');
+            }
+        }
+
+        function appendLog(state, msg) {
+            const container = document.getElementById('console-logs');
+            
+            // Remove initial placeholder if exists
+            if (container.innerHTML.includes("Awaiting events")) container.innerHTML = '';
+
+            const timeStr = new Date().toTimeString().split(' ')[0];
+            const stateUpper = state.toUpperCase();
+            
+            let stateClass = 'state-info';
+            if (stateUpper.includes('RUN')) stateClass = 'state-run';
+            if (stateUpper.includes('FINISH')) stateClass = 'state-finish';
+            if (stateUpper.includes('ERROR')) stateClass = 'state-error';
+
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerHTML = `
+                <div class="log-time">[${timeStr}]</div>
+                <div class="log-state ${stateClass}">[${stateUpper}]</div>
+                <div class="log-msg">${msg}</div>
+            `;
+            
+            container.appendChild(line);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('console-logs').innerHTML = '';
+        }
     </script>
 </body>
 </html>
