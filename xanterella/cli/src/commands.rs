@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
 use xanterella_core::{Ping, Xanterella, XanterellaInstall};
+use crate::server::requests::request_generate;
+use crate::server::requests::request_clear;
 
 use crate::{
     execute::*,
@@ -45,6 +47,12 @@ pub enum Commands {
         all: bool,
 
         flake: String,
+        url: String,
+    },
+    Clear {
+        url: String,
+    },
+    Generate {
         url: String,
     },
 }
@@ -94,6 +102,8 @@ pub async fn cli_parse() {
                 import_all(&flake, &url).await;
             }
         }
+        Commands::Clear { url } => { request_clear(url).await; },
+        Commands::Generate { url } => { request_generate(url).await; },
     }
 }
 

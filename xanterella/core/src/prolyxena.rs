@@ -450,7 +450,6 @@ impl<'a> Nixtractor<'a> {
         }
         flake_parts.retain(|f| !f.contains("host"));
         for i in flake_parts {
-            dbg!(&i);
             let path = format!("flake-modules/{}", i);
             let template_file = self.prolyxena.search_tree(&path)?;
             templates.push(CreateTemplate {
