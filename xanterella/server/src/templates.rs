@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use serde::Serialize;
 
 use axum::{
     Json,
@@ -15,15 +16,21 @@ use xanterella_core::{
 
 use crate::{ApiError, AppState};
 
-#[derive(serde::Serialize)]
-pub struct TemplateResponse {
+#[derive(Serialize)]
+pub struct ApiTemplatesResponse {
+    pub len: i64,
+    pub templates: Vec<TemplatesResponse>,
+}
+
+#[derive(Serialize)]
+pub struct TemplatesResponse {
     pub id: i64,
     pub name: String,
     pub path: String,
     pub config: String,
 }
 
-impl From<DBTemplates> for TemplateResponse {
+impl From<DBTemplates> for TemplatesResponse {
     fn from(db_template: DBTemplates) -> Self {
         let process_values = |vec: &Vec<serde_json::Value>| {
             vec.iter()
@@ -92,10 +99,14 @@ pub async fn delete_template(
     })))
 }
 
-pub async fn list_templates(State(state): State<Arc<AppState>>) -> Result<Json<Vec<TemplateResponse>>, ApiError> {
+pub async fn list_templates(State(state): State<Arc<AppState>>) -> Result<Json<ApiTemplatesResponse>, ApiError> {
     let templates = state.db.list_templates().await.map_err(|_| ApiError::InternalError)?;
-    let response: Vec<TemplateResponse> = templates.into_iter().map(TemplateResponse::from).collect();
-    Ok(Json(response))
+    let len = templates.len();
+    let response: Vec<TemplatesResponse> = templates.into_iter().map(TemplatesResponse::from).collect();
+    Ok(Json(ApiTemplatesResponse {
+        len: len.try_into().unwrap(),
+        templates: response,
+    }))
 }
 
 pub async fn check_template(

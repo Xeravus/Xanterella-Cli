@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use serde::Serialize;
 
 use axum::{
     Json,
@@ -15,7 +16,13 @@ use xanterella_core::{
 
 use crate::{ApiError, AppState};
 
-#[derive(serde::Serialize)]
+#[derive(Serialize)]
+pub struct ApiHostsResponse {
+    pub len: i64,
+    pub hosts: Vec<HostsResponse>,
+}
+
+#[derive(Serialize)]
 pub struct HostsResponse {
     pub id: i64,
     pub hostname: String,
@@ -118,10 +125,14 @@ pub async fn delete_host(
     })))
 }
 
-pub async fn list_hosts(State(state): State<Arc<AppState>>) -> Result<Json<Vec<HostsResponse>>, ApiError> {
+pub async fn list_hosts(State(state): State<Arc<AppState>>) -> Result<Json<ApiHostsResponse>, ApiError> {
     let hosts = state.db.list_hosts().await.map_err(|_| ApiError::InternalError)?;
+    let len = hosts.len();
     let response: Vec<HostsResponse> = hosts.into_iter().map(HostsResponse::from).collect();
-    Ok(Json(response))
+    Ok(Json(ApiHostsResponse {
+                len: len.try_into().unwrap(),
+                hosts: response,
+    }))
 }
 
 pub async fn check_host(

@@ -7,7 +7,7 @@ use xanterella_core::xanterella::{EventFormat, EventState};
 
 use crate::{
     ApiError, AppState, hosts::HostsResponse, modules::ModulesResponse, profiles::ProfilesResponse,
-    templates::TemplateResponse,
+    templates::TemplatesResponse,
 };
 
 pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<Value>, ApiError> {
@@ -175,7 +175,7 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         ApiError::InternalError
     })?;
     let templates_len = templates.len();
-    let formated_templates: Vec<TemplateResponse> = templates.into_iter().map(TemplateResponse::from).collect();
+    let formated_templates: Vec<TemplatesResponse> = templates.into_iter().map(TemplatesResponse::from).collect();
     for i in formated_templates {
         name.clear();
         prolyxena.generate_file(&i.path, i.config).map_err(|err| {
