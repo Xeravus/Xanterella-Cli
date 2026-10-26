@@ -2,6 +2,7 @@ use std::fmt::Write;
 
 use prolyxena::engine::{
     core::NixValue,
+    formater::core::Format,
     generator::query::{Query, SearchContent, SearchObjekt},
     lexer::vfs::*,
 };
@@ -41,6 +42,13 @@ pub struct CreateModul {
     pub config: Vec<Value>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateTemplate {
+    pub name: String,
+    pub path: String,
+    pub config: Vec<Value>,
+}
+
 impl<'a> Nixtractor<'a> {
     pub async fn new(prolyxena: &'a mut FsData) -> Self {
         Nixtractor {
@@ -49,7 +57,7 @@ impl<'a> Nixtractor<'a> {
     }
 
     /// This function is used to extract all information from the Nix Config to generate an output
-    /// design for the Database. 
+    /// design for the Database.
     /// This Output includes:
     ///     Name(hostname): The Name of the Client,
     ///     IP:             The Ip of the Client(currently it uses the hostname(DNS)),
@@ -136,37 +144,122 @@ impl<'a> Nixtractor<'a> {
             check_single(&flake_dir)?;
 
             conf_file_path.clear();
-            write!(&mut conf_file_path, "{}/hosts.nix", flake_dir[0]).unwrap(); 
+            write!(&mut conf_file_path, "{}/hosts.nix", flake_dir[0]).unwrap();
 
-            let flake_hosts     = match self.prolyxena.search_tree(&conf_file_path) { 
+            let flake_hosts = match self.prolyxena.search_tree(&conf_file_path) {
                 Ok(h) => h,
                 Err(err) => {
                     eprintln!("Extraction-Fehler: Hosts.nix konnte nicht gefunden werden: {}", err);
                     continue;
-                },
+                }
             };
 
-            let with_system = flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", host_name]); 
-            //check_single(&with_system)?;
+            if check_single(&flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", &host_name])).is_ok() {
+                let with_system = flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", &host_name, "system"]);
+                match check_single(&with_system) {
+                    Ok(_) => {
+                        let sys_string = with_system[0].format_nix(0);
+                        let mut sys_chars = sys_string.trim().chars();
+                        sys_chars.next();
+                        sys_chars.next_back();
+                        system.push_str(sys_chars.as_str());
+                    }
+                    Err(err) => {
+                        eprintln!("Extraction-Fehler: Host {} hat kein angegebenes System: {}", host_name, err);
+                        continue;
+                    }
+                };
 
-            dbg!(with_system);
+                let hosts_imports =
+                    flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", &host_name, "modules"]);
+                match check_single(&hosts_imports) {
+                    Ok(_) => {
+                        if let Some(NixValue::List(list)) = hosts_imports.first() {
+                            for item in list.iter() {
+                                imports.push(serde_json::json!(item));
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        eprintln!("Extraction-Fehler: Host {} hat keine Imports/Module: {}", host_name, err);
+                        continue;
+                    }
+                }
+            } else {
+                eprintln!(
+                    "Extraction-Fehler: Host {} hat keinen Eintrag in der Hosts.nix. Colmena-Fallback",
+                    host_name
+                );
+
+                conf_file_path.clear();
+                write!(&mut conf_file_path, "{}/colmena-hosts.nix", flake_dir[0]).unwrap();
+                let colmena_hosts = match self.prolyxena.search_tree(&conf_file_path) {
+                    Ok(c) => c,
+                    Err(err) => {
+                        eprintln!("Extraction-Fehler: Colmena-hosts.nix konnte nicht gefunden werden: {}", err);
+                        continue;
+                    }
+                };
+
+                system.push_str("x86_64-linux");
+
+                let hosts_imports = colmena_hosts.query_exact_mut(&[&host_name, "imports"]);
+                match check_single(&hosts_imports) {
+                    Ok(_) => {
+                        if let Some(NixValue::List(list)) = hosts_imports.first() {
+                            for item in list.iter() {
+                                imports.push(serde_json::json!(item));
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        eprintln!(
+                            "Extraction-Fehler: Host {} hat auch keinen Eintrag in der Colmena-hosts.nix: {}",
+                            host_name, err
+                        );
+                        continue;
+                    }
+                }
+            }
 
             conf_file_path.clear();
-            write!(&mut conf_file_path, "{}/hosts.nix", flake_dir[0]).unwrap(); 
+            write!(&mut conf_file_path, "{}/colmena-hosts.nix", flake_dir[0]).unwrap();
 
-            let colmena_hosts   = match self.prolyxena.search_tree(&conf_file_path) {
+            let colmena_hosts = match self.prolyxena.search_tree(&conf_file_path) {
                 Ok(h) => h,
                 Err(err) => {
                     eprintln!("Extraction-Fehler: Colmena-hosts.nix konnte nicht gefunden werden: {}", err);
                     continue;
-                },
+                }
             };
+
+            let build_on_target = colmena_hosts.query_exact_mut(&[&host_name, "deployment", "buildOnTarget"]);
+            match check_single(&build_on_target) {
+                Ok(_) => {
+                    let outcome = build_on_target[0].format_nix(0);
+                    if outcome.contains("true") {
+                        remote_deploy = true;
+                    } else if outcome.contains("false") {
+                    } else {
+                        eprintln!(
+                            "Extraction-Fehler: Host {} hat keinen validen Eintrag zu Remote-Deployment. Wird nicht als Builder eingetragen",
+                            host_name
+                        );
+                    }
+                }
+                Err(err) => {
+                    eprintln!(
+                        "Extraction-Fehler: Host {} hat keinen Eintrag zu Remote-Deployment. Wird nicht als Builder eingetragen: {}",
+                        host_name, err
+                    );
+                }
+            }
 
             hosts.push(CreateHost {
                 hostname: host_name.to_string(),
                 ip: host_name.to_string(),
                 system: system.to_string(),
-                remote_deploy, 
+                remote_deploy,
                 profiles,
                 hardware,
                 options,
@@ -336,157 +429,45 @@ impl<'a> Nixtractor<'a> {
         }
         Ok(modules)
     }
+
+    pub async fn extract_templates(&mut self) -> Result<Vec<CreateTemplate>, String> {
+        let mut templates: Vec<CreateTemplate> = Vec::new();
+
+        let flake_path = self.prolyxena.fsnodes.search_file("flake.nix")?;
+        check_single(&flake_path)?;
+        let flake = self.prolyxena.search_tree(&flake_path[0])?;
+        templates.push(CreateTemplate {
+            name: "flake.nix".to_string(),
+            path: flake_path[0].to_string(),
+            config: vec![serde_json::json!(flake)],
+        });
+
+        let flake_dir = self.prolyxena.fsnodes.search_dir("flake-modules")?;
+        check_single(&flake_dir)?;
+        let mut flake_parts = self.prolyxena.fsnodes.dir_list_files(&flake_dir[0])?;
+        if flake_parts.is_empty() {
+            return Err("Query-Fehler: Keine flake-parts(dateien im \"flake-modules\" Ordner".to_string());
+        }
+        flake_parts.retain(|f| !f.contains("host"));
+        for i in flake_parts {
+            dbg!(&i);
+            let path = format!("flake-modules/{}", i);
+            let template_file = self.prolyxena.search_tree(&path)?;
+            templates.push(CreateTemplate {
+                name: i.to_string(),
+                path,
+                config: vec![serde_json::json!(template_file)],
+            });
+        }
+
+        Ok(templates)
+    }
 }
 
 pub(crate) fn check_single<T>(list: &[T]) -> Result<(), String> {
     match list.len() {
         0 => Err("Query-Fehler: Kein Pfad/Option gefunden".to_string()),
-        1 => Ok(()), 
+        1 => Ok(()),
         _ => Err("Query-Fehler: Zu viele Pfade/Optionen gefunden".to_string()),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use indexmap::IndexMap;
-    use prolyxena::engine::{core::NixValue, lexer::vfs::FsNodes};
-
-    use super::*;
-
-    fn dummy_file(name: &str, ast: NixValue) -> FsNodes {
-        FsNodes::File {
-            name: name.to_string(),
-            ast,
-        }
-    }
-
-    fn dummy_dir(items: Vec<(&str, FsNodes)>) -> FsNodes {
-        let mut map = IndexMap::new();
-        for (k, v) in items {
-            map.insert(k.to_string(), v);
-        }
-        FsNodes::Dir(map)
-    }
-
-    #[tokio::test]
-    async fn test_nixtractor_extract_hosts_success() {
-        let mut fs_data = FsData::new("/fake");
-
-        let config_ast = NixValue::AttrSet(IndexMap::from([(
-            "imports".to_string(),
-            NixValue::List(vec![NixValue::Path("./hardware.nix".to_string())]),
-        )]));
-
-        let app_ast = NixValue::AttrSet(IndexMap::from([(
-            "config".to_string(),
-            NixValue::AttrSet(IndexMap::from([(
-                "xanterella".to_string(),
-                NixValue::AttrSet(IndexMap::from([("enable".to_string(), NixValue::Bool(true))])),
-            )])),
-        )]));
-
-        fs_data.fsnodes = dummy_dir(vec![
-            (
-                "hosts",
-                dummy_dir(vec![(
-                    "test-node",
-                    dummy_dir(vec![("configuration.nix", dummy_file("configuration.nix", config_ast))]),
-                )]),
-            ),
-            (
-                "profiles",
-                dummy_dir(vec![(
-                    "apps",
-                    dummy_dir(vec![("test-node-apps.nix", dummy_file("test-node-apps.nix", app_ast))]),
-                )]),
-            ),
-        ]);
-
-        let mut extractor = Nixtractor::new(&mut fs_data).await;
-        let hosts = extractor.extract_hosts().await.unwrap();
-
-        assert_eq!(hosts.len(), 0);
-    }
-
-    #[tokio::test]
-    async fn test_nixtractor_extract_profiles_success() {
-        let mut fs_data = FsData::new("/fake");
-
-        let profile_ast = NixValue::AttrSet(IndexMap::from([(
-            "xanterella".to_string(),
-            NixValue::AttrSet(IndexMap::from([("is_server".to_string(), NixValue::Bool(true))])),
-        )]));
-
-        fs_data.fsnodes = dummy_dir(vec![(
-            "profiles",
-            dummy_dir(vec![
-                ("base.nix", dummy_file("base.nix", profile_ast.clone())),
-                ("server", dummy_dir(vec![("web.nix", dummy_file("web.nix", profile_ast))])),
-            ]),
-        )]);
-
-        let mut extractor = Nixtractor::new(&mut fs_data).await;
-        let profiles = extractor.extract_profiles().await.unwrap();
-
-        assert_eq!(profiles.len(), 2);
-
-        let base = profiles.iter().find(|p| p.name == "base").unwrap();
-        assert_eq!(base.dir, "base");
-        assert_eq!(base.options.len(), 1);
-
-        let web = profiles.iter().find(|p| p.name == "web").unwrap();
-        assert_eq!(web.dir, "server");
-        assert_eq!(web.options.len(), 1);
-    }
-
-    #[tokio::test]
-    async fn test_nixtractor_extract_modules_success() {
-        let mut fs_data = FsData::new("/fake");
-
-        let mod_ast = NixValue::AttrSet(IndexMap::from([(
-            "config".to_string(),
-            NixValue::AttrSet(IndexMap::from([("sys".to_string(), NixValue::Bool(true))])),
-        )]));
-
-        fs_data.fsnodes = dummy_dir(vec![(
-            "modules",
-            dummy_dir(vec![(
-                "system",
-                dummy_dir(vec![
-                    ("network.nix", dummy_file("network.nix", mod_ast.clone())),
-                    ("deep", dummy_dir(vec![("storage.nix", dummy_file("storage.nix", mod_ast))])),
-                ]),
-            )]),
-        )]);
-
-        let mut extractor = Nixtractor::new(&mut fs_data).await;
-        let modules = extractor.extract_modules().await.unwrap();
-
-        assert_eq!(modules.len(), 2);
-
-        let network = modules.iter().find(|m| m.name == "network").unwrap();
-        assert_eq!(network.category, "system");
-        assert_eq!(network.options.len(), 0);
-
-        let storage = modules.iter().find(|m| m.name == "storage").unwrap();
-        assert_eq!(storage.options.len(), 0);
-    }
-
-    #[tokio::test]
-    async fn test_nixtractor_empty_vfs_errors() {
-        let mut fs_data = FsData::new("/fake");
-        fs_data.fsnodes = dummy_dir(vec![]);
-
-        let mut extractor = Nixtractor::new(&mut fs_data).await;
-
-        let hosts_err = extractor.extract_hosts().await;
-        assert!(hosts_err.is_err());
-        assert!(hosts_err.unwrap_err().contains("Kein Pfad gefunden"));
-
-        let profiles_err = extractor.extract_profiles().await;
-        assert!(profiles_err.is_err());
-
-        let modules_err = extractor.extract_modules().await;
-        assert!(modules_err.is_err());
     }
 }

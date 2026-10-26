@@ -3,7 +3,7 @@ use xanterella_core::{Ping, Xanterella, XanterellaInstall};
 
 use crate::{
     execute::*,
-    server::import::{import_all, import_hosts, import_modules, import_profiles},
+    server::import::{import_all, import_hosts, import_modules, import_profiles, import_templates},
 };
 
 #[derive(Parser)]
@@ -39,6 +39,8 @@ pub enum Commands {
         profiles: bool,
         #[arg(short, long)]
         modules: bool,
+        #[arg(short, long)]
+        templates: bool,
         #[arg(short, long)]
         all: bool,
 
@@ -77,6 +79,7 @@ pub async fn cli_parse() {
             hosts,
             profiles,
             modules,
+            templates,
             all: _,
         } => {
             if *hosts {
@@ -85,6 +88,8 @@ pub async fn cli_parse() {
                 import_profiles(&flake, &url).await;
             } else if *modules {
                 import_modules(&flake, &url).await;
+            } else if *templates {
+                import_templates(&flake, &url).await;
             } else {
                 import_all(&flake, &url).await;
             }

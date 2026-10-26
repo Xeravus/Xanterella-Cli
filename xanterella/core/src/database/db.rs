@@ -44,6 +44,14 @@ pub struct DBProfile {
     pub options: Json<Vec<serde_json::Value>>,
 }
 
+#[derive(Serialize, Deserialize, FromRow, Debug, Clone)]
+pub struct DBTemplates {
+    pub id: i64,
+    pub name: String,
+    pub path: String,
+    pub config: Json<Vec<serde_json::Value>>,
+}
+
 impl Database {
     pub async fn init(db_url: &str) -> Result<Self, sqlx::Error> {
         let pool = SqlitePoolOptions::new().max_connections(5).connect(db_url).await?;
@@ -64,6 +72,9 @@ impl Database {
         }
         if let Ok(modules) = sqlx::query!("DELETE FROM modules").execute(&self.pool).await {
             result.insert("Modules".to_string(), modules.rows_affected());
+        }
+        if let Ok(templates) = sqlx::query!("DELETE FROM templates").execute(&self.pool).await {
+            result.insert("Templates".to_string(), templates.rows_affected());
         }
         Ok(result)
     }
