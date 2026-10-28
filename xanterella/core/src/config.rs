@@ -48,6 +48,13 @@ pub struct AppConfig {
     pub target_directory: String,
     pub ip: String,
     pub port: u64,
+    pub connection_type: ConnectionType,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum ConnectionType {
+    HTTP,
+    HTTPS,
 }
 
 impl Default for AppConfig {
@@ -56,6 +63,7 @@ impl Default for AppConfig {
             target_directory: "/etc/nixos".to_string(),
             ip: "0.0.0.0".to_string(),
             port: 3000,
+            connection_type: ConnectionType::HTTP,
         }
     }
 }
