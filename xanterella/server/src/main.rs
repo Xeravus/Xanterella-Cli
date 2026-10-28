@@ -3,6 +3,7 @@ pub mod generate;
 pub mod hosts;
 pub mod modules;
 pub mod profiles;
+pub mod templates;
 pub mod test_helper;
 
 use std::sync::Arc;

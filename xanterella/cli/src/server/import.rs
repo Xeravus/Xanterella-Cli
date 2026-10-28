@@ -2,7 +2,7 @@ use std::process;
 
 use prolyxena::engine::lexer::vfs::FsData;
 use serde::Serialize;
-use xanterella_core::prolyxena::{CreateHost, CreateModul, CreateProfile, Nixtractor};
+use xanterella_core::prolyxena::{CreateHost, CreateModul, CreateProfile, CreateTemplate, Nixtractor};
 
 trait ApiSend: Serialize {
     fn endpoint(&self) -> &str;
@@ -26,10 +26,17 @@ impl ApiSend for CreateModul {
     }
 }
 
+impl ApiSend for CreateTemplate {
+    fn endpoint(&self) -> &str {
+        "/templates"
+    }
+}
+
 pub async fn import_all(flake: &str, url: &str) {
     import_hosts(&flake, &url).await;
     import_profiles(&flake, &url).await;
     import_modules(&flake, &url).await;
+    import_templates(&flake, &url).await;
 }
 
 pub async fn import_hosts(flake: &str, url: &str) {
@@ -86,6 +93,25 @@ pub async fn import_modules(flake: &str, url: &str) {
     match send_to_api(modules, url).await {
         Ok(_) => println!("Modules Sent"),
         Err(err) => println!("Fehler beim senden der Modules: {:#?}", err),
+    }
+}
+
+pub async fn import_templates(flake: &str, url: &str) {
+    let mut prolyxena = FsData::new(flake);
+    if let Err(e) = prolyxena.load() {
+        eprintln!("Fehler: {}", e);
+        process::exit(1);
+    }
+
+    let extractor = Nixtractor::new(&mut prolyxena);
+    let modules = match extractor.await.extract_templates().await {
+        Ok(h) => h,
+        Err(err) => panic!("Fehler: Error while extracting the Templates: {}", err),
+    };
+    println!("Templates OK");
+    match send_to_api(modules, url).await {
+        Ok(_) => println!("Templates Sent"),
+        Err(err) => println!("Fehler beim senden der Templates: {:#?}", err),
     }
 }
 

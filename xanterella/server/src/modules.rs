@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use serde::Serialize;
 
 use axum::{
     Json,
@@ -15,7 +16,13 @@ use xanterella_core::{
 
 use crate::{ApiError, AppState};
 
-#[derive(serde::Serialize)]
+#[derive(Serialize)]
+pub struct ApiModulesResponse {
+    pub len: i64,
+    pub modules: Vec<ModulesResponse>,
+}
+
+#[derive(Serialize)]
 pub struct ModulesResponse {
     pub id: i64,
     pub name: String,
@@ -100,10 +107,14 @@ pub async fn delete_modul(
     })))
 }
 
-pub async fn list_modules(State(state): State<Arc<AppState>>) -> Result<Json<Vec<ModulesResponse>>, ApiError> {
+pub async fn list_modules(State(state): State<Arc<AppState>>) -> Result<Json<ApiModulesResponse>, ApiError> {
     let modules = state.db.list_modules().await.map_err(|_| ApiError::InternalError)?;
+    let len = modules.len();
     let response: Vec<ModulesResponse> = modules.into_iter().map(ModulesResponse::from).collect();
-    Ok(Json(response))
+    Ok(Json(ApiModulesResponse {
+        len: len.try_into().unwrap(),
+        modules: response 
+    }))
 }
 
 pub async fn check_modul(
@@ -138,8 +149,8 @@ mod tests {
         assert!(res_create.is_ok());
 
         let list = list_modules(app_state.clone()).await.unwrap();
-        assert_eq!(list.len(), 1);
-        assert_eq!(list[0].name, "api-modul");
+        assert_eq!(list.len, 1);
+        assert_eq!(list.modules[0].name, "api-modul");
 
         let check = check_modul(app_state.clone(), Path("api-modul".to_string())).await.unwrap();
         assert_eq!(check.name, "api-modul");

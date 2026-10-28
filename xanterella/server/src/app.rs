@@ -18,7 +18,14 @@ use xanterella_core::{
     xanterella::{EventFormat, EventState},
 };
 
-use crate::{ApiError, AppState, generate::generate_config, hosts::*, modules::*, profiles::*};
+use crate::{
+    ApiError, AppState,
+    generate::generate_config,
+    hosts::*,
+    modules::*,
+    profiles::*,
+    templates::{check_template, create_template, delete_template, list_templates},
+};
 
 pub fn create_app(state: Arc<AppState>) -> Router {
     Router::new()
@@ -37,6 +44,8 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/profiles/:name/option", post(profile_add_option).delete(profile_remove_option))
         .route("/modules", get(list_modules).post(create_modul))
         .route("/modules/:name", get(check_modul).delete(delete_modul))
+        .route("/templates", get(list_templates).post(create_template))
+        .route("/templates/:name", get(check_template).delete(delete_template))
         .route("/generate", get(generate_config))
         .with_state(state)
 }
@@ -108,6 +117,11 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
         ApiError::InternalError
     })?;
 
+    let templates = extractor.extract_templates().await.map_err(|err| {
+        eprintln!("Extractions-Fehler: Templates: \n{}", err);
+        ApiError::InternalError
+    })?;
+
     let _ = state.tx.send(EventFormat {
         state: EventState::Finish,
         step: "Extraction of Files".to_string(),
@@ -121,7 +135,17 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
     for h in &hosts {
         if let Err(e) = state
             .db
-            .add_host(&h.hostname, &h.ip, h.system.clone(), h.remote_deploy, h.profiles.clone(), h.hardware.clone(), h.options.clone(), h.config.clone(), h.imports.clone())
+            .add_host(
+                &h.hostname,
+                &h.ip,
+                h.system.clone(),
+                h.remote_deploy,
+                h.profiles.clone(),
+                h.hardware.clone(),
+                h.options.clone(),
+                h.config.clone(),
+                h.imports.clone(),
+            )
             .await
         {
             eprintln!("Sync-Fehler: Host '{}': {}", h.hostname, e);
@@ -140,6 +164,12 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
         }
     }
 
+    for t in &templates {
+        if let Err(e) = state.db.add_template(&t.name, &t.path, t.config.clone()).await {
+            eprintln!("Sync-Fehler: Template '{}': {}", t.name, e);
+        }
+    }
+
     let _ = state.tx.send(EventFormat {
         state: EventState::Finish,
         step: "Synchronisation of Files".to_string(),
@@ -147,7 +177,7 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
 
     Ok(Json(json!({
         "status": "success",
-        "message": format!("Synchronisiert: {} Hosts, {} Profile, {} Module", hosts.len(), profiles.len(), modules.len())
+        "message": format!("Synchronisiert: {} Hosts, {} Profiles, {} Modules, {} Templates", hosts.len(), profiles.len(), modules.len(), templates.len())
     })))
 }
 
@@ -182,7 +212,7 @@ mod tests {
     async fn test_api_clear_db() {
         let state = test_state().await;
 
-        state.db.add_host("delete-me", "0.0.0.0", vec![], vec![], vec![]).await.unwrap();
+        state.db.add_host("delete-me", "0.0.0.0", "x86-64_linux".to_string(), true, vec![], vec![], vec![], vec![], vec![]).await.unwrap();
 
         let app_state = State(state.clone());
         let res = clear(app_state).await;

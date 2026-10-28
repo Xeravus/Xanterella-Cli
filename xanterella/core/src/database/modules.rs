@@ -1,6 +1,6 @@
 use sqlx::types::Json;
 
-use crate::database::{Database, db::DBModul};
+use crate::database::db::{DBModul, Database};
 
 impl Database {
     pub async fn add_modul(

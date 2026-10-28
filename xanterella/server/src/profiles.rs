@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use serde::Serialize;
 
 use axum::{
     Json,
@@ -15,7 +16,13 @@ use xanterella_core::{
 
 use crate::{ApiError, AppState};
 
-#[derive(serde::Serialize)]
+#[derive(Serialize)]
+pub struct ApiProfilesResponse {
+    pub len: i64,
+    pub profiles: Vec<ProfilesResponse>,
+}
+
+#[derive(Serialize)]
 pub struct ProfilesResponse {
     pub id: i64,
     pub name: String,
@@ -92,10 +99,14 @@ pub async fn delete_profile(
     })))
 }
 
-pub async fn list_profiles(State(state): State<Arc<AppState>>) -> Result<Json<Vec<ProfilesResponse>>, ApiError> {
+pub async fn list_profiles(State(state): State<Arc<AppState>>) -> Result<Json<ApiProfilesResponse>, ApiError> {
     let profiles = state.db.list_profiles().await.map_err(|_| ApiError::InternalError)?;
+    let len = profiles.len();
     let response: Vec<ProfilesResponse> = profiles.into_iter().map(ProfilesResponse::from).collect();
-    Ok(Json(response))
+    Ok(Json(ApiProfilesResponse {
+        len: len.try_into().unwrap(),
+        profiles: response,
+    }))
 }
 
 pub async fn check_profile(
@@ -164,8 +175,8 @@ mod tests {
         assert!(res_create.is_ok());
 
         let list = list_profiles(app_state.clone()).await.unwrap();
-        assert_eq!(list.len(), 1);
-        assert_eq!(list[0].name, "api-profile");
+        assert_eq!(list.len, 1);
+        assert_eq!(list.profiles[0].name, "api-profile");
 
         let check = check_profile(app_state.clone(), Path("api-profile".to_string())).await.unwrap();
         assert_eq!(check.name, "api-profile");
