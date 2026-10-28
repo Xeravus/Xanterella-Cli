@@ -231,16 +231,20 @@ mod tests {
         let payload = Json(xanterella_core::prolyxena::CreateHost {
             hostname: "api-host".to_string(),
             ip: "10.0.0.1".to_string(),
+            system: "x86-64_linux".to_string(),
+            remote_deploy: true,
             profiles: vec![],
             hardware: vec![],
             options: vec![],
+            config: vec![],
+            imports: vec![],
         });
         let res_create = create_host(app_state.clone(), payload).await;
         assert!(res_create.is_ok());
 
         let list = list_hosts(app_state.clone()).await.unwrap();
-        assert_eq!(list.len(), 1);
-        assert_eq!(list[0].hostname, "api-host");
+        assert_eq!(list.len, 1);
+        assert_eq!(list.hosts[0].hostname, "api-host");
 
         let check = check_host(app_state.clone(), Path("api-host".to_string())).await.unwrap();
         assert_eq!(check.hostname, "api-host");
@@ -279,12 +283,16 @@ mod tests {
             id: 1,
             hostname: "coverage-host".to_string(),
             ip: "127.0.0.1".to_string(),
+            system: "x86-64_linux".to_string(),
+            remote_deploy: true,
             profiles: sqlx::types::Json(vec![tagged_val]),
             hardware: sqlx::types::Json(vec![naked_map]),
-            options: sqlx::types::Json(vec![invalid_val]),
+            options: sqlx::types::Json(vec![invalid_val.clone()]),
+            config: sqlx::types::Json(vec![invalid_val.clone()]),
+            imports: sqlx::types::Json(vec![invalid_val]),
         };
 
-        let response = HostResponse::from(db_host);
+        let response = HostsResponse::from(db_host);
         assert_eq!(response.profiles.trim(), "true");
         assert!(response.hardware.contains("enable"));
         assert!(response.hardware.contains("true"));

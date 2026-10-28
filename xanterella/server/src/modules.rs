@@ -149,8 +149,8 @@ mod tests {
         assert!(res_create.is_ok());
 
         let list = list_modules(app_state.clone()).await.unwrap();
-        assert_eq!(list.len(), 1);
-        assert_eq!(list[0].name, "api-modul");
+        assert_eq!(list.len, 1);
+        assert_eq!(list.modules[0].name, "api-modul");
 
         let check = check_modul(app_state.clone(), Path("api-modul".to_string())).await.unwrap();
         assert_eq!(check.name, "api-modul");

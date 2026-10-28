@@ -175,8 +175,8 @@ mod tests {
         assert!(res_create.is_ok());
 
         let list = list_profiles(app_state.clone()).await.unwrap();
-        assert_eq!(list.len(), 1);
-        assert_eq!(list[0].name, "api-profile");
+        assert_eq!(list.len, 1);
+        assert_eq!(list.profiles[0].name, "api-profile");
 
         let check = check_profile(app_state.clone(), Path("api-profile".to_string())).await.unwrap();
         assert_eq!(check.name, "api-profile");
