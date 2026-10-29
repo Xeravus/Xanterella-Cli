@@ -47,6 +47,7 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
     let formated_modules: Vec<ModulesResponse> = modules.into_iter().map(ModulesResponse::from).collect();
 
     let mut prolyxena = FsData::new(&state.config.target_directory);
+    prolyxena.set_sort(true);
     let mut name = String::with_capacity(64);
     let mut colmena_string = String::new();
     /// Soll später mit einer Template verbunden werden
