@@ -118,7 +118,6 @@ impl<'a> Nixtractor<'a> {
                         "Extraction-Fehler: Keine Hardware-Configuration File found for Host: '{}'. {}",
                         host_name, e
                     );
-                    continue;
                 }
             };
             hardware.push(serde_json::json!(hardware_file));
