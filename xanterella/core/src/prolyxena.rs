@@ -111,8 +111,8 @@ impl<'a> Nixtractor<'a> {
 
             conf_file_path.clear();
             write!(&mut conf_file_path, "hosts/{}/hardware-configuration.nix", host_name).unwrap();
-            let hardware_file = match self.prolyxena.search_tree(&conf_file_path) {
-                Ok(file) => file,
+            match self.prolyxena.search_tree(&conf_file_path) {
+                Ok(file) => hardware.push(serde_json::json!(file)),
                 Err(e) => {
                     eprintln!(
                         "Extraction-Fehler: Keine Hardware-Configuration File found for Host: '{}'. {}",
@@ -120,7 +120,6 @@ impl<'a> Nixtractor<'a> {
                     );
                 }
             };
-            hardware.push(serde_json::json!(hardware_file));
 
             let host_app_file = app_files.iter().find(|f| f.contains(&i));
 
