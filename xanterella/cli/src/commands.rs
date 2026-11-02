@@ -1,11 +1,12 @@
 use clap::{Parser, Subcommand};
 use xanterella_core::{Ping, Xanterella, XanterellaInstall};
-use crate::server::requests::request_generate;
-use crate::server::requests::request_clear;
 
 use crate::{
     execute::*,
-    server::import::{import_all, import_hosts, import_modules, import_profiles, import_templates},
+    server::{
+        import::{import_all, import_hosts, import_modules, import_profiles, import_templates},
+        requests::{request_clear, request_generate},
+    },
 };
 
 #[derive(Parser)]
@@ -102,8 +103,16 @@ pub async fn cli_parse() {
                 import_all(&flake, &url).await;
             }
         }
-        Commands::Clear { url } => { request_clear(url).await; },
-        Commands::Generate { url } => { request_generate(url).await; },
+        Commands::Clear {
+            url,
+        } => {
+            request_clear(url).await;
+        }
+        Commands::Generate {
+            url,
+        } => {
+            request_generate(url).await;
+        }
     }
 }
 

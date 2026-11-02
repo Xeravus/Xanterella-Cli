@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use serde::Serialize;
 
 use axum::{
     Json,
@@ -7,6 +6,7 @@ use axum::{
 };
 use indexmap::IndexMap;
 use prolyxena::engine::{core::NixValue, formater::core::Format};
+use serde::Serialize;
 use serde_json::{Value, json};
 use xanterella_core::{
     database::db::DBHost,
@@ -130,8 +130,8 @@ pub async fn list_hosts(State(state): State<Arc<AppState>>) -> Result<Json<ApiHo
     let len = hosts.len();
     let response: Vec<HostsResponse> = hosts.into_iter().map(HostsResponse::from).collect();
     Ok(Json(ApiHostsResponse {
-                len: len.try_into().unwrap(),
-                hosts: response,
+        len: len.try_into().unwrap(),
+        hosts: response,
     }))
 }
 

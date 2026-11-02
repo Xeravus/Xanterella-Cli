@@ -1,11 +1,7 @@
-use std::process;
-
-use prolyxena::engine::lexer::vfs::FsData;
-use serde::Serialize;
-
 pub async fn request_clear(url: &String) {
     let client = reqwest::Client::new();
-    let response = client.get(format!("http://{}/clear", url)).send().await.expect("Fehler beim senden der Clear Request");
+    let response =
+        client.get(format!("http://{}/clear", url)).send().await.expect("Fehler beim senden der Clear Request");
     if response.status().is_success() {
         println!("DB geleert");
     } else {
@@ -15,7 +11,8 @@ pub async fn request_clear(url: &String) {
 
 pub async fn request_generate(url: &String) {
     let client = reqwest::Client::new();
-    let response = client.get(format!("http://{}/generate", url)).send().await.expect("Fehler beim senden der Clear Request");
+    let response =
+        client.get(format!("http://{}/generate", url)).send().await.expect("Fehler beim senden der Clear Request");
     if response.status().is_success() {
         println!("Config generiert");
     } else {

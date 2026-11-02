@@ -212,7 +212,11 @@ mod tests {
     async fn test_api_clear_db() {
         let state = test_state().await;
 
-        state.db.add_host("delete-me", "0.0.0.0", "x86-64_linux".to_string(), true, vec![], vec![], vec![], vec![], vec![]).await.unwrap();
+        state
+            .db
+            .add_host("delete-me", "0.0.0.0", "x86-64_linux".to_string(), true, vec![], vec![], vec![], vec![], vec![])
+            .await
+            .unwrap();
 
         let app_state = State(state.clone());
         let res = clear(app_state).await;

@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use serde::Serialize;
 
 use axum::{
     Json,
@@ -7,6 +6,7 @@ use axum::{
 };
 use indexmap::IndexMap;
 use prolyxena::engine::{core::NixValue, formater::core::Format};
+use serde::Serialize;
 use serde_json::{Value, json};
 use xanterella_core::{
     database::db::DBProfile,
