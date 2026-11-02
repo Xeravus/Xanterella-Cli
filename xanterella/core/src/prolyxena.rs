@@ -49,6 +49,14 @@ pub struct CreateTemplate {
     pub config: Vec<Value>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateRaw {
+    pub name: String,
+    pub path: String,
+    pub content: Vec<u8>,
+    pub readable: bool,
+}
+
 impl<'a> Nixtractor<'a> {
     pub async fn new(prolyxena: &'a mut FsData) -> Self {
         Nixtractor {

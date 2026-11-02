@@ -21,9 +21,15 @@ use xanterella_core::{
 use crate::{
     ApiError, AppState,
     generate::generate_config,
-    hosts::*,
-    modules::*,
-    profiles::*,
+    hosts::{
+        check_host, create_host, delete_host, host_add_option, host_add_profile, host_remove_option,
+        host_remove_profile, list_hosts,
+    },
+    modules::{check_modul, create_modul, delete_modul, list_modules},
+    profiles::{
+        check_profile, create_profile, delete_profile, list_profiles, profile_add_option, profile_remove_option,
+    },
+    raw::{check_raw, create_raw, delete_raw, list_raw},
     templates::{check_template, create_template, delete_template, list_templates},
 };
 
@@ -46,6 +52,8 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/modules/:name", get(check_modul).delete(delete_modul))
         .route("/templates", get(list_templates).post(create_template))
         .route("/templates/:name", get(check_template).delete(delete_template))
+        .route("/raw", get(list_raw).post(create_raw))
+        .route("/raw/:name", get(check_raw).delete(delete_raw))
         .route("/generate", get(generate_config))
         .with_state(state)
 }

@@ -1,1 +1,0 @@
-ALTER TABLE hosts ADD COLUMN hardware TEXT NOT NULL DEFAULT '[]';

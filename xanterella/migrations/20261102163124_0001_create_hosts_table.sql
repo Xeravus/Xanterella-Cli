@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS hosts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    hostname TEXT NOT NULL UNIQUE,
+    ip TEXT NOT NULL,
+    system TEXT NOT NULL DEFAULT 'x86_64-linux',
+    remote_deploy BOOLEAN NOT NULL DEFAULT 0,
+    profiles TEXT NOT NULL DEFAULT '[]',
+    hardware TEXT NOT NULL DEFAULT '[]',
+    options TEXT NOT NULL DEFAULT '[]',
+    config TEXT NOT NULL DEFAULT '[]',
+    imports TEXT NOT NULL DEFAULT '[]'
+);
