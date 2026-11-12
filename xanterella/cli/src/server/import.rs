@@ -2,7 +2,7 @@ use std::process;
 
 use prolyxena::engine::lexer::vfs::FsData;
 use serde::Serialize;
-use xanterella_core::prolyxena::{CreateHost, CreateModul, CreateProfile, CreateTemplate, Nixtractor};
+use xanterella_core::prolyxena::{CreateHost, CreateModul, CreateProfile, CreateRaw, CreateTemplate, Nixtractor};
 
 trait ApiSend: Serialize {
     fn endpoint(&self) -> &str;
@@ -32,11 +32,18 @@ impl ApiSend for CreateTemplate {
     }
 }
 
+impl ApiSend for CreateRaw {
+    fn endpoint(&self) -> &str {
+        "/raw"
+    }
+}
+
 pub async fn import_all(flake: &str, url: &str) {
     import_hosts(&flake, &url).await;
     import_profiles(&flake, &url).await;
     import_modules(&flake, &url).await;
     import_templates(&flake, &url).await;
+    import_raw(&flake, &url).await;
 }
 
 pub async fn import_hosts(flake: &str, url: &str) {
@@ -112,6 +119,25 @@ pub async fn import_templates(flake: &str, url: &str) {
     match send_to_api(modules, url).await {
         Ok(_) => println!("Templates Sent"),
         Err(err) => println!("Fehler beim senden der Templates: {:#?}", err),
+    }
+}
+
+pub async fn import_raw(flake: &str, url: &str) {
+    let mut prolyxena = FsData::new(flake);
+    if let Err(e) = prolyxena.load() {
+        eprintln!("Fehler: {}", e);
+        process::exit(1);
+    }
+
+    let extractor = Nixtractor::new(&mut prolyxena);
+    let modules = match extractor.await.extract_raw().await {
+        Ok(h) => h,
+        Err(err) => panic!("Fehler: Error while extracting the Raw Files: {}", err),
+    };
+    println!("Raw Files OK");
+    match send_to_api(modules, url).await {
+        Ok(_) => println!("Raw Files Sent"),
+        Err(err) => println!("Fehler beim senden der Raw Files: {:#?}", err),
     }
 }
 

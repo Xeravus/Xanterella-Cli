@@ -1,4 +1,10 @@
-use std::fmt::Write;
+use std::{
+    fmt::Write,
+    fs,
+    hash::{DefaultHasher, Hash, Hasher},
+    path::PathBuf,
+    str::from_utf8,
+};
 
 use prolyxena::engine::{
     core::NixValue,
@@ -466,6 +472,63 @@ impl<'a> Nixtractor<'a> {
         }
 
         Ok(templates)
+    }
+
+    pub async fn extract_raw(&mut self) -> Result<Vec<CreateRaw>, String> {
+        let mut raw: Vec<CreateRaw> = Vec::new();
+
+        let agenix_path = self.prolyxena.fsnodes.search_dir("agenix")?;
+        check_single(&agenix_path)?;
+        let path = format!("{}/{}/", &self.prolyxena.path, agenix_path[0]);
+
+        let files: Vec<String> = fs::read_dir(PathBuf::from(&path))
+            .map_err(|err| format!("Extraction-Fehler: IO Fehler: {}", err))?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path().display().to_string())
+            .filter(|path| !path.ends_with(".nix"))
+            .collect();
+
+        dbg!(&files);
+
+        for i in files {
+            let content = match fs::read(&i) {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    eprintln!(
+                        "Extraction-Fehler: Raw-File Dateiinhalt '{}' konnte nicht extrahiert werden: {}\n Überspringe Datei",
+                        i, err
+                    );
+                    continue;
+                }
+            };
+            let name = match i.split('/').last() {
+                Some(n) if !n.is_empty() => n.to_string(),
+                _ => {
+                    eprintln!("Extraction-Fehler: Raw-File Dateiname konnte nicht extrahiert werden: Hashfallback");
+                    let mut hasher = DefaultHasher::new();
+                    i.hash(&mut hasher);
+                    format!("fallback_{:x}", hasher.finish())
+                }
+            };
+            match from_utf8(&content) {
+                Ok(string) => {
+                    raw.push(CreateRaw {
+                        name,
+                        path: i,
+                        content: string.into(),
+                        readable: true,
+                    });
+                }
+                Err(_) => raw.push(CreateRaw {
+                    name,
+                    path: i,
+                    content,
+                    readable: false,
+                }),
+            }
+        }
+
+        Ok(raw)
     }
 }
 

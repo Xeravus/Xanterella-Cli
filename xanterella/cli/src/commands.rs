@@ -4,7 +4,7 @@ use xanterella_core::{Ping, Xanterella, XanterellaInstall};
 use crate::{
     execute::*,
     server::{
-        import::{import_all, import_hosts, import_modules, import_profiles, import_templates},
+        import::{import_all, import_hosts, import_modules, import_profiles, import_raw, import_templates},
         requests::{request_clear, request_generate},
     },
 };
@@ -44,6 +44,8 @@ pub enum Commands {
         modules: bool,
         #[arg(short, long)]
         templates: bool,
+        #[arg(short, long)]
+        raw: bool,
         #[arg(short, long)]
         all: bool,
 
@@ -89,6 +91,7 @@ pub async fn cli_parse() {
             profiles,
             modules,
             templates,
+            raw,
             all: _,
         } => {
             if *hosts {
@@ -99,6 +102,8 @@ pub async fn cli_parse() {
                 import_modules(&flake, &url).await;
             } else if *templates {
                 import_templates(&flake, &url).await;
+            } else if *raw {
+                import_raw(&flake, &url).await;
             } else {
                 import_all(&flake, &url).await;
             }
