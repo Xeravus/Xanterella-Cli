@@ -5,13 +5,13 @@ edition = "2024"
 
 [dependencies]
 xanterella-core = { path = "../core" }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+prolyxena.workspace = true
 
 axum = "0.7"
-prolyxena = { git = "https://github.com/Xeravus/Xanterella-Cli", branch = "final/staging" }
-tokio = { version = "1", features = ["full"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
-serde_json = "1.0.149"
-serde = { version = "1.0", features = ["derive"] }
 indexmap = { version = "2", features = ["serde"] }
 
 [dev-dependencies]

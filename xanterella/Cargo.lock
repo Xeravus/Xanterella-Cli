@@ -3216,6 +3216,7 @@ dependencies = [
  "sqlx",
  "tokio",
  "toml",
+ "walkdir",
 ]
 
 [[package]]

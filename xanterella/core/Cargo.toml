@@ -5,10 +5,12 @@ edition = "2024"
 
 [dependencies]
 tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.149"
-prolyxena = { git = "https://github.com/Xeravus/Xanterella-Cli", branch = "final/staging" }
+prolyxena.workspace = true
+
 sqlx = { version = "0.8.1", features = ["sqlite", "runtime-tokio", "macros"] }
 indexmap = { version = "2", features = ["serde"] }
 toml = "1.1.8"
+walkdir = "2.5.0"
