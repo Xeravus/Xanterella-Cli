@@ -2,7 +2,7 @@ use std::{
     fmt::Write,
     fs,
     hash::{DefaultHasher, Hash, Hasher},
-    path::PathBuf,
+    path::{Path, PathBuf},
     str::from_utf8,
 };
 
@@ -14,6 +14,8 @@ use prolyxena::engine::{
 };
 use serde::*;
 use serde_json::Value;
+use tokio::task::spawn_blocking;
+use walkdir::{DirEntry, WalkDir};
 
 pub struct Nixtractor<'a> {
     pub prolyxena: &'a mut FsData,
@@ -475,6 +477,76 @@ impl<'a> Nixtractor<'a> {
     }
 
     pub async fn extract_raw(&mut self) -> Result<Vec<CreateRaw>, String> {
+        let mut raw: Vec<CreateRaw> = Vec::new();
+        let mut files = Self::extract_files_rec(self.prolyxena.path.clone()).await?;
+        dbg!(&files);
+
+        for i in files {
+            let content = match fs::read(&i) {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    eprintln!(
+                        "Extraction-Fehler: Raw-File Dateiinhalte '{}' konnte nicht extrahiert werden: {}\n Überspringe Datei",
+                        i, err
+                    );
+                    continue;
+                }
+            };
+            let name = match i.split('/').last() {
+                Some(n) if !n.is_empty() => n.to_string(),
+                _ => {
+                    eprintln!("Extraction-Fehler: Raw-File Dateiname konnte nicht extrahiert werden: Hashfallback");
+                    let mut hasher = DefaultHasher::new();
+                    i.hash(&mut hasher);
+                    format!("fallback_{:x}", hasher.finish())
+                }
+            };
+            match from_utf8(&content) {
+                Ok(string) => {
+                    raw.push(CreateRaw {
+                        name,
+                        path: i,
+                        content: string.into(),
+                        readable: true,
+                    });
+                }
+                Err(_) => {
+                    raw.push(CreateRaw {
+                        name,
+                        path: i,
+                        content,
+                        readable: false,
+                    });
+                }
+            }
+        }
+        Ok(raw)
+    }
+
+    fn is_hidden(entry: &DirEntry) -> bool {
+        entry
+            .file_name()
+            .to_str()
+            .map(|e| e.starts_with('.') || e.ends_with(".nix") || e.ends_with(".lock"))
+            .unwrap_or(false)
+    }
+
+    pub(crate) async fn extract_files_rec(dir: String) -> Result<Vec<String>, String> {
+        let files = spawn_blocking(move || {
+            WalkDir::new(dir)
+                .into_iter()
+                .filter_entry(|e| !Self::is_hidden(e))
+                .filter_map(|e| e.ok())
+                .filter(|e| e.file_type().is_file())
+                .map(|e| e.into_path().into_string().unwrap())
+                .collect()
+        })
+        .await
+        .map_err(|err| err.to_string())?;
+        Ok(files)
+    }
+
+    pub async fn extract_raw_old(&mut self) -> Result<Vec<CreateRaw>, String> {
         let mut raw: Vec<CreateRaw> = Vec::new();
 
         let agenix_path = self.prolyxena.fsnodes.search_dir("agenix")?;
