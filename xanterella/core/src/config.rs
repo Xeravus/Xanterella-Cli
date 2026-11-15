@@ -70,6 +70,10 @@ impl AppConfig {
                         "Config-Fehler: Config.toml enthält nicht korrektes toml. \n{} \nFallback auf Standartwerte",
                         e
                     );
+                    let old_config = format!("{}.old", path.config_file.display());
+                    let _ = write(old_config, content);
+                    let _ = Self::default().save(&AppPaths::init()); 
+                    eprintln!("Config-Fehler: Ursprüngliche Config.toml wird zu 'config.toml.old' und neue Config.toml mit Standartwerte wird erstellt.");
                     Self::default()
                 }
             }
