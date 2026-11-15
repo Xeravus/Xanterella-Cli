@@ -12,7 +12,6 @@ pub mod prelude;
 
 pub use config::Config;
 pub use get::{Paths, User};
-pub use git::{Branches, Git, PrType};
 pub use install::install::XanterellaInstall;
 pub use result::{Events, EventsFailed};
 pub use xanterella::Xanterella;

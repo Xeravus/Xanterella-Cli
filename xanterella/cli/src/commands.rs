@@ -22,16 +22,6 @@ pub enum Commands {
     Ping {
         ip: String,
     },
-    RemoteInstall {
-        #[arg(short = 'a', long = "automate")]
-        automate: bool,
-        #[arg(short = 's', long = "speed")]
-        speed: bool,
-        #[arg(short = 'd', long = "debug")]
-        debug: bool,
-        #[arg(short = 'f', long = "flake-dir")]
-        flake: String,
-    },
     Extract {
         flake: String,
     },
@@ -70,14 +60,6 @@ pub async fn cli_parse() {
             let mut installer = XanterellaInstall::new(xanterella);
             installer.set_ip(ip);
             let _ = installer.ping();
-        }
-        Commands::RemoteInstall {
-            automate,
-            speed,
-            debug,
-            flake,
-        } => {
-            execute_remote_install(*automate, *speed, *debug, flake).await;
         }
         Commands::Extract {
             flake,

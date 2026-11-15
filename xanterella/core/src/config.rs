@@ -48,6 +48,8 @@ pub struct AppConfig {
     pub target_directory: String,
     pub ip: String,
     pub port: u64,
+    pub repo_url: String,
+    pub repo_main_branch: String,
 }
 
 impl Default for AppConfig {
@@ -56,6 +58,8 @@ impl Default for AppConfig {
             target_directory: "/etc/nixos".to_string(),
             ip: "0.0.0.0".to_string(),
             port: 3000,
+            repo_url: "".to_string(),
+            repo_main_branch: "main".to_string(),
         }
     }
 }

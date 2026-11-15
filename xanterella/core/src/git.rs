@@ -1,204 +1,215 @@
 use crate::prelude::*;
+use std::fs::create_dir_all;
 
-#[derive(Debug, Clone)]
+pub struct Initial;
+pub struct Initialized;
+pub struct CheckedOut;
+pub struct Merged;
+pub struct Tracked;
+pub struct Commited;
+pub struct Pushed;
+
 pub enum Branches {
     Main,
     Xanterella,
 }
 
-#[derive(Debug, Clone)]
-pub enum PrType {
-    AddHost(String),
-    RemoveHost(String),
-
-    Changes(String),
+pub struct GitManager<State> {
+    pub repo: String,
+    pub directory: String,
+    pub main_br: String,
+    pub state: State,
 }
 
-pub trait Git {
-    fn git_commit(&mut self, msg: &str) -> Result<(), EventsFailed>;
-    fn git_checkout(&mut self, branch: Branches) -> Result<(), EventsFailed>;
-    fn git_merge(&mut self) -> Result<(), EventsFailed>;
-    fn git_pr(&mut self, pr: PrType) -> Result<(), EventsFailed>;
-    fn git_rollback(&mut self, head: i8) -> Result<(), EventsFailed>;
-    fn git_reset(&mut self, head: i8) -> Result<(), EventsFailed>;
-}
-
-impl Git for Xanterella {
-    fn git_commit(&mut self, msg: &str) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitCommit);
-
-        if !self.debug {
-            let cmd = Command::new("git")
-                .args(["commit", "-am", msg])
-                .current_dir(self.load_config().target_directory)
-                .output()
-                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
-
-            if !cmd.status.success() {
-                return Err(EventsFailed::GitCommit(String::from_utf8_lossy(&cmd.stderr).to_string()));
-            };
-        };
-
-        self.log_event(Events::OkGitCommit);
-        Ok(())
+impl GitManager<Initial> {
+    pub async fn new(repo: String, directory: String, main_br: String) -> Self {
+        Self {
+            repo,
+            directory,
+            main_br,
+            state: Initial,
+        }
     }
 
-    fn git_checkout(&mut self, branch: Branches) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitCheckout);
+    pub async fn init(self) -> Result<GitManager<Initialized>, EventsFailed> {
+        let git_dir = PathBuf::from(&self.directory).join(".git");
 
-        let br_name = match branch {
-            Branches::Main => "main",
-            Branches::Xanterella => "xanterella",
-        };
+        if !git_dir.exists() {
+            eprintln!("Kein Git-Repo gefunden. Repo wird initialisiert");
+            create_dir_all(&self.directory);
 
-        if !self.debug {
-            let cmd = Command::new("git")
-                .args(["checkout", br_name])
-                .current_dir(self.load_config().target_directory)
+            let init = Command::new("git")
+                .arg("init")
+                .current_dir(&self.directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-            if !cmd.status.success() {
-                self.log_event(Events::RunGitCheckoutCreate);
+            if !init.status.success() {
+                return Err(EventsFailed::GitInit(String::from_utf8_lossy(&init.stderr).to_string()));
+            }
 
-                let create = Command::new("git")
-                    .args(["checkout", "-b", br_name])
-                    .current_dir(self.load_config().target_directory)
+            if !&self.repo.is_empty() {
+                let remote = Command::new("git")
+                    .args(["remote", "add", "origin", &self.repo])
+                    .current_dir(&self.directory)
                     .output()
                     .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-                if !create.status.success() {
-                    return Err(EventsFailed::GitCheckout(String::from_utf8_lossy(&create.stderr).to_string()));
-                };
-
-                self.log_event(Events::OkGitCheckoutCreate);
-            };
-        };
-
-        self.log_event(Events::RunGitCheckout);
-        Ok(())
-    }
-
-    fn git_merge(&mut self) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitMerge);
-
-        if !self.debug {
-            self.git_checkout(Branches::Xanterella)?;
-
-            let cmd = Command::new("git")
-                .args(["merge", "--ff-only", "-n", "main"])
-                .current_dir(self.load_config().target_directory)
-                .output()
-                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
-
-            if !cmd.status.success() {
-                return Err(EventsFailed::GitMerge(String::from_utf8_lossy(&cmd.stderr).to_string()));
-            }
-        };
-
-        self.log_event(Events::OkGitMerge);
-        Ok(())
-    }
-
-    fn git_pr(&mut self, pr: PrType) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitPr);
-
-        let extra_part = "This is an automatic generated Pull Request";
-        let title = match pr {
-            PrType::AddHost(ref host) => format!("Xanterella: Add Host: {}", host),
-            PrType::RemoveHost(ref host) => format!("Xanterella: Remove Host: {}", host),
-            PrType::Changes(ref changes) => format!("Xanterella: Change Configs: {}", changes),
-        };
-        let body = match pr {
-            PrType::AddHost(ref host) => format!("Xanterella added a Host \nAdded Host: {} \n{}", host, extra_part),
-            PrType::RemoveHost(ref host) => {
-                format!("Xanterella removed a Host \nRemoved Host: {} \n{}", host, extra_part)
-            }
-            PrType::Changes(ref changes) => {
-                format!("Xanterella changed the Configs \nChanges: {} \n{}", changes, extra_part)
-            }
-        };
-
-        if !self.debug {
-            let cmd = Command::new("gh")
-                .args(["pr", "create", "--no-maintainer-edit"])
-                .args(["-B", "main"])
-                .args(["-t", &title])
-                .args(["-b", &body])
-                .current_dir(self.load_config().target_directory)
-                .output()
-                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
-
-            if !cmd.status.success() {
-                return Err(EventsFailed::GitPr(String::from_utf8_lossy(&cmd.stderr).to_string()));
-            };
-        };
-
-        self.log_event(Events::OkGitPr);
-        Ok(())
-    }
-
-    fn git_rollback(&mut self, head: i8) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitRollback);
-
-        self.git_reset(head)?;
-        self.git_checkout(Branches::Main)?;
-
-        self.log_event(Events::OkGitRollback);
-        Ok(())
-    }
-
-    fn git_reset(&mut self, head: i8) -> Result<(), EventsFailed> {
-        self.log_event(Events::RunGitReset);
-
-        let commit = format!("HEAD~{}", head);
-
-        if !self.debug {
-            let cmd = Command::new("git")
-                .args(["reset", "--hard", &commit])
-                .current_dir(self.load_config().target_directory)
-                .output()
-                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
-
-            if !cmd.status.success() {
-                return Err(EventsFailed::GitReset(String::from_utf8_lossy(&cmd.stderr).to_string()));
+                if !remote.status.success() {
+                    return Err(EventsFailed::GitRemote(String::from_utf8_lossy(&remote.stderr).to_string()));
+                }
+            } else {
+                eprintln!("Kein Remote Repo angegeben, verbinde nicht");
             }
         }
-        self.log_event(Events::OkGitReset);
-        Ok(())
+        if !&self.repo.is_empty() {
+            let pull = Command::new("git")
+                .args(["pull", "origin", &self.main_br])
+                .current_dir(&self.directory)
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+            if !pull.status.success() {
+                return Err(EventsFailed::GitPull(String::from_utf8_lossy(&pull.stderr).to_string()));
+            }
+        }
+
+        Ok(GitManager {
+            repo: self.repo.clone(),
+            directory: self.directory.clone(),
+            main_br: self.main_br,
+            state: Initialized,
+        })
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    fn test_git_debug() -> Xanterella {
-        let mut xanterella = Xanterella::new();
-        xanterella.debug = true;
-        xanterella
-    }
+impl GitManager<Initialized> {
+    pub async fn checkout(self, branch: Branches) -> Result<GitManager<CheckedOut>, EventsFailed> {
+        let br_name = match branch {
+            Branches::Main => &self.main_br,
+            Branches::Xanterella => "xanterella",
+        };
 
-    #[test]
-    fn test_utils_git_git_commit() {
-        let result1 = test_git_debug().git_commit("Test");
-        assert!(result1.is_ok());
-    }
+        let checkout = Command::new("git")
+            .args(["checkout", br_name])
+            .current_dir(&self.directory)
+            .output()
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-    #[test]
-    fn test_utils_git_git_checkout() {
-        let result1 = test_git_debug().git_checkout(Branches::Main);
-        assert!(result1.is_ok());
+        if !checkout.status.success() {
+            let create = Command::new("git")
+                .args(["checkout", "-b", br_name])
+                .current_dir(&self.directory)
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+            if !create.status.success() {
+                return Err(EventsFailed::GitCheckoutCreate(String::from_utf8_lossy(&create.stderr).to_string()));
+            }
+        }
+        Ok(GitManager {
+            repo: self.repo.clone(),
+            directory: self.directory.clone(),
+            main_br: self.main_br,
+            state: CheckedOut,
+        })
     }
+}
 
-    #[test]
-    fn test_utils_git_git_merge() {
-        let result1 = test_git_debug().git_merge();
-        assert!(result1.is_ok());
+impl GitManager<CheckedOut> {
+    pub async fn merge(self) -> Result<GitManager<Merged>, EventsFailed> {
+        let merge = Command::new("git")
+            .args(["merge", "--ff-only", "-n", &self.main_br])
+            .current_dir(&self.directory)
+            .output()
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+        if !merge.status.success() {
+            return Err(EventsFailed::GitMerge(String::from_utf8_lossy(&merge.stderr).to_string()));
+        }
+        Ok(GitManager {
+            repo: self.repo.clone(),
+            directory: self.directory.clone(),
+            main_br: self.main_br,
+            state: Merged,
+        })
     }
+}
 
-    #[test]
-    fn test_utils_git_git_pr() {
-        let result1 = test_git_debug().git_merge();
-        assert!(result1.is_ok());
+impl GitManager<Merged> {
+    pub async fn add(self) -> Result<GitManager<Tracked>, EventsFailed> {
+        let add = Command::new("git")
+            .args(["add", "."])
+            .current_dir(&self.directory)
+            .output()
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+        if !add.status.success() {
+            return Err(EventsFailed::GitAdd(String::from_utf8_lossy(&add.stderr).to_string()));
+        }
+        Ok(GitManager {
+            repo: self.repo.clone(),
+            directory: self.directory.clone(),
+            main_br: self.main_br,
+            state: Tracked,
+        })
+    }
+    pub async fn reset(self, head: i8) -> Result<GitManager<Initialized>, EventsFailed> {
+        let commit = format!("HEAD~{}", head);
+
+        let reset = Command::new("git")
+            .args(["reset", "--hard", &commit])
+            .current_dir(&self.directory)
+            .output()
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+        if !reset.status.success() {
+            return Err(EventsFailed::GitReset(String::from_utf8_lossy(&reset.stderr).to_string()));
+        }
+        Ok(GitManager {
+            repo: self.repo.clone(),
+            directory: self.directory.clone(),
+            main_br: self.main_br,
+            state: Initialized,
+        })
+    }
+}
+
+impl GitManager<Tracked> {
+    pub async fn commit(self, msg: String) -> Result<GitManager<Commited>, EventsFailed> {
+        let commit = Command::new("git")
+            .args(["commit", "-m", &msg])
+            .current_dir(&self.directory)
+            .output()
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+        if !commit.status.success() {
+            return Err(EventsFailed::GitCommit(String::from_utf8_lossy(&commit.stderr).to_string()));
+        }
+        Ok(GitManager {
+            repo: self.repo.clone(),
+            directory: self.directory.clone(),
+            main_br: self.main_br,
+            state: Commited,
+        })
+    }
+}
+
+impl GitManager<Commited> {
+    pub async fn push(self) -> Result<GitManager<Pushed>, EventsFailed> {
+        let push = Command::new("git")
+            .args(["push", "-u", "origin", "HEAD"])
+            .current_dir(&self.directory)
+            .output()
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+        if !push.status.success() {
+            return Err(EventsFailed::GitPush(String::from_utf8_lossy(&push.stderr).to_string()));
+        }
+        Ok(GitManager {
+            repo: self.repo.clone(),
+            directory: self.directory.clone(),
+            main_br: self.main_br,
+            state: Pushed,
+        })
     }
 }

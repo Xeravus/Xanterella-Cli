@@ -3,7 +3,10 @@ use std::{collections::HashMap, fmt::Write, fs::create_dir_all, path::PathBuf, s
 use axum::{Json, extract::State};
 use prolyxena::engine::{formater::write::Write as WalkTree, generator::generate::Modify, lexer::vfs::FsData};
 use serde_json::{Value, json};
-use xanterella_core::xanterella::{EventFormat, EventState};
+use xanterella_core::{
+    git::{Branches, GitManager},
+    xanterella::{EventFormat, EventState},
+};
 
 use crate::{
     ApiError, AppState, hosts::HostsResponse, modules::ModulesResponse, profiles::ProfilesResponse,
@@ -15,6 +18,24 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         state: EventState::Run,
         step: "Generating Config".to_string(),
     });
+
+    let git = GitManager::new(
+        state.config.repo_url.clone(),
+        state.config.target_directory.clone(),
+        state.config.repo_main_branch.clone(),
+    );
+    let git = git.await.init().await.map_err(|err| {
+        eprintln!("Generation-Fehler: Git: {:#?}", err);
+        ApiError::InternalError
+    })?;
+    let git = git.checkout(Branches::Xanterella).await.map_err(|err| {
+        eprintln!("Generation-Fehler: Git: {:#?}", err);
+        ApiError::InternalError
+    })?;
+    let git = git.merge().await.map_err(|err| {
+        eprintln!("Generation-Fehler: Git: {:#?}", err);
+        ApiError::InternalError
+    })?;
 
     let hosts = state.db.list_hosts().await.map_err(|err| {
         eprintln!("Generation-Fehler: Hosts konnten nicht aus der DB abgerufen werden: {}", err);
@@ -196,16 +217,30 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         let path = PathBuf::from(&state.config.target_directory).join(&i.path);
 
         if let Some(parent) = path.parent()
-            && let Err(err) = create_dir_all(parent) {
-                eprintln!("Generation-Fehler: Konnte Ordner für Raw-Datei '{}' nicht erstellen: {}", i.path, err);
-                return Err(ApiError::InternalError);
-            }
+            && let Err(err) = create_dir_all(parent)
+        {
+            eprintln!("Generation-Fehler: Konnte Ordner für Raw-Datei '{}' nicht erstellen: {}", i.path, err);
+            return Err(ApiError::InternalError);
+        }
 
         if let Err(err) = std::fs::write(&path, &i.content) {
             eprintln!("Generation-Fehler: Raw-Datei '{}' konnte nicht geschrieben werden: {}", i.path, err);
             return Err(ApiError::InternalError);
         }
     }
+
+    let git = git.add().await.map_err(|err| {
+        eprintln!("Generation-Fehler: Git: {:#?}", err);
+        ApiError::InternalError
+    })?;
+    let git = git.commit("Xanterella: Changes".to_string()).await.map_err(|err| {
+        eprintln!("Generation-Fehler: Git: {:#?}", err);
+        ApiError::InternalError
+    })?;
+    let git = git.push().await.map_err(|err| {
+        eprintln!("Generation-Fehler: Git: {:#?}", err);
+        ApiError::InternalError
+    })?;
 
     Ok(Json(json!({
         "status": "success",

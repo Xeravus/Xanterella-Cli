@@ -83,6 +83,7 @@ impl Xanterella {
             Events::RunGitPr => (EventState::Run, "Git Pull Request"),
             Events::RunGitRollback => (EventState::Run, "Git Rollback"),
             Events::RunGitReset => (EventState::Run, "Git Reset"),
+            Events::RunGitPush => (EventState::Run, "Git Push"),
 
             Events::OkGitCommit => (EventState::Finish, "Git Commit"),
             Events::OkGitCheckout => (EventState::Finish, "Git Checkout"),
@@ -91,6 +92,7 @@ impl Xanterella {
             Events::OkGitPr => (EventState::Finish, "Git Pull Request"),
             Events::OkGitRollback => (EventState::Run, "Git Rollback"),
             Events::OkGitReset => (EventState::Run, "Git Reset"),
+            Events::OkGitPush => (EventState::Run, "Git Push"),
             // utils/Check.rs
             Events::RunCheckNix => (EventState::Run, "Nix Flake Check"),
 

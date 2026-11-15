@@ -17,6 +17,11 @@ pub enum EventsFailed {
     GitMerge(String),
     GitPr(String),
     GitReset(String),
+    GitPush(String),
+    GitPull(String),
+    GitInit(String),
+    GitRemote(String),
+    GitAdd(String),
 
     /// utils/Check.rs
     CheckNix(String),
@@ -68,6 +73,7 @@ pub enum Events {
     RunGitPr,
     RunGitRollback,
     RunGitReset,
+    RunGitPush,
 
     OkGitCommit,
     OkGitCheckout,
@@ -76,6 +82,7 @@ pub enum Events {
     OkGitPr,
     OkGitRollback,
     OkGitReset,
+    OkGitPush,
 
     /// utils/Check.rs
     RunCheckNix,
