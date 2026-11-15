@@ -1,6 +1,6 @@
 use crate::database::db::{DBRaw, Database};
 
-trait RawString {
+pub trait RawString {
     fn into_blop(&self) -> Vec<u8>;
 }
 

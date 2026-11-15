@@ -1,10 +1,4 @@
-use std::{
-    fmt::Write,
-    fs,
-    hash::{DefaultHasher, Hash, Hasher},
-    path::{Path, PathBuf},
-    str::from_utf8,
-};
+use std::{collections::hash_map::DefaultHasher, fmt::Write, fs, path::PathBuf, str::from_utf8};
 
 use prolyxena::engine::{
     core::NixValue,
@@ -478,7 +472,7 @@ impl<'a> Nixtractor<'a> {
 
     pub async fn extract_raw(&mut self) -> Result<Vec<CreateRaw>, String> {
         let mut raw: Vec<CreateRaw> = Vec::new();
-        let mut files = Self::extract_files_rec(self.prolyxena.path.clone()).await?;
+        let files = Self::extract_files_rec(self.prolyxena.path.clone()).await?;
         let path_prefix = PathBuf::from(&self.prolyxena.path);
         dbg!(&files);
 
@@ -499,7 +493,7 @@ impl<'a> Nixtractor<'a> {
                 Some(n) if !n.is_empty() => n.to_string_lossy().into_owned(),
                 _ => {
                     eprintln!("Extraction-Fehler: Raw-File Dateiname konnte nicht extrahiert werden: Hashfallback");
-                    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+                    let mut hasher = DefaultHasher::new();
                     std::hash::Hash::hash(&i, &mut hasher);
                     format!("fallback_{:x}", std::hash::Hasher::finish(&hasher))
                 }

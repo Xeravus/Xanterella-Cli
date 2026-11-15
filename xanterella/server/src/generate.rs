@@ -93,7 +93,7 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         hosts_string.push_str(&name);
     }
 
-    colmena_string.push_str("}");
+    colmena_string.push('}');
     hosts_string.push_str("}; }; }");
 
     prolyxena.generate_file("flake-modules/colmena-hosts.nix", colmena_string).map_err(|err| {
@@ -187,23 +187,19 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         state: EventState::Finish,
         step: "Generated Config".to_string(),
     });
-    match prolyxena.walk_tree() {
-        Err(err) => {
-            eprintln!("Generation-Fehler: Konnte die Configs nicht erstellen: {}", err);
-            return Err(ApiError::InternalError);
-        }
-        _ => {}
+    if let Err(err) = prolyxena.walk_tree() {
+        eprintln!("Generation-Fehler: Konnte die Configs nicht erstellen: {}", err);
+        return Err(ApiError::InternalError);
     };
 
     for i in raw {
         let path = PathBuf::from(&state.config.target_directory).join(&i.path);
 
-        if let Some(parent) = path.parent() {
-            if let Err(err) = create_dir_all(parent) {
+        if let Some(parent) = path.parent()
+            && let Err(err) = create_dir_all(parent) {
                 eprintln!("Generation-Fehler: Konnte Ordner für Raw-Datei '{}' nicht erstellen: {}", i.path, err);
                 return Err(ApiError::InternalError);
             }
-        }
 
         if let Err(err) = std::fs::write(&path, &i.content) {
             eprintln!("Generation-Fehler: Raw-Datei '{}' konnte nicht geschrieben werden: {}", i.path, err);
