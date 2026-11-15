@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Write, sync::Arc};
+use std::{collections::HashMap, fmt::Write, fs::create_dir_all, path::PathBuf, sync::Arc};
 
 use axum::{Json, extract::State};
 use prolyxena::engine::{formater::write::Write as WalkTree, generator::generate::Modify, lexer::vfs::FsData};
@@ -16,35 +16,39 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         step: "Generating Config".to_string(),
     });
 
-    let hosts = match state.db.list_hosts().await {
-        Ok(h) => h,
-        Err(err) => {
-            eprintln!("Generation-Fehler: Hosts konnten nicht aus der DB abgerufen werden: {}", err);
-            return Err(ApiError::InternalError);
-        }
-    };
+    let hosts = state.db.list_hosts().await.map_err(|err| {
+        eprintln!("Generation-Fehler: Hosts konnten nicht aus der DB abgerufen werden: {}", err);
+        ApiError::InternalError
+    })?;
     let hosts_len = hosts.len();
     let formated_hosts: Vec<HostsResponse> = hosts.into_iter().map(HostsResponse::from).collect();
 
-    let profiles = match state.db.list_profiles().await {
-        Ok(p) => p,
-        Err(err) => {
-            eprintln!("Generation-Fehler: Profiles konnten nicht aus der DB abgerufen werden: {}", err);
-            return Err(ApiError::InternalError);
-        }
-    };
+    let profiles = state.db.list_profiles().await.map_err(|err| {
+        eprintln!("Generation-Fehler: Profiles konnten nicht aus der DB abgerufen werden: {}", err);
+        ApiError::InternalError
+    })?;
     let profiles_len = profiles.len();
     let formated_profiles: Vec<ProfilesResponse> = profiles.into_iter().map(ProfilesResponse::from).collect();
 
-    let modules = match state.db.list_modules().await {
-        Ok(m) => m,
-        Err(err) => {
-            eprintln!("Generation-Fehler: Module konnten nicht aus der DB abgerufen werden: {}", err);
-            return Err(ApiError::InternalError);
-        }
-    };
+    let modules = state.db.list_modules().await.map_err(|err| {
+        eprintln!("Generation-Fehler: Module konnten nicht aus der DB abgerufen werden: {}", err);
+        ApiError::InternalError
+    })?;
     let modules_len = modules.len();
     let formated_modules: Vec<ModulesResponse> = modules.into_iter().map(ModulesResponse::from).collect();
+
+    let templates = state.db.list_templates().await.map_err(|err| {
+        eprintln!("Generation-Fehler: Templates konnten nicht aus der DB abgerufen werden: {}", err);
+        ApiError::InternalError
+    })?;
+    let templates_len = templates.len();
+    let formated_templates: Vec<TemplatesResponse> = templates.into_iter().map(TemplatesResponse::from).collect();
+
+    let raw = state.db.list_raw().await.map_err(|err| {
+        eprintln!("Generation-Fehler: Raw-Files konnten nicht aus der DB abgerufen werden: {}", err);
+        ApiError::InternalError
+    })?;
+    let raw_len = raw.len();
 
     let mut prolyxena = FsData::new(&state.config.target_directory);
     prolyxena.set_sort(true);
@@ -171,12 +175,6 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         ApiError::InternalError
     })?;
 
-    let templates = state.db.list_templates().await.map_err(|err| {
-        eprintln!("Generation-Fehler: Templates konnten nicht aus der DB abgerufen werden: {}", err);
-        ApiError::InternalError
-    })?;
-    let templates_len = templates.len();
-    let formated_templates: Vec<TemplatesResponse> = templates.into_iter().map(TemplatesResponse::from).collect();
     for i in formated_templates {
         name.clear();
         prolyxena.generate_file(&i.path, i.config).map_err(|err| {
@@ -196,11 +194,29 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         }
         _ => {}
     };
+
+    for i in raw {
+        let path = PathBuf::from(&state.config.target_directory).join(&i.path);
+
+        if let Some(parent) = path.parent() {
+            if let Err(err) = create_dir_all(parent) {
+                eprintln!("Generation-Fehler: Konnte Ordner für Raw-Datei '{}' nicht erstellen: {}", i.path, err);
+                return Err(ApiError::InternalError);
+            }
+        }
+
+        if let Err(err) = std::fs::write(&path, &i.content) {
+            eprintln!("Generation-Fehler: Raw-Datei '{}' konnte nicht geschrieben werden: {}", i.path, err);
+            return Err(ApiError::InternalError);
+        }
+    }
+
     Ok(Json(json!({
         "status": "success",
         "hosts": hosts_len,
         "profiles": profiles_len,
         "modules": modules_len,
         "templates": templates_len,
+        "raw": raw_len,
     })))
 }
