@@ -124,10 +124,6 @@ pub async fn import_templates(flake: &str, url: &str) {
 
 pub async fn import_raw(flake: &str, url: &str) {
     let mut prolyxena = FsData::new(flake);
-    if let Err(e) = prolyxena.load() {
-        eprintln!("Fehler: {}", e);
-        process::exit(1);
-    }
 
     let extractor = Nixtractor::new(&mut prolyxena);
     let modules = match extractor.await.extract_raw().await {

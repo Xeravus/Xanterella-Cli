@@ -479,33 +479,46 @@ impl<'a> Nixtractor<'a> {
     pub async fn extract_raw(&mut self) -> Result<Vec<CreateRaw>, String> {
         let mut raw: Vec<CreateRaw> = Vec::new();
         let mut files = Self::extract_files_rec(self.prolyxena.path.clone()).await?;
+        let path_prefix = PathBuf::from(&self.prolyxena.path);
         dbg!(&files);
 
         for i in files {
-            let content = match fs::read(&i) {
-                Ok(bytes) => bytes,
+            let path = match PathBuf::from(&i).strip_prefix(&path_prefix) {
+                Ok(stripped) => stripped.to_string_lossy().into_owned(),
                 Err(err) => {
                     eprintln!(
-                        "Extraction-Fehler: Raw-File Dateiinhalte '{}' konnte nicht extrahiert werden: {}\n Überspringe Datei",
+                        "Extraction-Fehler: Raw-File '{:#?}' Dateipfad konnte nicht korrigiert werden: '{}' Überspringe Datei",
                         i, err
                     );
                     continue;
                 }
             };
-            let name = match i.split('/').last() {
-                Some(n) if !n.is_empty() => n.to_string(),
+
+            // 2. Dateinamen sicher extrahieren
+            let name = match PathBuf::from(&i).file_name() {
+                Some(n) if !n.is_empty() => n.to_string_lossy().into_owned(),
                 _ => {
                     eprintln!("Extraction-Fehler: Raw-File Dateiname konnte nicht extrahiert werden: Hashfallback");
-                    let mut hasher = DefaultHasher::new();
-                    i.hash(&mut hasher);
-                    format!("fallback_{:x}", hasher.finish())
+                    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+                    std::hash::Hash::hash(&i, &mut hasher);
+                    format!("fallback_{:x}", std::hash::Hasher::finish(&hasher))
+                }
+            };
+            let content = match fs::read(&i) {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    eprintln!(
+                        "Extraction-Fehler: Raw-File Dateiinhalte '{:#?}' konnte nicht extrahiert werden: {}\n Überspringe Datei",
+                        i, err
+                    );
+                    continue;
                 }
             };
             match from_utf8(&content) {
                 Ok(string) => {
                     raw.push(CreateRaw {
                         name,
-                        path: i,
+                        path,
                         content: string.into(),
                         readable: true,
                     });
@@ -513,7 +526,7 @@ impl<'a> Nixtractor<'a> {
                 Err(_) => {
                     raw.push(CreateRaw {
                         name,
-                        path: i,
+                        path,
                         content,
                         readable: false,
                     });
@@ -531,76 +544,19 @@ impl<'a> Nixtractor<'a> {
             .unwrap_or(false)
     }
 
-    pub(crate) async fn extract_files_rec(dir: String) -> Result<Vec<String>, String> {
+    pub(crate) async fn extract_files_rec(dir: String) -> Result<Vec<PathBuf>, String> {
         let files = spawn_blocking(move || {
             WalkDir::new(dir)
                 .into_iter()
                 .filter_entry(|e| !Self::is_hidden(e))
                 .filter_map(|e| e.ok())
                 .filter(|e| e.file_type().is_file())
-                .map(|e| e.into_path().into_string().unwrap())
+                .map(|e| e.into_path())
                 .collect()
         })
         .await
         .map_err(|err| err.to_string())?;
         Ok(files)
-    }
-
-    pub async fn extract_raw_old(&mut self) -> Result<Vec<CreateRaw>, String> {
-        let mut raw: Vec<CreateRaw> = Vec::new();
-
-        let agenix_path = self.prolyxena.fsnodes.search_dir("agenix")?;
-        check_single(&agenix_path)?;
-        let path = format!("{}/{}/", &self.prolyxena.path, agenix_path[0]);
-
-        let files: Vec<String> = fs::read_dir(PathBuf::from(&path))
-            .map_err(|err| format!("Extraction-Fehler: IO Fehler: {}", err))?
-            .filter_map(|entry| entry.ok())
-            .map(|entry| entry.path().display().to_string())
-            .filter(|path| !path.ends_with(".nix"))
-            .collect();
-
-        dbg!(&files);
-
-        for i in files {
-            let content = match fs::read(&i) {
-                Ok(bytes) => bytes,
-                Err(err) => {
-                    eprintln!(
-                        "Extraction-Fehler: Raw-File Dateiinhalt '{}' konnte nicht extrahiert werden: {}\n Überspringe Datei",
-                        i, err
-                    );
-                    continue;
-                }
-            };
-            let name = match i.split('/').last() {
-                Some(n) if !n.is_empty() => n.to_string(),
-                _ => {
-                    eprintln!("Extraction-Fehler: Raw-File Dateiname konnte nicht extrahiert werden: Hashfallback");
-                    let mut hasher = DefaultHasher::new();
-                    i.hash(&mut hasher);
-                    format!("fallback_{:x}", hasher.finish())
-                }
-            };
-            match from_utf8(&content) {
-                Ok(string) => {
-                    raw.push(CreateRaw {
-                        name,
-                        path: i,
-                        content: string.into(),
-                        readable: true,
-                    });
-                }
-                Err(_) => raw.push(CreateRaw {
-                    name,
-                    path: i,
-                    content,
-                    readable: false,
-                }),
-            }
-        }
-
-        Ok(raw)
     }
 }
 
