@@ -74,6 +74,18 @@ impl GitManager<Initial> {
             }
         }
 
+        if !&self.repo.is_empty() {
+            let pull = Command::new("git")
+                .args(["pull", "origin", "xanterella"])
+                .current_dir(&self.directory)
+                .output()
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+            if !pull.status.success() {
+                return Err(EventsFailed::GitPull(String::from_utf8_lossy(&pull.stderr).to_string()));
+            }
+        }
+
         Ok(GitManager {
             repo: self.repo.clone(),
             directory: self.directory.clone(),
