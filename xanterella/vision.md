@@ -59,9 +59,9 @@ Der Übergang von der Datenbank in das Dateisystem und die Versionskontrolle.
   - [x] `generate_config` Endpunkt im Backend (schreibt VFS auf Festplatte).
   - [x] Schreiben der Raw-Files (Binärdaten 1:1 auf die Disk dumpen).
   - [ ] Frontend: "Apply Changes" Button, der den Endpunkt triggert.
-- [ ] **Git & Versionskontrolle**
-  - [ ] Nach `std::fs::write` in der Generate-Schleife: Automatisches `git add .`.
-  - [ ] Automatisches `git commit -m "chore: auto-generated config update"`.
+- [x] **Git & Versionskontrolle**
+  - [x] Nach `std::fs::write` in der Generate-Schleife: Automatisches `git add .`.
+  - [x] Automatisches `git commit -m "chore: auto-generated config update"`.
 - [ ] **Nix Flake Check & Rollback**
   - [ ] Führe `nix flake check` oder `nixos-rebuild dry-build` nach dem Commit aus.
   - [ ] Bei Fehler: Automatisches `git reset --hard HEAD~1` (Rollback) und Fehlermeldung via SSE an das Frontend senden.
