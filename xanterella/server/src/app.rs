@@ -1,4 +1,5 @@
 use std::{convert::Infallible, sync::Arc};
+use std::fs::remove_dir_all;
 
 use axum::{
     Json, Router,
@@ -55,6 +56,7 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/raw", get(list_raw).post(create_raw))
         .route("/raw/:name", get(check_raw).delete(delete_raw))
         .route("/generate", get(generate_config))
+        .route("/wipe", get(wipe_config))
         .with_state(state)
 }
 
@@ -88,6 +90,18 @@ pub async fn get_ping(State(state): State<Arc<AppState>>, Path(ip): Path<String>
             "ip": ip,
         }))),
         Err(_) => Err(ApiError::InternalError),
+    }
+}
+
+pub async fn wipe_config(State(state): State<Arc<AppState>>) -> Result<Json<Value>, ApiError> {
+    match remove_dir_all(&state.config.target_directory) {
+        Ok(_) => Ok(Json(json!({
+            "wipe": "success"
+        }))),
+        Err(err) => {
+            eprintln!("Wipe-Fehler: {}", err);
+            Err(ApiError::InternalError)
+        },
     }
 }
 

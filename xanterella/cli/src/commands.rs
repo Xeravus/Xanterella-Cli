@@ -5,7 +5,7 @@ use crate::{
     execute::*,
     server::{
         import::{import_all, import_hosts, import_modules, import_profiles, import_raw, import_templates},
-        requests::{request_clear, request_generate},
+        requests::{request_clear, request_generate, request_wipe},
     },
 };
 
@@ -46,6 +46,9 @@ pub enum Commands {
         url: String,
     },
     Generate {
+        url: String,
+    },
+    Wipe {
         url: String,
     },
 }
@@ -99,6 +102,11 @@ pub async fn cli_parse() {
             url,
         } => {
             request_generate(url).await;
+        }
+        Commands::Wipe {
+            url,
+        } => {
+            request_wipe(url).await;
         }
     }
 }
