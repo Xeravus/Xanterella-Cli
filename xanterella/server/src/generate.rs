@@ -1,4 +1,6 @@
 use std::{collections::HashMap, fmt::Write, fs::create_dir_all, path::PathBuf, sync::Arc};
+use std::fs;
+use std::path::Path;
 
 use axum::{Json, extract::State};
 use prolyxena::engine::{formater::write::Write as WalkTree, generator::generate::Modify, lexer::vfs::FsData};
@@ -35,6 +37,10 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
     let git = git.merge().await.map_err(|err| {
         eprintln!("Generation-Fehler: Git: {:#?}", err);
         ApiError::InternalError
+    })?;
+    let _ = clean_directory(&PathBuf::from(state.config.target_directory.clone())).await.map_err(|err| {
+        eprintln!("Generation-Fehler: Konnte den Ordner nicht säubern: {}", err);
+        ApiError::InternalError 
     })?;
 
     let hosts = state.db.list_hosts().await.map_err(|err| {
@@ -237,7 +243,7 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         eprintln!("Generation-Fehler: Git: {:#?}", err);
         ApiError::InternalError
     })?;
-    let git = git.push().await.map_err(|err| {
+    let _git = git.push().await.map_err(|err| {
         eprintln!("Generation-Fehler: Git: {:#?}", err);
         ApiError::InternalError
     })?;
@@ -250,4 +256,24 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         "templates": templates_len,
         "raw": raw_len,
     })))
+}
+
+pub async fn clean_directory(dir: &Path) -> Result<(), std::io::Error> {
+    if !dir.exists() {
+        return Ok(());
+    }
+
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.file_name().and_then(|n| n.to_str()) == Some(".git") {
+            continue;
+        }
+        if path.is_dir() {
+            fs::remove_dir_all(&path)?;
+        } else {
+            fs::remove_file(&path)?;
+        }
+    }
+    Ok(())
 }

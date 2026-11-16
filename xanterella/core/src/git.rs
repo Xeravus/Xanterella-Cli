@@ -1,5 +1,6 @@
-use crate::prelude::*;
 use std::fs::create_dir_all;
+
+use crate::prelude::*;
 
 pub struct Initial;
 pub struct Initialized;
@@ -75,14 +76,14 @@ impl GitManager<Initial> {
         }
 
         if !&self.repo.is_empty() {
-            let pull = Command::new("git")
-                .args(["pull", "origin", "xanterella"])
+            let fetch = Command::new("git")
+                .args(["fetch"])
                 .current_dir(&self.directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
-            if !pull.status.success() {
-                return Err(EventsFailed::GitPull(String::from_utf8_lossy(&pull.stderr).to_string()));
+            if !fetch.status.success() {
+                return Err(EventsFailed::GitPull(String::from_utf8_lossy(&fetch.stderr).to_string()));
             }
         }
 
@@ -129,8 +130,9 @@ impl GitManager<Initialized> {
 
 impl GitManager<CheckedOut> {
     pub async fn merge(self) -> Result<GitManager<Merged>, EventsFailed> {
+        let remote_branch = format!("origin/{}", &self.main_br);
         let merge = Command::new("git")
-            .args(["merge", "--ff-only", "-n", &self.main_br])
+            .args(["merge", "--ff-only", "-n", &remote_branch])
             .current_dir(&self.directory)
             .output()
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;

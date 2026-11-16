@@ -1,5 +1,4 @@
-use std::{convert::Infallible, sync::Arc};
-use std::fs::remove_dir_all;
+use std::{convert::Infallible, fs::remove_dir_all, sync::Arc};
 
 use axum::{
     Json, Router,
@@ -101,7 +100,7 @@ pub async fn wipe_config(State(state): State<Arc<AppState>>) -> Result<Json<Valu
         Err(err) => {
             eprintln!("Wipe-Fehler: {}", err);
             Err(ApiError::InternalError)
-        },
+        }
     }
 }
 
