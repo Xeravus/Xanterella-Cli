@@ -1,4 +1,5 @@
 pub mod app;
+pub mod config;
 pub mod generate;
 pub mod hosts;
 pub mod modules;
@@ -6,7 +7,6 @@ pub mod profiles;
 pub mod raw;
 pub mod templates;
 pub mod test_helper;
-pub mod config;
 
 use std::sync::Arc;
 

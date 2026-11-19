@@ -121,7 +121,7 @@ impl<'a> Nixtractor<'a> {
 
             conf_file_path.clear();
             write!(&mut conf_file_path, "hosts/{}/hardware-configuration.nix", host_name).unwrap();
-            match self.prolyxena.search_tree(&conf_file_path) { 
+            match self.prolyxena.search_tree(&conf_file_path) {
                 Ok(file) => hardware.push(serde_json::json!(file)),
                 Err(e) => {
                     eprintln!(

@@ -5,7 +5,7 @@ use crate::{
     execute::*,
     server::{
         import::{import_all, import_hosts, import_modules, import_profiles, import_raw, import_templates},
-        requests::{request_clear, request_generate, request_wipe, request_check},
+        requests::{request_check, request_clear, request_generate, request_wipe},
     },
 };
 

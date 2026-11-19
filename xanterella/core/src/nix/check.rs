@@ -7,7 +7,7 @@ pub trait Check {
 impl Check for Xanterella {
     fn check_nix_flake(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunCheckNix);
-        
+
         eprintln!("Starte Check");
         if !self.debug {
             let cmd = Command::new("nix")

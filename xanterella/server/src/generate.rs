@@ -1,6 +1,11 @@
-use std::{collections::HashMap, fmt::Write, fs::create_dir_all, path::PathBuf, sync::Arc};
-use std::fs;
-use std::path::Path;
+use std::{
+    collections::HashMap,
+    fmt::Write,
+    fs,
+    fs::create_dir_all,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use axum::{Json, extract::State};
 use prolyxena::engine::{formater::write::Write as WalkTree, generator::generate::Modify, lexer::vfs::FsData};
@@ -38,9 +43,9 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         eprintln!("Generation-Fehler: Git: {:#?}", err);
         ApiError::InternalError
     })?;
-    let _ = clean_directory(&PathBuf::from(state.config.target_directory.clone())).await.map_err(|err| {
+    clean_directory(&PathBuf::from(state.config.target_directory.clone())).await.map_err(|err| {
         eprintln!("Generation-Fehler: Konnte den Ordner nicht säubern: {}", err);
-        ApiError::InternalError 
+        ApiError::InternalError
     })?;
 
     let hosts = state.db.list_hosts().await.map_err(|err| {

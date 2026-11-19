@@ -1,5 +1,4 @@
 use std::{convert::Infallible, fs::remove_dir_all, sync::Arc};
-use crate::config::check_config;
 
 use axum::{
     Json, Router,
@@ -21,6 +20,7 @@ use xanterella_core::{
 
 use crate::{
     ApiError, AppState,
+    config::check_config,
     generate::generate_config,
     hosts::{
         check_host, create_host, delete_host, host_add_option, host_add_profile, host_remove_option,
