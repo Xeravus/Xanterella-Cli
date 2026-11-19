@@ -37,7 +37,7 @@ impl GitManager<Initial> {
 
         if !git_dir.exists() {
             eprintln!("Kein Git-Repo gefunden. Repo wird initialisiert");
-            create_dir_all(&self.directory);
+            create_dir_all(&self.directory).map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             let init = Command::new("git")
                 .arg("init")

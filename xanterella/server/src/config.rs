@@ -26,7 +26,7 @@ pub async fn check_config(State(state): State<Arc<AppState>>) -> Result<Json<Val
             ApiError::InternalError
         })?;
         Ok::<(), ApiError>(())
-    }).await.map_err(|_err| ApiError::InternalError)?;
+    }).await.map_err(|_err| ApiError::InternalError)??;
     let _ = state.tx.send(EventFormat {
         state: EventState::Finish,
         step: "Checked Config".to_string(),
