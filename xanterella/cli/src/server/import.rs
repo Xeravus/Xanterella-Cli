@@ -39,11 +39,11 @@ impl ApiSend for CreateRaw {
 }
 
 pub async fn import_all(flake: &str, url: &str) {
-    import_hosts(&flake, &url).await;
-    import_profiles(&flake, &url).await;
-    import_modules(&flake, &url).await;
-    import_templates(&flake, &url).await;
-    import_raw(&flake, &url).await;
+    import_hosts(flake, url).await;
+    import_profiles(flake, url).await;
+    import_modules(flake, url).await;
+    import_templates(flake, url).await;
+    import_raw(flake, url).await;
 }
 
 pub async fn import_hosts(flake: &str, url: &str) {
@@ -139,7 +139,7 @@ pub async fn import_raw(flake: &str, url: &str) {
 
 async fn send_to_api<I: ApiSend>(data: Vec<I>, url: &str) -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
-    let full_url = format!("http://{}{}", url, &data.first().expect("Nichts zu versenden").endpoint());
+    let full_url = format!("http://{}{}", url, data.first().expect("Nichts zu versenden").endpoint());
     for i in data {
         let response = client.post(&full_url).json(&i).send().await?;
 

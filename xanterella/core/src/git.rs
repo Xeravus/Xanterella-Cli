@@ -167,25 +167,6 @@ impl GitManager<Merged> {
             state: Tracked,
         })
     }
-    pub async fn reset(self, head: i8) -> Result<GitManager<Initialized>, EventsFailed> {
-        let commit = format!("HEAD~{}", head);
-
-        let reset = Command::new("git")
-            .args(["reset", "--hard", &commit])
-            .current_dir(&self.directory)
-            .output()
-            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
-
-        if !reset.status.success() {
-            return Err(EventsFailed::GitReset(String::from_utf8_lossy(&reset.stderr).to_string()));
-        }
-        Ok(GitManager {
-            repo: self.repo.clone(),
-            directory: self.directory.clone(),
-            main_br: self.main_br,
-            state: Initialized,
-        })
-    }
 }
 
 impl GitManager<Tracked> {
@@ -198,6 +179,25 @@ impl GitManager<Tracked> {
 
         if !commit.status.success() {
             return Err(EventsFailed::GitCommit(String::from_utf8_lossy(&commit.stderr).to_string()));
+        }
+        Ok(GitManager {
+            repo: self.repo.clone(),
+            directory: self.directory.clone(),
+            main_br: self.main_br,
+            state: Commited,
+        })
+    }
+    pub async fn reset(self, head: i8) -> Result<GitManager<Commited>, EventsFailed> {
+        let commit = format!("HEAD~{}", head);
+
+        let reset = Command::new("git")
+            .args(["reset", "--hard", &commit])
+            .current_dir(&self.directory)
+            .output()
+            .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+
+        if !reset.status.success() {
+            return Err(EventsFailed::GitReset(String::from_utf8_lossy(&reset.stderr).to_string()));
         }
         Ok(GitManager {
             repo: self.repo.clone(),

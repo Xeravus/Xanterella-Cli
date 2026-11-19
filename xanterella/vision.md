@@ -63,7 +63,7 @@ Der Übergang von der Datenbank in das Dateisystem und die Versionskontrolle.
   - [x] Nach `std::fs::write` in der Generate-Schleife: Automatisches `git add .`.
   - [x] Automatisches `git commit -m "chore: auto-generated config update"`.
 - [ ] **Nix Flake Check & Rollback**
-  - [ ] Führe `nix flake check` oder `nixos-rebuild dry-build` nach dem Commit aus.
+  - [x] Führe `nix flake check` nach dem Commit aus.
   - [ ] Bei Fehler: Automatisches `git reset --hard HEAD~1` (Rollback) und Fehlermeldung via SSE an das Frontend senden.
 
 ## Phase 5: Remote Deployment Status & Installation

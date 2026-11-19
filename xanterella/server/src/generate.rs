@@ -16,8 +16,8 @@ use xanterella_core::{
 };
 
 use crate::{
-    ApiError, AppState, hosts::HostsResponse, modules::ModulesResponse, profiles::ProfilesResponse,
-    templates::TemplatesResponse,
+    ApiError, AppState, config::check_config, hosts::HostsResponse, modules::ModulesResponse,
+    profiles::ProfilesResponse, templates::TemplatesResponse,
 };
 
 pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<Value>, ApiError> {
@@ -248,6 +248,22 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         eprintln!("Generation-Fehler: Git: {:#?}", err);
         ApiError::InternalError
     })?;
+    if let Err(_) = check_config(State(state.clone())).await {
+        eprintln!("Generation-Fehler: Config ist fehlerhaft");
+        let _ = state.tx.send(EventFormat {
+            state: EventState::Run,
+            step: "Rolling back Config".to_string(),
+        });
+        git.reset(1).await.map_err(|err| {
+            eprintln!("Generation-Fehler: Git: {:#?}", err);
+            ApiError::InternalError
+        })?;
+        let _ = state.tx.send(EventFormat {
+            state: EventState::Finish,
+            step: "Rolled back Config".to_string(),
+        });
+        return Err(ApiError::InternalError);
+    }
     let git = git.commit("Xanterella: Changes".to_string()).await.map_err(|err| {
         eprintln!("Generation-Fehler: Git: {:#?}", err);
         ApiError::InternalError
