@@ -7,10 +7,11 @@ pub trait Check {
 impl Check for Xanterella {
     fn check_nix_flake(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunCheckNix);
-
+        
+        eprintln!("Starte Check");
         if !self.debug {
-            let cmd = Command::new("nixos-rebuild")
-                .args(["dry-build", "--flake", ".#crylia"])
+            let cmd = Command::new("nix")
+                .args(["flake", "check", "--impure"])
                 .current_dir(self.load_config().target_directory)
                 .output()
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
@@ -20,6 +21,7 @@ impl Check for Xanterella {
             };
         };
 
+        eprintln!("Beende Check");
         self.log_event(Events::OkCheckNix);
         Ok(())
     }

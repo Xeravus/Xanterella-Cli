@@ -6,6 +6,7 @@ pub mod profiles;
 pub mod raw;
 pub mod templates;
 pub mod test_helper;
+pub mod config;
 
 use std::sync::Arc;
 

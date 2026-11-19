@@ -85,8 +85,8 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
     let mut hosts_string = String::new();
     /// Soll später mit einer Template verbunden werden
 
-    colmena_string.push_str("{inputs,systemarch,taruser,commonSSHKeys,pkgs-new,pkgs-unstable,pkgs-unstable}:{meta={nixpkgs = import inputs.nixpkgs { system = systemarch; config = { allowUnfree = true; }; purity = \"impure\"; }; specialArgs = { inputs = inputs; pkgs-new = pkgs-new; pkgs-unstable = pkgs-unstable; pkgs-bleeding = pkgs-bleeding; }; };");
-    hosts_string.push_str("{inputs, withSystem}: { perSystem = {system}: {_module.agrs = { pkgs-new = import inputs.nixpkgs-new { system = system; config = { allowUnfree = true; }; }; pkgs-unstable = import inputs.nixpkgs-unstable { system = system; config = { allowUnfree = true; permittedInsecurePackages = [ \"olm-3.2.16\" ]; }; }; pkgs-bleeding = import inputs.nixpkgs-bleeding-edge { system = system; config = { allowUnfree = true; permittedInsecurePackages = [ \"olm-3.2.16\" ]; }; }; }; }; flake = { nixosConfigurations = {");
+    colmena_string.push_str("{inputs,systemarch,taruser,commonSSHKeys,pkgs-new,pkgs-unstable,pkgs-bleeding}:{meta={nixpkgs = import inputs.nixpkgs { system = systemarch; config = { allowUnfree = true; }; purity = \"impure\"; }; specialArgs = { inputs = inputs; pkgs-new = pkgs-new; pkgs-unstable = pkgs-unstable; pkgs-bleeding = pkgs-bleeding; }; };");
+    hosts_string.push_str("{inputs, withSystem}: { perSystem = {system}: {_module.args = { pkgs-new = import inputs.nixpkgs-new { system = system; config = { allowUnfree = true; }; }; pkgs-unstable = import inputs.nixpkgs-unstable { system = system; config = { allowUnfree = true; permittedInsecurePackages = [ \"olm-3.2.16\" \"garage-1.3.1\" ]; }; }; pkgs-bleeding = import inputs.nixpkgs-bleeding-edge { system = system; config = { allowUnfree = true; permittedInsecurePackages = [ \"olm-3.2.16\" \"garage-1.3.1\" ]; }; }; }; }; flake = { nixosConfigurations = {");
 
     for i in formated_hosts {
         name.clear();
@@ -168,13 +168,17 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
     for (category, module_names) in modules_for_default {
         if category == "base" {
             for i in module_names {
-                root_imports.push(format!("./{}.nix", i));
+                if !i.contains("secrets") {
+                    root_imports.push(format!("./{}.nix", i));
+                }
             }
         } else {
             root_imports.push(format!("./{}", category));
             let mut category_imports = String::new();
             for i in module_names {
-                category_imports.push_str(&format!("./{}.nix ", i));
+                if !i.contains("secrets") {
+                    category_imports.push_str(&format!("./{}.nix ", i));
+                }
             }
 
             let category_default_content = format!("{{imports=[{}];}}", category_imports);

@@ -121,7 +121,7 @@ impl<'a> Nixtractor<'a> {
 
             conf_file_path.clear();
             write!(&mut conf_file_path, "hosts/{}/hardware-configuration.nix", host_name).unwrap();
-            match self.prolyxena.search_tree(&conf_file_path) {
+            match self.prolyxena.search_tree(&conf_file_path) { 
                 Ok(file) => hardware.push(serde_json::json!(file)),
                 Err(e) => {
                     eprintln!(
@@ -474,7 +474,6 @@ impl<'a> Nixtractor<'a> {
         let mut raw: Vec<CreateRaw> = Vec::new();
         let files = Self::extract_files_rec(self.prolyxena.path.clone()).await?;
         let path_prefix = PathBuf::from(&self.prolyxena.path);
-        dbg!(&files);
 
         for i in files {
             let path = match PathBuf::from(&i).strip_prefix(&path_prefix) {
@@ -488,7 +487,6 @@ impl<'a> Nixtractor<'a> {
                 }
             };
 
-            // 2. Dateinamen sicher extrahieren
             let name = match PathBuf::from(&i).file_name() {
                 Some(n) if !n.is_empty() => n.to_string_lossy().into_owned(),
                 _ => {

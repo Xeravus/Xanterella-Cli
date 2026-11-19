@@ -5,7 +5,7 @@ use crate::{
     execute::*,
     server::{
         import::{import_all, import_hosts, import_modules, import_profiles, import_raw, import_templates},
-        requests::{request_clear, request_generate, request_wipe},
+        requests::{request_clear, request_generate, request_wipe, request_check},
     },
 };
 
@@ -49,6 +49,9 @@ pub enum Commands {
         url: String,
     },
     Wipe {
+        url: String,
+    },
+    Check {
         url: String,
     },
 }
@@ -107,6 +110,11 @@ pub async fn cli_parse() {
             url,
         } => {
             request_wipe(url).await;
+        }
+        Commands::Check {
+            url,
+        } => {
+            request_check(url).await;
         }
     }
 }

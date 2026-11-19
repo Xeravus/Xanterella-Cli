@@ -1,4 +1,5 @@
 use std::{convert::Infallible, fs::remove_dir_all, sync::Arc};
+use crate::config::check_config;
 
 use axum::{
     Json, Router,
@@ -54,6 +55,7 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/templates/:name", get(check_template).delete(delete_template))
         .route("/raw", get(list_raw).post(create_raw))
         .route("/raw/:name", get(check_raw).delete(delete_raw))
+        .route("/config/check", get(check_config))
         .route("/generate", get(generate_config))
         .route("/wipe", get(wipe_config))
         .with_state(state)
