@@ -1,5 +1,6 @@
 pub mod app;
 pub mod config;
+pub mod deploy;
 pub mod generate;
 pub mod hosts;
 pub mod modules;

@@ -101,6 +101,10 @@ impl Xanterella {
             Events::RunCheckNix => (EventState::Run, "Nix Flake Check"),
 
             Events::OkCheckNix => (EventState::Finish, "Nix Flake Check"),
+            // utils/Colmena.rs
+            Events::RunColmenaApply => (EventState::Run, "Colmena Apply"),
+
+            Events::OkColmenaApply => (EventState::Finish, "Colmena Apply"),
             // utils/Config.rs
             Events::RunConfigCreateDir => (EventState::Run, "Create Config Dir"),
             Events::RunConfigGenBasic => (EventState::Run, "Create basic Config"),

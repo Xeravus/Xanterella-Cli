@@ -26,6 +26,9 @@ pub enum EventsFailed {
     /// utils/Check.rs
     CheckNix(String),
 
+    /// utils/Colmena.rs
+    ColmenaApply(String),
+
     /// utils/Config.rs
     ConfigCreateDir(String),
     ConfigGenBasic(String),
@@ -88,6 +91,11 @@ pub enum Events {
     RunCheckNix,
 
     OkCheckNix,
+
+    /// utils/Colmena.rs
+    RunColmenaApply,
+
+    OkColmenaApply,
 
     /// utils/Config.rs
     RunConfigCreateDir,
