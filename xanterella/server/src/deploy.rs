@@ -68,7 +68,7 @@ pub async fn deploy_selected(
     tokio::spawn(async move {
         let deploy = tokio::task::spawn_blocking(move || {
             let mut xanterella = Xanterella::new();
-xanterella.set_config(AppPaths::init()); 
+            xanterella.set_config(AppPaths::init());
             xanterella.colmena_apply(&payload.hosts)
         })
         .await;

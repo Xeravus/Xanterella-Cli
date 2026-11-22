@@ -162,8 +162,8 @@ impl<'a> Nixtractor<'a> {
                 }
             };
 
-            if check_single(&flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", &host_name])).is_ok() {
-                let with_system = flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", &host_name, "system"]);
+            if check_single(&flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", host_name])).is_ok() {
+                let with_system = flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", host_name, "system"]);
                 match check_single(&with_system) {
                     Ok(_) => {
                         let sys_string = with_system[0].format_nix(0);
@@ -179,7 +179,7 @@ impl<'a> Nixtractor<'a> {
                 };
 
                 let hosts_imports =
-                    flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", &host_name, "modules"]);
+                    flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", host_name, "modules"]);
                 match check_single(&hosts_imports) {
                     Ok(_) => {
                         if let Some(NixValue::List(list)) = hosts_imports.first() {
@@ -211,7 +211,7 @@ impl<'a> Nixtractor<'a> {
 
                 system.push_str("x86_64-linux");
 
-                let hosts_imports = colmena_hosts.query_exact_mut(&[&host_name, "imports"]);
+                let hosts_imports = colmena_hosts.query_exact_mut(&[host_name, "imports"]);
                 match check_single(&hosts_imports) {
                     Ok(_) => {
                         if let Some(NixValue::List(list)) = hosts_imports.first() {
@@ -241,7 +241,7 @@ impl<'a> Nixtractor<'a> {
                 }
             };
 
-            let build_on_target = colmena_hosts.query_exact_mut(&[&host_name, "deployment", "buildOnTarget"]);
+            let build_on_target = colmena_hosts.query_exact_mut(&[host_name, "deployment", "buildOnTarget"]);
             match check_single(&build_on_target) {
                 Ok(_) => {
                     let outcome = build_on_target[0].format_nix(0);

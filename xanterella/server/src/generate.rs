@@ -244,7 +244,7 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
             eprintln!("Generation-Fehler: Git: {:#?}", err);
             ApiError::InternalError
         })?;
-        if let Err(_) = check_config(State(state.clone())).await {
+        if check_config(State(state.clone())).await.is_err() {
             eprintln!("Generation-Fehler: Config ist fehlerhaft");
             let _ = state.tx.send(EventFormat {
                 state: EventState::Run,
@@ -268,7 +268,7 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
             eprintln!("Generation-Fehler: Git: {:#?}", err);
             ApiError::InternalError
         })?;
-        return Ok(());
+        Ok(())
     });
 
     Ok(Json(json!({

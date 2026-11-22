@@ -1,17 +1,17 @@
 use crate::database::db::{DBRaw, Database};
 
 pub trait RawString {
-    fn into_blop(&self) -> Vec<u8>;
+    fn to_blop(&self) -> Vec<u8>;
 }
 
 impl RawString for Vec<u8> {
-    fn into_blop(&self) -> Vec<u8> {
+    fn to_blop(&self) -> Vec<u8> {
         self.clone()
     }
 }
 
 impl RawString for String {
-    fn into_blop(&self) -> Vec<u8> {
+    fn to_blop(&self) -> Vec<u8> {
         self.as_bytes().to_vec()
     }
 }
@@ -20,7 +20,7 @@ impl Database {
     pub async fn add_raw<I: RawString>(
         &self, name: &str, path: &str, content: I, readable: bool,
     ) -> Result<(), sqlx::Error> {
-        let blop = content.into_blop();
+        let blop = content.to_blop();
         sqlx::query!(
             "INSERT INTO raw (name, path, content, readable) VALUES (?, ?, ?, ?)",
             name,

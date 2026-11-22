@@ -130,7 +130,7 @@ impl GitManager<Initialized> {
 
 impl GitManager<CheckedOut> {
     pub async fn merge(self) -> Result<GitManager<Merged>, EventsFailed> {
-        let remote_branch = format!("origin/{}", &self.main_br);
+        let remote_branch = format!("origin/{}", self.main_br);
         let merge = Command::new("git")
             .args(["merge", "--ff-only", "-n", &remote_branch])
             .current_dir(&self.directory)

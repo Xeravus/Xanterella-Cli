@@ -3,6 +3,7 @@ use sqlx::types::Json;
 use crate::database::db::{DBHost, Database};
 
 impl Database {
+    #[allow(clippy::too_many_arguments)]
     pub async fn add_host(
         &self, hostname: &str, ip: &str, system: String, remote_deploy: bool, profiles: Vec<serde_json::Value>,
         hardware: Vec<serde_json::Value>, options: Vec<serde_json::Value>, config: Vec<serde_json::Value>,
