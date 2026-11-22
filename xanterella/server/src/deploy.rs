@@ -3,11 +3,10 @@ use std::sync::Arc;
 use axum::{Json, extract::State};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use tokio::task::spawn_blocking;
 use xanterella_core::{
     Xanterella,
     config::AppPaths,
-    nix::{check::Check, colmena::Deploy},
+    nix::colmena::Deploy,
     xanterella::{EventFormat, EventState},
 };
 

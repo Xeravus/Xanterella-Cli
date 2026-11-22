@@ -1,4 +1,4 @@
-use crate::{install::install::XanterellaInstall, prelude::*};
+use crate::prelude::*;
 
 pub trait Deploy {
     fn colmena_apply<T: AsRef<str>>(&mut self, hosts: &[T]) -> Result<(), EventsFailed>;
