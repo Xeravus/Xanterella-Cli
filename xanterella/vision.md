@@ -29,7 +29,7 @@ Das interaktive Dashboard (Arcane UI), um die Datenbank zu verwalten.
 - [ ] **Frontend Grundgerüst & Routing**
   - [x] Basis HTML/CSS/JS (Dark/Arcane Theme).
   - [x] Tab-Navigation (Dashboard, Hosts, Profiles, Modules, Templates).
-  - [ ] Tab-Navigation für "Raw Files" ergänzen.
+  - [x] Tab-Navigation für "Raw Files" ergänzen.
 - [ ] **Host Management UI**
   - [x] Tabelle zur Anzeige aller Hosts.
   - [ ] "Add Host" Modal/Formular (Eingabefelder für Hostname, IP, Systemarchitektur).
