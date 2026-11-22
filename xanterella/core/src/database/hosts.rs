@@ -121,9 +121,9 @@ mod tests {
         let imports = vec![json!({"sys.enable": true})];
 
         db.add_host(
-            "test-node-01",
-            "100.100.100.1",
-            "x86-64_linux".to_string(),
+            "hostname",
+            "ip",
+            "system".to_string(),
             true,
             profiles,
             hardware,
@@ -136,9 +136,9 @@ mod tests {
 
         let hosts = db.list_hosts().await.expect("Fehler beim Auslesen");
         assert_eq!(hosts.len(), 1);
-        assert_eq!(hosts[0].hostname, "test-node-01");
-        assert_eq!(hosts[0].ip, "100.100.100.1");
-        assert_eq!(hosts[0].system, "x86-64_linux".to_string());
+        assert_eq!(hosts[0].hostname, "hostname");
+        assert_eq!(hosts[0].ip, "ip");
+        assert_eq!(hosts[0].system, "system".to_string());
         assert_eq!(hosts[0].profiles.0[0], json!({"Path": "./hardware.nix"}));
         assert_eq!(hosts[0].hardware.0[0], json!({"Path": "./hardware.nix"}));
         assert_eq!(hosts[0].options.0[0], json!({"sys.enable": true}));
@@ -149,12 +149,17 @@ mod tests {
     #[tokio::test]
     async fn db_add_duplicate_host_fails() {
         let db = setup_test_db().await;
-        db.add_host("dup-node", "1.1.1.1", "x86-64_linux".to_string(), true, vec![], vec![], vec![], vec![], vec![])
+        let profiles = vec![json!({"Path": "./hardware.nix"})];
+        let hardware = vec![json!({"Path": "./hardware.nix"})];
+        let options = vec![json!({"sys.enable": true})];
+        let config = vec![json!({"sys.enable": true})];
+        let imports = vec![json!({"sys.enable": true})];
+        db.add_host("dup-node", "1.1.1.1", "x86-64_linux".to_string(), true, profiles.clone(), hardware.clone(), options.clone(), config.clone(), imports.clone())
             .await
             .unwrap();
 
         let result = db
-            .add_host("dup-node", "2.2.2.2", "x86-64_linux".to_string(), true, vec![], vec![], vec![], vec![], vec![])
+            .add_host("dup-node", "2.2.2.2", "x86-64_linux".to_string(), true, profiles, hardware, options, config, imports)
             .await;
         assert!(result.is_err(), "Das Hinzufügen eines Duplikats sollte einen Fehler werfen");
     }
@@ -162,7 +167,12 @@ mod tests {
     #[tokio::test]
     async fn db_get_host_edge_cases() {
         let db = setup_test_db().await;
-        db.add_host("test", "1.1.1.1", "x86-64_linux".to_string(), true, vec![], vec![], vec![], vec![], vec![])
+        let profiles = vec![json!({"Path": "./hardware.nix"})];
+        let hardware = vec![json!({"Path": "./hardware.nix"})];
+        let options = vec![json!({"sys.enable": true})];
+        let config = vec![json!({"sys.enable": true})];
+        let imports = vec![json!({"sys.enable": true})];
+        db.add_host("test", "1.1.1.1", "x86-64_linux".to_string(), true, profiles, hardware, options, config, imports)
             .await
             .unwrap();
 
@@ -176,7 +186,12 @@ mod tests {
     #[tokio::test]
     async fn db_delete_host_edge_cases() {
         let db = setup_test_db().await;
-        db.add_host("delete-me", "1.1.1.1", "x86-64_linux".to_string(), true, vec![], vec![], vec![], vec![], vec![])
+        let profiles = vec![json!({"Path": "./hardware.nix"})];
+        let hardware = vec![json!({"Path": "./hardware.nix"})];
+        let options = vec![json!({"sys.enable": true})];
+        let config = vec![json!({"sys.enable": true})];
+        let imports = vec![json!({"sys.enable": true})];
+        db.add_host("delete-me", "1.1.1.1", "x86-64_linux".to_string(), true, profiles, hardware, options, config, imports)
             .await
             .unwrap();
 
@@ -190,19 +205,14 @@ mod tests {
     #[tokio::test]
     async fn db_profiles_crud() {
         let db = setup_test_db().await;
-        db.add_host(
-            "profile-node",
-            "10.10.10.10",
-            "x86-64_linux".to_string(),
-            true,
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-        )
-        .await
-        .unwrap();
+        let profiles = vec![];
+        let hardware = vec![json!({"Path": "./hardware.nix"})];
+        let options = vec![json!({"sys.enable": true})];
+        let config = vec![json!({"sys.enable": true})];
+        let imports = vec![json!({"sys.enable": true})];
+        db.add_host("profile-node", "1.1.1.1", "x86-64_linux".to_string(), true, profiles, hardware, options, config, imports)
+            .await
+            .unwrap();
 
         db.host_add_profile("profile-node", json!("web-server")).await.unwrap();
         let host = db.get_host("profile-node").await.unwrap().unwrap();

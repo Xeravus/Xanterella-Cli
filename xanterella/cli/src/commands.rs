@@ -103,28 +103,28 @@ pub async fn cli_parse() {
         Commands::Clear {
             url,
         } => {
-            request_clear(url).await;
+            let _ = request_clear(url).await;
         }
         Commands::Generate {
             url,
         } => {
-            request_generate(url).await;
+            let _ = request_generate(url).await;
         }
         Commands::Wipe {
             url,
         } => {
-            request_wipe(url).await;
+            let _ = request_wipe(url).await;
         }
         Commands::Check {
             url,
         } => {
-            request_check(url).await;
+            let _ = request_check(url).await;
         }
         Commands::Deploy {
             url,
             hosts,
         } => {
-            request_deployment(url, hosts).await;
+            let _ = request_deployment(url, hosts).await;
         }
     }
 }

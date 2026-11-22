@@ -1,6 +1,7 @@
 use reqwest::Client;
 use serde_json::json;
 
+#[allow(clippy::result_unit_err)]
 pub async fn request_clear(url: &String) -> Result<(), ()> {
     let client = Client::new();
     let response = client.get(format!("http://{}/clear", url)).send().await.expect("Fehler beim senden der Request");
@@ -13,6 +14,7 @@ pub async fn request_clear(url: &String) -> Result<(), ()> {
     }
 }
 
+#[allow(clippy::result_unit_err)]
 pub async fn request_generate(url: &String) -> Result<(), ()> {
     let client = Client::new();
     let response = client.get(format!("http://{}/generate", url)).send().await.expect("Fehler beim senden der Request");
@@ -25,6 +27,7 @@ pub async fn request_generate(url: &String) -> Result<(), ()> {
     }
 }
 
+#[allow(clippy::result_unit_err)]
 pub async fn request_wipe(url: &String) -> Result<(), ()> {
     let client = Client::new();
     let response = client.get(format!("http://{}/wipe", url)).send().await.expect("Fehler beim senden der Request");
@@ -37,6 +40,7 @@ pub async fn request_wipe(url: &String) -> Result<(), ()> {
     }
 }
 
+#[allow(clippy::result_unit_err)]
 pub async fn request_check(url: &String) -> Result<(), ()> {
     let client = Client::new();
     let response =
@@ -50,6 +54,7 @@ pub async fn request_check(url: &String) -> Result<(), ()> {
     }
 }
 
+#[allow(clippy::result_unit_err)]
 pub async fn request_deployment<T: AsRef<str>>(url: &String, hosts: &[T]) -> Result<(), ()> {
     let client = Client::new();
     let base_url = format!("http://{}/deploy", url);
