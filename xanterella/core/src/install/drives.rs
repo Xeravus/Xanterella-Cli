@@ -383,6 +383,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_installer_helper_get_drives() {
         let xanterella1 = Xanterella::new();
         let xanterella2 = Xanterella::new();

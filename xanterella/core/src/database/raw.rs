@@ -57,3 +57,30 @@ impl Database {
         Ok(raw)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::database::tests_utils::setup_test_db;
+
+    #[tokio::test]
+    async fn db_add_raw() {
+        let db = setup_test_db().await;
+        let raw = "test".to_string();
+        let result = db.add_raw("test", "test.test", raw, true).await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn db_add_raw_and_list_raw() {
+        let db = setup_test_db().await;
+        let raw = "test".to_string();
+        db.add_raw("test", "test.test", raw.clone(), true).await.expect("Fehler beim Hinzufügen der Raw-File");
+
+        let raws = db.list_raw().await.expect("Fehler beim Auslesen");
+        assert_eq!(raws[0].name, "test");
+        assert_eq!(raws[0].path, "test.test");
+        assert_eq!(raws[0].content, raw.as_bytes());
+        assert_eq!(raws[0].readable, true);
+    }
+}

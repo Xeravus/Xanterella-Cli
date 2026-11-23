@@ -1,6 +1,8 @@
 #[cfg(test)]
 pub mod tests_utils {
     use std::sync::Arc;
+use std::path::PathBuf;
+use xanterella_core::config::AppPaths;
 
     use tokio::sync::broadcast;
     use xanterella_core::{config::AppConfig, database::db::Database};
@@ -14,11 +16,18 @@ pub mod tests_utils {
             target_directory: String::new(),
             ip: String::new(),
             port: 0,
+            repo_url: String::new(),
+            repo_main_branch: String::new(),
+        };
+        let paths = AppPaths {
+            config_file: PathBuf::new(),
+            database_url: String::new(),
         };
         Arc::new(AppState {
             tx,
             db,
             config,
+            paths
         })
     }
 }

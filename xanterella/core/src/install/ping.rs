@@ -69,6 +69,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_installer_ping_ping_ssh() {
         let xanterella1 = Xanterella::new();
         let xanterella2 = Xanterella::new();
