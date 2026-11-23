@@ -120,19 +120,9 @@ mod tests {
         let config = vec![json!({"sys.enable": true})];
         let imports = vec![json!({"sys.enable": true})];
 
-        db.add_host(
-            "hostname",
-            "ip",
-            "system".to_string(),
-            true,
-            profiles,
-            hardware,
-            options,
-            config,
-            imports,
-        )
-        .await
-        .expect("Fehler beim Hinzufügen des Hosts");
+        db.add_host("hostname", "ip", "system".to_string(), true, profiles, hardware, options, config, imports)
+            .await
+            .expect("Fehler beim Hinzufügen des Hosts");
 
         let hosts = db.list_hosts().await.expect("Fehler beim Auslesen");
         assert_eq!(hosts.len(), 1);
@@ -154,12 +144,32 @@ mod tests {
         let options = vec![json!({"sys.enable": true})];
         let config = vec![json!({"sys.enable": true})];
         let imports = vec![json!({"sys.enable": true})];
-        db.add_host("dup-node", "1.1.1.1", "x86-64_linux".to_string(), true, profiles.clone(), hardware.clone(), options.clone(), config.clone(), imports.clone())
-            .await
-            .unwrap();
+        db.add_host(
+            "dup-node",
+            "1.1.1.1",
+            "x86-64_linux".to_string(),
+            true,
+            profiles.clone(),
+            hardware.clone(),
+            options.clone(),
+            config.clone(),
+            imports.clone(),
+        )
+        .await
+        .unwrap();
 
         let result = db
-            .add_host("dup-node", "2.2.2.2", "x86-64_linux".to_string(), true, profiles, hardware, options, config, imports)
+            .add_host(
+                "dup-node",
+                "2.2.2.2",
+                "x86-64_linux".to_string(),
+                true,
+                profiles,
+                hardware,
+                options,
+                config,
+                imports,
+            )
             .await;
         assert!(result.is_err(), "Das Hinzufügen eines Duplikats sollte einen Fehler werfen");
     }
@@ -191,9 +201,19 @@ mod tests {
         let options = vec![json!({"sys.enable": true})];
         let config = vec![json!({"sys.enable": true})];
         let imports = vec![json!({"sys.enable": true})];
-        db.add_host("delete-me", "1.1.1.1", "x86-64_linux".to_string(), true, profiles, hardware, options, config, imports)
-            .await
-            .unwrap();
+        db.add_host(
+            "delete-me",
+            "1.1.1.1",
+            "x86-64_linux".to_string(),
+            true,
+            profiles,
+            hardware,
+            options,
+            config,
+            imports,
+        )
+        .await
+        .unwrap();
 
         let affected = db.delete_host("delete-me").await.unwrap();
         assert_eq!(affected, 1);
@@ -210,9 +230,19 @@ mod tests {
         let options = vec![json!({"sys.enable": true})];
         let config = vec![json!({"sys.enable": true})];
         let imports = vec![json!({"sys.enable": true})];
-        db.add_host("profile-node", "1.1.1.1", "x86-64_linux".to_string(), true, profiles, hardware, options, config, imports)
-            .await
-            .unwrap();
+        db.add_host(
+            "profile-node",
+            "1.1.1.1",
+            "x86-64_linux".to_string(),
+            true,
+            profiles,
+            hardware,
+            options,
+            config,
+            imports,
+        )
+        .await
+        .unwrap();
 
         db.host_add_profile("profile-node", json!("web-server")).await.unwrap();
         let host = db.get_host("profile-node").await.unwrap().unwrap();

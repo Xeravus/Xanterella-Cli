@@ -65,7 +65,6 @@ async fn main() {
         db,
         config: config.clone(),
         paths: paths.clone(),
-
     });
 
     let app = create_app(state);
