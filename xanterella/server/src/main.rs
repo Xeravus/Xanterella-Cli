@@ -26,6 +26,7 @@ pub struct AppState {
     pub tx: broadcast::Sender<EventFormat>,
     pub db: Database,
     pub config: AppConfig,
+    pub paths: AppPaths,
 }
 
 #[allow(unused)]
@@ -63,6 +64,8 @@ async fn main() {
         tx,
         db,
         config: config.clone(),
+        paths: paths.clone(),
+
     });
 
     let app = create_app(state);

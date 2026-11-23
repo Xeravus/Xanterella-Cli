@@ -5,7 +5,6 @@ use serde_json::{Value, json};
 use tokio::task::spawn_blocking;
 use xanterella_core::{
     Xanterella,
-    config::AppPaths,
     nix::check::Check,
     xanterella::{EventFormat, EventState},
 };
@@ -18,9 +17,10 @@ pub async fn check_config(State(state): State<Arc<AppState>>) -> Result<Json<Val
         step: "Checking Config".to_string(),
     });
 
+    let paths = state.paths.clone();
     spawn_blocking(move || {
         let mut xanterella = Xanterella::new();
-        xanterella.set_config(AppPaths::init());
+        xanterella.set_config(paths);
         xanterella.check_nix_flake().map_err(|err| {
             eprintln!("Config-Fehler: Checking: {:#?}", err);
             ApiError::InternalError

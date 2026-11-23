@@ -75,7 +75,7 @@ impl Xanterella {
     pub fn set_config(&mut self, config: AppPaths) {
         self.config = config;
     }
-
+    
     pub fn log_event(&mut self, event: Events) {
         let (state, name): (EventState, &str) = match event {
             // Utils

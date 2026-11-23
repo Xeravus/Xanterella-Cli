@@ -5,7 +5,6 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use xanterella_core::{
     Xanterella,
-    config::AppPaths,
     nix::colmena::Deploy,
     xanterella::{EventFormat, EventState},
 };
@@ -65,10 +64,11 @@ pub async fn deploy_selected(
         step: "Deploying selected".to_string(),
     });
 
+    let paths = state.paths.clone();
     tokio::spawn(async move {
         let deploy = tokio::task::spawn_blocking(move || {
             let mut xanterella = Xanterella::new();
-            xanterella.set_config(AppPaths::init());
+            xanterella.set_config(paths);
             xanterella.colmena_apply(&payload.hosts)
         })
         .await;
