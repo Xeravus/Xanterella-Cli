@@ -83,4 +83,44 @@ mod tests {
         assert_eq!(raws[0].content, raw.as_bytes());
         assert_eq!(raws[0].readable, true);
     }
+
+    #[tokio::test]
+    async fn db_add_duplicate_fails() {
+        let db = setup_test_db().await;
+        let raw = "test".to_string();
+        db.add_raw("test", "test.test", raw.clone(), true).await.expect("Fehler beim Hinzufügen der Raw-File");
+        let result = db.add_raw("test", "test.test.test", raw, false).await;
+
+        assert!(result.is_err(), "Das Hinzufügen eines Duplikates sollte einen Fehler werfen");
+    }
+
+    #[tokio::test]
+    async fn db_get_raw_edge_cases() {
+        let db = setup_test_db().await;
+        let raw = "test".to_string();
+        db.add_raw("test", "test.test", raw, true).await.unwrap();
+
+        let exist = db.get_raw("test").await;
+        assert!(exist.is_ok());
+        assert!(exist.unwrap().is_some());
+
+        let ghost = db.get_raw("ghost").await;
+        assert!(ghost.is_ok());
+        assert!(ghost.unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn db_delete_raw_edge_cases() {
+        let db = setup_test_db().await;
+        let raw = "test".to_string();
+        db.add_raw("test", "test.test", raw, true).await.unwrap();
+
+        let affected = db.delete_raw("test").await;
+        assert!(affected.is_ok());
+        assert_eq!(affected.unwrap(), 1);
+
+        let affected_none = db.delete_raw("ghost").await;
+        assert!(affected_none.is_ok());
+        assert_eq!(affected_none.unwrap(), 0);
+    }
 }
