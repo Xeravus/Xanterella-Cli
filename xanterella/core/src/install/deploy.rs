@@ -1,17 +1,13 @@
-use crate::{install::install::XanterellaInstall, prelude::*};
+use crate::xanterella::CommandRunner;
+use crate::Events;
+use crate::EventsFailed;
+use crate::User;
+use std::process::Command;
+use std::fs;
+use crate::XanterellaInstall;
 
-pub trait Deploy {
-    fn nix_build(&mut self) -> Result<(), EventsFailed>;
-    fn nix_copy(&mut self) -> Result<(), EventsFailed>;
-    fn create_profile(&mut self) -> Result<(), EventsFailed>;
-    fn prep_sys(&mut self) -> Result<(), EventsFailed>;
-    fn activate_sys(&mut self) -> Result<(), EventsFailed>;
-    fn activate_bootloader(&mut self) -> Result<(), EventsFailed>;
-    fn reboot_sys(&mut self) -> Result<(), EventsFailed>;
-}
-
-impl Deploy for XanterellaInstall {
-    fn nix_build(&mut self) -> Result<(), EventsFailed> {
+impl<C: CommandRunner> XanterellaInstall<C> {
+    pub fn nix_build(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunNixBuild);
 
         if !self.xanterella.debug {
@@ -55,7 +51,7 @@ impl Deploy for XanterellaInstall {
         Ok(())
     }
 
-    fn create_profile(&mut self) -> Result<(), EventsFailed> {
+    pub fn create_profile(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunCreateProfile);
 
         if !self.xanterella.debug {
@@ -80,7 +76,7 @@ impl Deploy for XanterellaInstall {
         Ok(())
     }
 
-    fn prep_sys(&mut self) -> Result<(), EventsFailed> {
+    pub fn prep_sys(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPrepSys);
 
         let prep_cmd = "mkdir -m 0755 -p /mnt/etc && touch /mnt/etc/NIXOS";
@@ -101,7 +97,7 @@ impl Deploy for XanterellaInstall {
         Ok(())
     }
 
-    fn activate_sys(&mut self) -> Result<(), EventsFailed> {
+    pub fn activate_sys(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunActivateSys);
 
         let activate_cmd =
@@ -123,7 +119,7 @@ impl Deploy for XanterellaInstall {
         Ok(())
     }
 
-    fn activate_bootloader(&mut self) -> Result<(), EventsFailed> {
+    pub fn activate_bootloader(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunActivateBootloader);
 
         let bootloader_cmd = "nixos-enter --root /mnt --command 'NIXOS_INSTALL_BOOTLOADER=1 /nix/var/nix/profiles/system/bin/switch-to-configuration boot'";
@@ -144,7 +140,7 @@ impl Deploy for XanterellaInstall {
         Ok(())
     }
 
-    fn reboot_sys(&mut self) -> Result<(), EventsFailed> {
+    pub fn reboot_sys(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunRebootSys);
 
         let reboot_cmd = "nohup sh -c 'sleep 3 && tailscale logout && reboot' > /dev/null 2>&1 &";

@@ -1,12 +1,12 @@
-use crate::prelude::*;
+use crate::xanterella::CommandRunner;
+use crate::Events;
+use crate::EventsFailed;
+use crate::User;
+use std::process::Command;
+use crate::XanterellaInstall;
 
-pub trait Ping {
-    fn ping(&mut self) -> Result<(), EventsFailed>;
-    fn ping_ssh(&mut self) -> Result<(), EventsFailed>;
-}
-
-impl Ping for XanterellaInstall {
-    fn ping(&mut self) -> Result<(), EventsFailed> {
+impl<C: CommandRunner> XanterellaInstall<C> {
+    pub fn ping(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPing);
 
         if !self.xanterella.debug {
@@ -25,7 +25,7 @@ impl Ping for XanterellaInstall {
         Ok(())
     }
 
-    fn ping_ssh(&mut self) -> Result<(), EventsFailed> {
+    pub fn ping_ssh(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPingSsh);
 
         if !self.xanterella.debug {

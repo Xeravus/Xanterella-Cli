@@ -8,12 +8,7 @@ pub mod prolyxena;
 pub mod result;
 pub mod xanterella;
 
-pub mod prelude;
-
-pub use config::Config;
 pub use get::{Paths, User};
 pub use install::install::XanterellaInstall;
 pub use result::{Events, EventsFailed};
 pub use xanterella::Xanterella;
-
-pub use crate::install::ping::Ping;

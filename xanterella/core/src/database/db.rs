@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use crate::Events;
 
 use serde::{Deserialize, Serialize};
 use sqlx::{

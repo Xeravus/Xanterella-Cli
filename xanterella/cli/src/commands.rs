@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
-use xanterella_core::{Ping, Xanterella, XanterellaInstall};
+use xanterella_core::{Xanterella, XanterellaInstall};
+use xanterella_core::xanterella::RealCommandRunner;
 
 use crate::{
     execute::*,
@@ -66,7 +67,7 @@ pub async fn cli_parse() {
         Commands::Ping {
             ip,
         } => {
-            let xanterella = Xanterella::new();
+            let xanterella = Xanterella::new(RealCommandRunner);
             let mut installer = XanterellaInstall::new(xanterella);
             installer.set_ip(ip);
             let _ = installer.ping();

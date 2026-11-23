@@ -1,11 +1,11 @@
-use crate::prelude::*;
+use crate::xanterella::CommandRunner;
+use crate::Events;
+use crate::EventsFailed;
+use std::process::Command;
+use crate::Xanterella;
 
-pub trait Deploy {
-    fn colmena_apply<T: AsRef<str>>(&mut self, hosts: &[T]) -> Result<(), EventsFailed>;
-}
-
-impl Deploy for Xanterella {
-    fn colmena_apply<T: AsRef<str>>(&mut self, hosts: &[T]) -> Result<(), EventsFailed> {
+impl<C: CommandRunner> Xanterella<C> {
+    pub fn colmena_apply<T: AsRef<str>>(&mut self, hosts: &[T]) -> Result<(), EventsFailed> {
         self.log_event(Events::RunColmenaApply);
 
         if !self.debug {

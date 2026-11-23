@@ -1,4 +1,9 @@
-use crate::prelude::*;
+use crate::xanterella::CommandRunner;
+use crate::Events;
+use crate::EventsFailed;
+use crate::User;
+use std::process::Command;
+use crate::XanterellaInstall;
 
 #[derive(serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct StorageDrives {
@@ -14,25 +19,8 @@ pub struct BlockDevice {
     pub device_type: String,
 }
 
-pub trait Drives {
-    /// Get / Sort Functions
-    fn sort_drives(&mut self, drives: StorageDrives) -> StorageDrives;
-    fn get_drive_size(&self, size: &str) -> u64;
-    fn get_drives(&mut self) -> Result<StorageDrives, EventsFailed>;
-    fn get_part_name(&mut self, part: i8) -> String;
-
-    /// Helper Functions
-    fn part_efi(&mut self) -> Result<(), EventsFailed>;
-    fn part_root(&mut self) -> Result<(), EventsFailed>;
-    fn format_efi(&mut self) -> Result<(), EventsFailed>;
-    fn format_root(&mut self) -> Result<(), EventsFailed>;
-    fn create_boot_dir(&mut self) -> Result<(), EventsFailed>;
-    fn mount_boot(&mut self) -> Result<(), EventsFailed>;
-    fn mount_root(&mut self) -> Result<(), EventsFailed>;
-}
-
-impl Drives for XanterellaInstall {
-    fn sort_drives(&mut self, drives: StorageDrives) -> StorageDrives {
+impl<C: CommandRunner> XanterellaInstall<C> {
+    pub fn sort_drives(&mut self, drives: StorageDrives) -> StorageDrives {
         let mut drives = drives;
         drives.blockdevices.sort_by(|a, b| {
             let size_a = self.get_drive_size(&a.size);
@@ -42,7 +30,7 @@ impl Drives for XanterellaInstall {
         drives
     }
 
-    fn get_drive_size(&self, size: &str) -> u64 {
+    pub fn get_drive_size(&self, size: &str) -> u64 {
         let size = size.trim().to_uppercase();
         let mut multiplier: f64 = 1.0;
         let mut num_str = size.as_str();
@@ -66,7 +54,7 @@ impl Drives for XanterellaInstall {
         (val * multiplier) as u64
     }
 
-    fn get_drives(&mut self) -> Result<StorageDrives, EventsFailed> {
+    pub fn get_drives(&mut self) -> Result<StorageDrives, EventsFailed> {
         self.xanterella.log_event(Events::RunGetDrives);
 
         let parsed_drives = if !&self.ip.contains("127.0.0.1") {
@@ -109,13 +97,13 @@ impl Drives for XanterellaInstall {
         Ok(parsed_drives)
     }
 
-    fn get_part_name(&mut self, part: i8) -> String {
+    pub fn get_part_name(&mut self, part: i8) -> String {
         let drive = format!("/dev/{}", self.drive.clone());
         let p_suffix = if drive.contains("nvme") || drive.contains("mmclblk") { "p" } else { "" };
         format!("{}{}{}", drive, p_suffix, part)
     }
 
-    fn part_efi(&mut self) -> Result<(), EventsFailed> {
+    pub fn part_efi(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPartEfi);
 
         if !self.xanterella.debug {
@@ -137,7 +125,7 @@ impl Drives for XanterellaInstall {
         Ok(())
     }
 
-    fn part_root(&mut self) -> Result<(), EventsFailed> {
+    pub fn part_root(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPartRoot);
 
         if !self.xanterella.debug {
@@ -157,7 +145,7 @@ impl Drives for XanterellaInstall {
         Ok(())
     }
 
-    fn format_efi(&mut self) -> Result<(), EventsFailed> {
+    pub fn format_efi(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunFormatEfi);
 
         if !self.xanterella.debug {
@@ -177,7 +165,7 @@ impl Drives for XanterellaInstall {
         Ok(())
     }
 
-    fn format_root(&mut self) -> Result<(), EventsFailed> {
+    pub fn format_root(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunFormatRoot);
 
         if !self.xanterella.debug {
@@ -197,7 +185,7 @@ impl Drives for XanterellaInstall {
         Ok(())
     }
 
-    fn create_boot_dir(&mut self) -> Result<(), EventsFailed> {
+    pub fn create_boot_dir(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunCreateBootDir);
 
         if !self.xanterella.debug {
@@ -216,7 +204,7 @@ impl Drives for XanterellaInstall {
         Ok(())
     }
 
-    fn mount_boot(&mut self) -> Result<(), EventsFailed> {
+    pub fn mount_boot(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunMountBoot);
 
         if !self.xanterella.debug {
@@ -235,7 +223,7 @@ impl Drives for XanterellaInstall {
         Ok(())
     }
 
-    fn mount_root(&mut self) -> Result<(), EventsFailed> {
+    pub fn mount_root(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunMountRoot);
 
         if !self.xanterella.debug {

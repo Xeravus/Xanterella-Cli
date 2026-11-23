@@ -1,14 +1,17 @@
-use crate::prelude::*;
+use crate::xanterella::CommandRunner;
+use crate::Events;
+use crate::Xanterella;
 
-pub struct XanterellaInstall {
-    pub xanterella: Xanterella,
+
+pub struct XanterellaInstall<C: CommandRunner> {
+    pub xanterella: Xanterella<C>,
     pub ip: String,
     pub drive: String,
 }
 
-impl XanterellaInstall {
+impl<C: CommandRunner> XanterellaInstall<C> {
     #[allow(clippy::new_without_default)]
-    pub fn new(xanterella: Xanterella) -> Self {
+    pub fn new(xanterella: Xanterella<C>) -> Self {
         XanterellaInstall {
             xanterella,
             ip: String::new(),

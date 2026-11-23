@@ -1,11 +1,11 @@
 use std::sync::Arc;
+use xanterella_core::xanterella::RealCommandRunner;
 
 use axum::{Json, extract::State};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use xanterella_core::{
     Xanterella,
-    nix::colmena::Deploy,
     xanterella::{EventFormat, EventState},
 };
 
@@ -24,7 +24,7 @@ pub async fn deploy_all(State(state): State<Arc<AppState>>) -> Result<Json<Value
 
     tokio::spawn(async move {
         let deploy = tokio::task::spawn_blocking(|| {
-            let mut xanterella = Xanterella::new();
+            let mut xanterella = Xanterella::new(RealCommandRunner);
             xanterella.colmena_apply::<&str>(&[])
         })
         .await;
@@ -67,7 +67,7 @@ pub async fn deploy_selected(
     let paths = state.paths.clone();
     tokio::spawn(async move {
         let deploy = tokio::task::spawn_blocking(move || {
-            let mut xanterella = Xanterella::new();
+            let mut xanterella = Xanterella::new(RealCommandRunner);
             xanterella.set_config(paths);
             xanterella.colmena_apply(&payload.hosts)
         })

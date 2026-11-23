@@ -1,4 +1,5 @@
 use std::{convert::Infallible, fs::remove_dir_all, sync::Arc};
+use xanterella_core::xanterella::RealCommandRunner;
 
 use axum::{
     Json, Router,
@@ -13,7 +14,7 @@ use prolyxena::engine::lexer::vfs::*;
 use serde_json::{Value, json};
 use tokio_stream::{Stream, StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{
-    Ping, Xanterella, XanterellaInstall,
+    Xanterella, XanterellaInstall,
     prolyxena::Nixtractor,
     xanterella::{EventFormat, EventState},
 };
@@ -80,7 +81,7 @@ pub async fn event_stream(State(state): State<Arc<AppState>>) -> Sse<impl Stream
 }
 
 pub async fn get_ping(State(state): State<Arc<AppState>>, Path(ip): Path<String>) -> Result<Json<Value>, ApiError> {
-    let xanterella = Xanterella::new();
+    let xanterella = Xanterella::new(RealCommandRunner);
     let mut install = XanterellaInstall::new(xanterella);
     install.xanterella.set_sender(state.tx.clone());
     install.set_ip(&ip);

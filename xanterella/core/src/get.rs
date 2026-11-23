@@ -1,6 +1,10 @@
 use std::collections::HashSet;
+use crate::xanterella::CommandRunner;
+use crate::Events;
+use crate::EventsFailed;
+use crate::Xanterella;
+use std::collections::HashMap;
 
-use crate::prelude::*;
 
 pub enum User {
     Root,
@@ -28,25 +32,17 @@ pub struct DeviceInfo {
     pub os: String,
 }
 
-pub trait Get {
-    fn get_taildevices(&self) -> Result<Taildevices, EventsFailed>;
-    fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String>;
-}
-
-impl Get for Xanterella {
-    fn get_taildevices(&self) -> Result<Taildevices, EventsFailed> {
-        let cmd = Command::new("tailscale")
-            .args(["status", "--json"])
-            .output()
+impl<C: CommandRunner> Xanterella<C> {
+    pub fn get_taildevices(&self) -> Result<Taildevices, EventsFailed> {
+        let cmd = self.runner.execute("tailscale", &["status", "--json"], "")
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
-
         if !cmd.status.success() {
             return Err(EventsFailed::Tailscale(String::from_utf8_lossy(&cmd.stderr).to_string()));
         }
         serde_json::from_slice::<Taildevices>(&cmd.stdout).map_err(|err| EventsFailed::SerdeJson(err.to_string()))
     }
 
-    fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {
+    pub fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {
         let mut ips: Vec<String> = vec![];
         for (_nodekey, device) in devices.devices {
             if device.name == name && device.os == "linux" {

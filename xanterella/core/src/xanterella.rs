@@ -1,25 +1,13 @@
 use serde::Serialize;
 use tokio::sync::broadcast::*;
+use std::process::Command;
+use std::process::Output;
+use std::io::Result as IoResult;
 
-use crate::{config::AppPaths, prelude::*};
-
-#[derive(Debug, Clone)]
-pub struct Xanterella {
-    pub config: AppPaths,
-    pub fast: bool,
-    pub debug: bool,
-    pub automate: bool,
-    pub sender: Option<Sender<EventFormat>>,
-}
-
-impl PartialEq for Xanterella {
-    fn eq(&self, other: &Self) -> bool {
-        self.config == other.config
-            && self.fast == other.fast
-            && self.debug == other.debug
-            && self.automate == other.automate
-    }
-}
+use crate::Events;
+use crate::config::AppPaths;
+use crate::EventsFailed;
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct EventFormat {
@@ -34,9 +22,50 @@ pub enum EventState {
     Failed,
 }
 
-impl Xanterella {
+#[cfg_attr(test, automock)]
+pub trait CommandRunner {
+    fn execute<T: AsRef<std::ffi::OsStr>>(&self, program: &str, args: &[T], dir: &str) -> IoResult<Output>;
+}
+
+pub struct RealCommandRunner;
+
+impl CommandRunner for RealCommandRunner {
+    fn execute<T: AsRef<std::ffi::OsStr>>(&self, program: &str, args: &[T], dir: &str) -> IoResult<Output> {
+        if !dir.is_empty() {
+            Command::new(program)
+                .args(args)
+                .current_dir(dir)
+                .output()
+        } else {
+            Command::new(program)
+                .args(args)
+                .output()
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Xanterella<C: CommandRunner> {
+    pub config: AppPaths,
+    pub fast: bool,
+    pub debug: bool,
+    pub automate: bool,
+    pub sender: Option<Sender<EventFormat>>,
+    pub runner: C,
+}
+
+impl<C: CommandRunner> PartialEq for Xanterella<C> {
+    fn eq(&self, other: &Self) -> bool {
+        self.config == other.config
+            && self.fast == other.fast
+            && self.debug == other.debug
+            && self.automate == other.automate
+    }
+}
+
+impl<C: CommandRunner> Xanterella<C> {
     #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
+    pub fn new(runner: C) -> Self {
         Xanterella {
             config: AppPaths {
                 config_file: PathBuf::new(),
@@ -46,6 +75,7 @@ impl Xanterella {
             debug: false,
             automate: false,
             sender: None,
+            runner,
         }
     }
 

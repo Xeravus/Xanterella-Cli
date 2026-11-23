@@ -3,10 +3,13 @@ use std::{
     fs::{create_dir_all, read_to_string, write},
     path::PathBuf,
 };
+use crate::xanterella::CommandRunner;
 
 use serde::{Deserialize, Serialize};
 
-use crate::prelude::*;
+use crate::Events;
+use crate::EventsFailed;
+use crate::Xanterella;
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct AppPaths {
@@ -97,17 +100,12 @@ impl AppConfig {
     }
 }
 
-pub trait Config {
-    fn load_config(&mut self) -> AppConfig;
-    fn save_config(&mut self, content: AppConfig) -> Result<(), EventsFailed>;
-}
-
-impl Config for Xanterella {
-    fn load_config(&mut self) -> AppConfig {
+impl<C: CommandRunner> Xanterella<C> {
+    pub fn load_config(&mut self) -> AppConfig {
         AppConfig::load(&self.config)
     }
 
-    fn save_config(&mut self, content: AppConfig) -> Result<(), EventsFailed> {
+    pub fn save_config(&mut self, content: AppConfig) -> Result<(), EventsFailed> {
         let config = content;
         config.save(&self.config).map_err(|err| EventsFailed::ConfigSave(err.to_string()))?;
         Ok(())

@@ -1,12 +1,12 @@
-use crate::prelude::*;
+use crate::xanterella::CommandRunner;
+use crate::Events;
+use crate::EventsFailed;
+use crate::User;
+use std::process::Command;
+use crate::XanterellaInstall;
 
-pub trait Helper {
-    fn get_hardware(&mut self) -> Result<String, EventsFailed>;
-    fn get_sshstring(&mut self, user: User) -> Vec<String>;
-}
-
-impl Helper for XanterellaInstall {
-    fn get_hardware(&mut self) -> Result<String, EventsFailed> {
+impl <C: CommandRunner> XanterellaInstall<C> {
+    pub fn get_hardware(&mut self) -> Result<String, EventsFailed> {
         self.xanterella.log_event(Events::RunGetHardware);
 
         if !self.xanterella.debug {
@@ -27,7 +27,7 @@ impl Helper for XanterellaInstall {
         }
     }
 
-    fn get_sshstring(&mut self, user: User) -> Vec<String> {
+    pub fn get_sshstring(&mut self, user: User) -> Vec<String> {
         let target = match user {
             User::Root => format!("root@{}", self.ip),
             User::Cato => format!("cato@{}", self.ip),

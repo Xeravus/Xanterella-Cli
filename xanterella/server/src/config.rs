@@ -1,11 +1,11 @@
 use std::sync::Arc;
+use xanterella_core::xanterella::RealCommandRunner;
 
 use axum::{Json, extract::State};
 use serde_json::{Value, json};
 use tokio::task::spawn_blocking;
 use xanterella_core::{
     Xanterella,
-    nix::check::Check,
     xanterella::{EventFormat, EventState},
 };
 
@@ -19,7 +19,7 @@ pub async fn check_config(State(state): State<Arc<AppState>>) -> Result<Json<Val
 
     let paths = state.paths.clone();
     spawn_blocking(move || {
-        let mut xanterella = Xanterella::new();
+        let mut xanterella = Xanterella::new(RealCommandRunner);
         xanterella.set_config(paths);
         xanterella.check_nix_flake().map_err(|err| {
             eprintln!("Config-Fehler: Checking: {:#?}", err);

@@ -1,11 +1,11 @@
-use crate::prelude::*;
+use crate::xanterella::CommandRunner;
+use crate::Events;
+use crate::EventsFailed;
+use std::process::Command;
+use crate::Xanterella;
 
-pub trait Check {
-    fn check_nix_flake(&mut self) -> Result<(), EventsFailed>;
-}
-
-impl Check for Xanterella {
-    fn check_nix_flake(&mut self) -> Result<(), EventsFailed> {
+impl<C: CommandRunner> Xanterella<C> {
+    pub fn check_nix_flake(&mut self) -> Result<(), EventsFailed> {
         self.log_event(Events::RunCheckNix);
 
         eprintln!("Starte Check");
