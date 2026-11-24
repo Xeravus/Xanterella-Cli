@@ -7,11 +7,8 @@ use prolyxena::engine::{
     },
     lexer::vfs::FsData,
 };
-use crate::xanterella::CommandRunner;
-use crate::Events;
-use crate::EventsFailed;
-use crate::XanterellaInstall;
 
+use crate::{Events, EventsFailed, XanterellaInstall, xanterella::CommandRunner};
 
 impl<C: CommandRunner> XanterellaInstall<C> {
     pub fn crylia_edit_start(&mut self) -> Result<(), EventsFailed> {

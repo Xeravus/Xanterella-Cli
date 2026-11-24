@@ -1,9 +1,6 @@
-use crate::xanterella::CommandRunner;
-use crate::Events;
-use crate::EventsFailed;
-use crate::User;
 use std::process::Command;
-use crate::XanterellaInstall;
+
+use crate::{Events, EventsFailed, User, XanterellaInstall, xanterella::CommandRunner};
 
 #[derive(serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct StorageDrives {
@@ -60,13 +57,17 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         let parsed_drives = if !&self.ip.contains("127.0.0.1") {
             let mut ssh_args = self.get_sshstring(User::Root);
             ssh_args.push("lsblk --json".to_string());
-            let cmd = self.xanterella.execute("ssh", &ssh_args, "")
+            let cmd = self
+                .xanterella
+                .execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
                 let mut ssh_args = self.get_sshstring(User::Cato);
                 ssh_args.push("lsblk --json".to_string());
-                let cmd_again = self.xanterella.execute("ssh", &ssh_args, "")
+                let cmd_again = self
+                    .xanterella
+                    .execute("ssh", &ssh_args, "")
                     .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
                 if !cmd_again.status.success() {
@@ -80,7 +81,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
                     .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
             }
         } else {
-            let cmd = self.xanterella.execute("lsblk", &["--json"], "")
+            let cmd = self
+                .xanterella
+                .execute("lsblk", &["--json"], "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -106,8 +109,13 @@ impl<C: CommandRunner> XanterellaInstall<C> {
 
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
-            ssh_args.push(format!("parted -s /dev/{} mklabel gpt mkpart disk-main-boot fat32 1MiB 512MiB set 1 esp on", &self.drive));
-            let cmd = self.xanterella.execute("ssh", &ssh_args, "")
+            ssh_args.push(format!(
+                "parted -s /dev/{} mklabel gpt mkpart disk-main-boot fat32 1MiB 512MiB set 1 esp on",
+                &self.drive
+            ));
+            let cmd = self
+                .xanterella
+                .execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -125,7 +133,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
             ssh_args.push(format!("parted -s /dev/{} mkpart disk-main-root extr 512MiB 100%", &self.drive));
-            let cmd = self.xanterella.execute("ssh", &ssh_args, "")
+            let cmd = self
+                .xanterella
+                .execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -143,7 +153,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
             ssh_args.push(format!("mkfs.fat {} -F 32 -n boot", self.get_part_name(1)));
-            let cmd = self.xanterella.execute("ssh", &ssh_args, "")
+            let cmd = self
+                .xanterella
+                .execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -161,7 +173,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
             ssh_args.push(format!("mkfs.ext4 {} -L nixos", self.get_part_name(2)));
-            let cmd = self.xanterella.execute("ssh", &ssh_args, "")
+            let cmd = self
+                .xanterella
+                .execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -179,7 +193,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
             ssh_args.push("mkdir -p /mnt/boot".to_string());
-            let cmd = self.xanterella.execute("ssh", &ssh_args, "")
+            let cmd = self
+                .xanterella
+                .execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -197,7 +213,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
             ssh_args.push(format!("mount {} /mnt/boot", &self.get_part_name(1)));
-            let cmd = self.xanterella.execute("ssh", &ssh_args, "")
+            let cmd = self
+                .xanterella
+                .execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -215,7 +233,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
             ssh_args.push(format!("mount {} /mnt", &self.get_part_name(2)));
-            let cmd = self.xanterella.execute("ssh", &ssh_args, "")
+            let cmd = self
+                .xanterella
+                .execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -230,133 +250,212 @@ impl<C: CommandRunner> XanterellaInstall<C> {
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        os::unix::process::ExitStatusExt,
+        process::{ExitStatus, Output},
+    };
+
+    use mockall::{
+        automock,
+        predicate::{always, eq},
+    };
+
     use super::*;
-use std::process::ExitStatus;
-use std::process::Output;
-use mockall::predicate::always;
-use mockall::predicate::eq;
-use std::os::unix::process::ExitStatusExt;
-use crate::xanterella::MockCommandRunner;
-use mockall::automock;
-use crate::test_helpers::mock_ok;
-use crate::Xanterella;
+    use crate::{Xanterella, test_helpers::mock_ok, xanterella::MockCommandRunner};
 
-#[test]
-fn test_mock_part_efi() {
-    let mut mock = MockCommandRunner::new();
+    #[test]
+    fn test_mock_part_efi() {
+        let mut mock = MockCommandRunner::new();
 
-    mock.expect_run_cmd()
-        .withf(|program, args, _dir| {
-            program == "ssh" && args == ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@127.0.0.1", "parted -s /dev/sda mklabel gpt mkpart disk-main-boot fat32 1MiB 512MiB set 1 esp on"] 
-        }).times(1).returning(|_, _, _| mock_ok(""));
+        mock.expect_run_cmd()
+            .withf(|program, args, _dir| {
+                program == "ssh"
+                    && args
+                        == [
+                            "-o",
+                            "StrictHostKeyChecking=no",
+                            "-o",
+                            "UserKnownHostsFile=/dev/null",
+                            "root@127.0.0.1",
+                            "parted -s /dev/sda mklabel gpt mkpart disk-main-boot fat32 1MiB 512MiB set 1 esp on",
+                        ]
+            })
+            .times(1)
+            .returning(|_, _, _| mock_ok(""));
 
-    let mut xanterella = Xanterella::new(mock);
-    let mut xanterellainstall = XanterellaInstall::new(xanterella);
-    xanterellainstall.set_ip("127.0.0.1");
-    xanterellainstall.set_drive("sda");
-    let result = xanterellainstall.part_efi();
-    assert!(result.is_ok());
-}
+        let mut xanterella = Xanterella::new(mock);
+        let mut xanterellainstall = XanterellaInstall::new(xanterella);
+        xanterellainstall.set_ip("127.0.0.1");
+        xanterellainstall.set_drive("sda");
+        let result = xanterellainstall.part_efi();
+        assert!(result.is_ok());
+    }
 
-#[test]
-fn test_mock_part_root() {
-    let mut mock = MockCommandRunner::new();
+    #[test]
+    fn test_mock_part_root() {
+        let mut mock = MockCommandRunner::new();
 
-    mock.expect_run_cmd()
-        .withf(|program, args, _dir| {
-            program == "ssh" && args == ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@127.0.0.1", "parted -s /dev/sda mkpart disk-main-root extr 512MiB 100%"] 
-        }).times(1).returning(|_, _, _| mock_ok(""));
+        mock.expect_run_cmd()
+            .withf(|program, args, _dir| {
+                program == "ssh"
+                    && args
+                        == [
+                            "-o",
+                            "StrictHostKeyChecking=no",
+                            "-o",
+                            "UserKnownHostsFile=/dev/null",
+                            "root@127.0.0.1",
+                            "parted -s /dev/sda mkpart disk-main-root extr 512MiB 100%",
+                        ]
+            })
+            .times(1)
+            .returning(|_, _, _| mock_ok(""));
 
-    let mut xanterella = Xanterella::new(mock);
-    let mut xanterellainstall = XanterellaInstall::new(xanterella);
-    xanterellainstall.set_ip("127.0.0.1");
-    xanterellainstall.set_drive("sda");
-    let result = xanterellainstall.part_root();
-    assert!(result.is_ok());
-}
+        let mut xanterella = Xanterella::new(mock);
+        let mut xanterellainstall = XanterellaInstall::new(xanterella);
+        xanterellainstall.set_ip("127.0.0.1");
+        xanterellainstall.set_drive("sda");
+        let result = xanterellainstall.part_root();
+        assert!(result.is_ok());
+    }
 
-#[test]
-fn test_mock_format_efi() {
-    let mut mock = MockCommandRunner::new();
+    #[test]
+    fn test_mock_format_efi() {
+        let mut mock = MockCommandRunner::new();
 
-    mock.expect_run_cmd()
-        .withf(|program, args, _dir| {
-            program == "ssh" && args == ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@127.0.0.1", "mkfs.fat /dev/sda1 -F 32 -n boot"] 
-        }).times(1).returning(|_, _, _| mock_ok(""));
+        mock.expect_run_cmd()
+            .withf(|program, args, _dir| {
+                program == "ssh"
+                    && args
+                        == [
+                            "-o",
+                            "StrictHostKeyChecking=no",
+                            "-o",
+                            "UserKnownHostsFile=/dev/null",
+                            "root@127.0.0.1",
+                            "mkfs.fat /dev/sda1 -F 32 -n boot",
+                        ]
+            })
+            .times(1)
+            .returning(|_, _, _| mock_ok(""));
 
-    let mut xanterella = Xanterella::new(mock);
-    let mut xanterellainstall = XanterellaInstall::new(xanterella);
-    xanterellainstall.set_ip("127.0.0.1");
-    xanterellainstall.set_drive("sda");
-    let result = xanterellainstall.format_efi();
-    assert!(result.is_ok());
-}
+        let mut xanterella = Xanterella::new(mock);
+        let mut xanterellainstall = XanterellaInstall::new(xanterella);
+        xanterellainstall.set_ip("127.0.0.1");
+        xanterellainstall.set_drive("sda");
+        let result = xanterellainstall.format_efi();
+        assert!(result.is_ok());
+    }
 
-#[test]
-fn test_mock_format_root() {
-    let mut mock = MockCommandRunner::new();
+    #[test]
+    fn test_mock_format_root() {
+        let mut mock = MockCommandRunner::new();
 
-    mock.expect_run_cmd()
-        .withf(|program, args, _dir| {
-            program == "ssh" && args == ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@127.0.0.1", "mkfs.ext4 /dev/sda2 -L nixos"] 
-        }).times(1).returning(|_, _, _| mock_ok(""));
+        mock.expect_run_cmd()
+            .withf(|program, args, _dir| {
+                program == "ssh"
+                    && args
+                        == [
+                            "-o",
+                            "StrictHostKeyChecking=no",
+                            "-o",
+                            "UserKnownHostsFile=/dev/null",
+                            "root@127.0.0.1",
+                            "mkfs.ext4 /dev/sda2 -L nixos",
+                        ]
+            })
+            .times(1)
+            .returning(|_, _, _| mock_ok(""));
 
-    let mut xanterella = Xanterella::new(mock);
-    let mut xanterellainstall = XanterellaInstall::new(xanterella);
-    xanterellainstall.set_ip("127.0.0.1");
-    xanterellainstall.set_drive("sda");
-    let result = xanterellainstall.format_root();
-    assert!(result.is_ok());
-}
+        let mut xanterella = Xanterella::new(mock);
+        let mut xanterellainstall = XanterellaInstall::new(xanterella);
+        xanterellainstall.set_ip("127.0.0.1");
+        xanterellainstall.set_drive("sda");
+        let result = xanterellainstall.format_root();
+        assert!(result.is_ok());
+    }
 
-#[test]
-fn test_mock_create_boot_dir() {
-    let mut mock = MockCommandRunner::new();
+    #[test]
+    fn test_mock_create_boot_dir() {
+        let mut mock = MockCommandRunner::new();
 
-    mock.expect_run_cmd()
-        .withf(|program, args, _dir| {
-            program == "ssh" && args == ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@127.0.0.1", "mkdir -p /mnt/boot"] 
-        }).times(1).returning(|_, _, _| mock_ok(""));
+        mock.expect_run_cmd()
+            .withf(|program, args, _dir| {
+                program == "ssh"
+                    && args
+                        == [
+                            "-o",
+                            "StrictHostKeyChecking=no",
+                            "-o",
+                            "UserKnownHostsFile=/dev/null",
+                            "root@127.0.0.1",
+                            "mkdir -p /mnt/boot",
+                        ]
+            })
+            .times(1)
+            .returning(|_, _, _| mock_ok(""));
 
-    let mut xanterella = Xanterella::new(mock);
-    let mut xanterellainstall = XanterellaInstall::new(xanterella);
-    xanterellainstall.set_ip("127.0.0.1");
-    xanterellainstall.set_drive("sda");
-    let result = xanterellainstall.create_boot_dir();
-    assert!(result.is_ok());
-}
+        let mut xanterella = Xanterella::new(mock);
+        let mut xanterellainstall = XanterellaInstall::new(xanterella);
+        xanterellainstall.set_ip("127.0.0.1");
+        xanterellainstall.set_drive("sda");
+        let result = xanterellainstall.create_boot_dir();
+        assert!(result.is_ok());
+    }
 
-#[test]
-fn test_mock_mount_boot() {
-    let mut mock = MockCommandRunner::new();
+    #[test]
+    fn test_mock_mount_boot() {
+        let mut mock = MockCommandRunner::new();
 
-    mock.expect_run_cmd()
-        .withf(|program, args, _dir| {
-            program == "ssh" && args == ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@127.0.0.1", "mount /dev/sda1 /mnt/boot"] 
-        }).times(1).returning(|_, _, _| mock_ok(""));
+        mock.expect_run_cmd()
+            .withf(|program, args, _dir| {
+                program == "ssh"
+                    && args
+                        == [
+                            "-o",
+                            "StrictHostKeyChecking=no",
+                            "-o",
+                            "UserKnownHostsFile=/dev/null",
+                            "root@127.0.0.1",
+                            "mount /dev/sda1 /mnt/boot",
+                        ]
+            })
+            .times(1)
+            .returning(|_, _, _| mock_ok(""));
 
-    let mut xanterella = Xanterella::new(mock);
-    let mut xanterellainstall = XanterellaInstall::new(xanterella);
-    xanterellainstall.set_ip("127.0.0.1");
-    xanterellainstall.set_drive("sda");
-    let result = xanterellainstall.mount_boot();
-    assert!(result.is_ok());
-}
+        let mut xanterella = Xanterella::new(mock);
+        let mut xanterellainstall = XanterellaInstall::new(xanterella);
+        xanterellainstall.set_ip("127.0.0.1");
+        xanterellainstall.set_drive("sda");
+        let result = xanterellainstall.mount_boot();
+        assert!(result.is_ok());
+    }
 
-#[test]
-fn test_mock_mount_root() {
-    let mut mock = MockCommandRunner::new();
+    #[test]
+    fn test_mock_mount_root() {
+        let mut mock = MockCommandRunner::new();
 
-    mock.expect_run_cmd()
-        .withf(|program, args, _dir| {
-            program == "ssh" && args == ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@127.0.0.1", "mount /dev/sda2 /mnt"] 
-        }).times(1).returning(|_, _, _| mock_ok(""));
+        mock.expect_run_cmd()
+            .withf(|program, args, _dir| {
+                program == "ssh"
+                    && args
+                        == [
+                            "-o",
+                            "StrictHostKeyChecking=no",
+                            "-o",
+                            "UserKnownHostsFile=/dev/null",
+                            "root@127.0.0.1",
+                            "mount /dev/sda2 /mnt",
+                        ]
+            })
+            .times(1)
+            .returning(|_, _, _| mock_ok(""));
 
-    let mut xanterella = Xanterella::new(mock);
-    let mut xanterellainstall = XanterellaInstall::new(xanterella);
-    xanterellainstall.set_ip("127.0.0.1");
-    xanterellainstall.set_drive("sda");
-    let result = xanterellainstall.mount_root();
-    assert!(result.is_ok());
-}
+        let mut xanterella = Xanterella::new(mock);
+        let mut xanterellainstall = XanterellaInstall::new(xanterella);
+        xanterellainstall.set_ip("127.0.0.1");
+        xanterellainstall.set_drive("sda");
+        let result = xanterellainstall.mount_root();
+        assert!(result.is_ok());
+    }
 }

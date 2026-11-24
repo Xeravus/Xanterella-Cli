@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use crate::Events;
 
 use serde::{Deserialize, Serialize};
 use sqlx::{
@@ -7,6 +6,8 @@ use sqlx::{
     sqlite::{SqlitePool, SqlitePoolOptions},
     types::Json,
 };
+
+use crate::Events;
 
 #[derive(Debug, Clone)]
 pub struct Database {

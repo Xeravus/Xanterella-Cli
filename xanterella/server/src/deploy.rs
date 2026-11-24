@@ -1,12 +1,11 @@
 use std::sync::Arc;
-use xanterella_core::xanterella::RealCommandRunner;
 
 use axum::{Json, extract::State};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use xanterella_core::{
     Xanterella,
-    xanterella::{EventFormat, EventState},
+    xanterella::{EventFormat, EventState, RealCommandRunner},
 };
 
 use crate::{ApiError, AppState};

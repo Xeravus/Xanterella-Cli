@@ -15,9 +15,11 @@ pub use xanterella::Xanterella;
 
 #[cfg(test)]
 pub(crate) mod test_helpers {
-    use std::io::Result as IoResult;
-    use std::os::unix::process::ExitStatusExt;
-    use std::process::{ExitStatus, Output};
+    use std::{
+        io::Result as IoResult,
+        os::unix::process::ExitStatusExt,
+        process::{ExitStatus, Output},
+    };
 
     pub fn mock_output(code: i32, stdout: &str, stderr: &str) -> IoResult<Output> {
         Ok(Output {

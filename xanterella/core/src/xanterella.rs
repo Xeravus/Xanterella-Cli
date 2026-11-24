@@ -1,13 +1,13 @@
+use std::{
+    io::Result as IoResult,
+    path::PathBuf,
+    process::{Command, Output},
+};
+
 use serde::Serialize;
 use tokio::sync::broadcast::*;
-use std::process::Command;
-use std::process::Output;
-use std::io::Result as IoResult;
 
-use crate::Events;
-use crate::config::AppPaths;
-use crate::EventsFailed;
-use std::path::PathBuf;
+use crate::{Events, EventsFailed, config::AppPaths};
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct EventFormat {
@@ -32,14 +32,9 @@ pub struct RealCommandRunner;
 impl CommandRunner for RealCommandRunner {
     fn run_cmd(&self, program: &str, args: &[String], dir: &str) -> IoResult<Output> {
         if !dir.is_empty() {
-            Command::new(program)
-                .args(args)
-                .current_dir(dir)
-                .output()
+            Command::new(program).args(args).current_dir(dir).output()
         } else {
-            Command::new(program)
-                .args(args)
-                .output()
+            Command::new(program).args(args).output()
         }
     }
 }

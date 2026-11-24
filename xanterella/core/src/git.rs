@@ -1,8 +1,6 @@
-use std::fs::create_dir_all;
-use crate::Events;
-use crate::EventsFailed;
-use std::process::Command;
-use std::path::PathBuf;
+use std::{fs::create_dir_all, path::PathBuf, process::Command};
+
+use crate::{Events, EventsFailed};
 
 pub struct Initial;
 pub struct Initialized;

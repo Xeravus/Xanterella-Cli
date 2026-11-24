@@ -1,10 +1,6 @@
-use std::collections::HashSet;
-use crate::xanterella::CommandRunner;
-use crate::Events;
-use crate::EventsFailed;
-use crate::Xanterella;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
+use crate::{Events, EventsFailed, Xanterella, xanterella::CommandRunner};
 
 pub enum User {
     Root,
@@ -34,7 +30,8 @@ pub struct DeviceInfo {
 
 impl<C: CommandRunner> Xanterella<C> {
     pub fn get_taildevices(&self) -> Result<Taildevices, EventsFailed> {
-        let cmd = self.execute("tailscale", &["status", "--json"], "")
+        let cmd = self
+            .execute("tailscale", &["status", "--json"], "")
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
         if !cmd.status.success() {
             return Err(EventsFailed::Tailscale(String::from_utf8_lossy(&cmd.stderr).to_string()));
@@ -42,7 +39,9 @@ impl<C: CommandRunner> Xanterella<C> {
         serde_json::from_slice::<Taildevices>(&cmd.stdout).map_err(|err| EventsFailed::SerdeJson(err.to_string()))
     }
 
-    pub fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {
+    pub fn get_taildevices_specific(
+        devices: Taildevices, name: &str, active_installs: &HashSet<String>,
+    ) -> Vec<String> {
         let mut ips: Vec<String> = vec![];
         for (_nodekey, device) in devices.devices {
             if device.name == name && device.os == "linux" {
@@ -58,28 +57,30 @@ impl<C: CommandRunner> Xanterella<C> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-use std::process::ExitStatus;
-use std::process::Output;
-use mockall::predicate::always;
-use mockall::predicate::eq;
-use std::os::unix::process::ExitStatusExt;
-use crate::xanterella::MockCommandRunner;
-use mockall::automock;
+    use std::{
+        os::unix::process::ExitStatusExt,
+        process::{ExitStatus, Output},
+    };
 
+    use mockall::{
+        automock,
+        predicate::{always, eq},
+    };
+
+    use super::*;
+    use crate::xanterella::MockCommandRunner;
 
     #[test]
     fn test_mock_get_taildevices() {
         let mut mock = MockCommandRunner::new();
 
         mock.expect_run_cmd()
-            .withf(|program, args, _dir| {
-                program == "tailscale" && args == ["status", "--json"]
-                })
-            .times(1).returning(|_, _, _| {
+            .withf(|program, args, _dir| program == "tailscale" && args == ["status", "--json"])
+            .times(1)
+            .returning(|_, _, _| {
                 Ok(Output {
                     status: ExitStatus::from_raw(0),
-stdout: br#"{"Peer": {}}"#.to_vec(),
+                    stdout: br#"{"Peer": {}}"#.to_vec(),
                     stderr: Vec::new(),
                 })
             });

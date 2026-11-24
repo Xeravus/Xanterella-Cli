@@ -1,5 +1,7 @@
-use crate::database::db::{DBRaw, Database};
-use crate::Events;
+use crate::{
+    Events,
+    database::db::{DBRaw, Database},
+};
 
 pub trait RawString {
     fn to_blop(&self) -> Vec<u8>;

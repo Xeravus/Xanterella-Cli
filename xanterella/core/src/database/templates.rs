@@ -36,8 +36,9 @@ impl Database {
 
 #[cfg(test)]
 mod tests {
-     use serde_json::json;
-   use crate::database::tests_utils::setup_test_db;
+    use serde_json::json;
+
+    use crate::database::tests_utils::setup_test_db;
 
     #[tokio::test]
     async fn db_add_template() {
@@ -46,7 +47,7 @@ mod tests {
         let result = db.add_template("test", "test.test", value).await;
         assert!(result.is_ok());
     }
-    
+
     #[tokio::test]
     async fn db_add_template_and_list_template() {
         let db = setup_test_db().await;

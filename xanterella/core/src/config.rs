@@ -3,13 +3,10 @@ use std::{
     fs::{create_dir_all, read_to_string, write},
     path::PathBuf,
 };
-use crate::xanterella::CommandRunner;
 
 use serde::{Deserialize, Serialize};
 
-use crate::Events;
-use crate::EventsFailed;
-use crate::Xanterella;
+use crate::{Events, EventsFailed, Xanterella, xanterella::CommandRunner};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct AppPaths {

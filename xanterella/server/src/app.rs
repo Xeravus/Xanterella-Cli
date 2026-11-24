@@ -1,5 +1,4 @@
 use std::{convert::Infallible, fs::remove_dir_all, sync::Arc};
-use xanterella_core::xanterella::RealCommandRunner;
 
 use axum::{
     Json, Router,
@@ -16,7 +15,7 @@ use tokio_stream::{Stream, StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{
     Xanterella, XanterellaInstall,
     prolyxena::Nixtractor,
-    xanterella::{EventFormat, EventState},
+    xanterella::{EventFormat, EventState, RealCommandRunner},
 };
 
 use crate::{

@@ -1,6 +1,5 @@
 use clap::{Parser, Subcommand};
-use xanterella_core::{Xanterella, XanterellaInstall};
-use xanterella_core::xanterella::RealCommandRunner;
+use xanterella_core::{Xanterella, XanterellaInstall, xanterella::RealCommandRunner};
 
 use crate::{
     execute::*,

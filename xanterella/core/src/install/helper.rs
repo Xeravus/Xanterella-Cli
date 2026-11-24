@@ -1,18 +1,17 @@
-use crate::xanterella::CommandRunner;
-use crate::Events;
-use crate::EventsFailed;
-use crate::User;
 use std::process::Command;
-use crate::XanterellaInstall;
 
-impl <C: CommandRunner> XanterellaInstall<C> {
+use crate::{Events, EventsFailed, User, XanterellaInstall, xanterella::CommandRunner};
+
+impl<C: CommandRunner> XanterellaInstall<C> {
     pub fn get_hardware(&mut self) -> Result<String, EventsFailed> {
         self.xanterella.log_event(Events::RunGetHardware);
 
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
             ssh_args.push("nixos-generate-config --no-filesystem --show-hardware-config".to_string());
-            let cmd = self.xanterella.execute("ssh", &ssh_args, "")
+            let cmd = self
+                .xanterella
+                .execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -43,30 +42,43 @@ impl <C: CommandRunner> XanterellaInstall<C> {
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        os::unix::process::ExitStatusExt,
+        process::{ExitStatus, Output},
+    };
+
+    use mockall::{
+        automock,
+        predicate::{always, eq},
+    };
+
     use super::*;
-use std::process::ExitStatus;
-use std::process::Output;
-use mockall::predicate::always;
-use mockall::predicate::eq;
-use std::os::unix::process::ExitStatusExt;
-use crate::xanterella::MockCommandRunner;
-use mockall::automock;
-use crate::test_helpers::mock_ok;
-use crate::Xanterella;
+    use crate::{Xanterella, test_helpers::mock_ok, xanterella::MockCommandRunner};
 
-#[test]
-fn test_mock_get_hardware() {
-    let mut mock = MockCommandRunner::new();
+    #[test]
+    fn test_mock_get_hardware() {
+        let mut mock = MockCommandRunner::new();
 
-    mock.expect_run_cmd()
-        .withf(|program, args, _dir| {
-            program == "ssh" && args == ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@127.0.0.1", "nixos-generate-config --no-filesystem --show-hardware-config"] 
-        }).times(1).returning(|_, _, _| mock_ok(""));
+        mock.expect_run_cmd()
+            .withf(|program, args, _dir| {
+                program == "ssh"
+                    && args
+                        == [
+                            "-o",
+                            "StrictHostKeyChecking=no",
+                            "-o",
+                            "UserKnownHostsFile=/dev/null",
+                            "root@127.0.0.1",
+                            "nixos-generate-config --no-filesystem --show-hardware-config",
+                        ]
+            })
+            .times(1)
+            .returning(|_, _, _| mock_ok(""));
 
-    let mut xanterella = Xanterella::new(mock);
-    let mut xanterellainstall = XanterellaInstall::new(xanterella);
-    xanterellainstall.set_ip("127.0.0.1");
-    let result = xanterellainstall.get_hardware();
-    assert!(result.is_ok());
-}
+        let mut xanterella = Xanterella::new(mock);
+        let mut xanterellainstall = XanterellaInstall::new(xanterella);
+        xanterellainstall.set_ip("127.0.0.1");
+        let result = xanterellainstall.get_hardware();
+        assert!(result.is_ok());
+    }
 }

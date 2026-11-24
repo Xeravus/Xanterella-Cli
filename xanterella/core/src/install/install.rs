@@ -1,7 +1,4 @@
-use crate::xanterella::CommandRunner;
-use crate::Events;
-use crate::Xanterella;
-
+use crate::{Events, Xanterella, xanterella::CommandRunner};
 
 pub struct XanterellaInstall<C: CommandRunner> {
     pub xanterella: Xanterella<C>,

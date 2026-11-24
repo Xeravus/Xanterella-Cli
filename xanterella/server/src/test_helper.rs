@@ -1,11 +1,12 @@
 #[cfg(test)]
 pub mod tests_utils {
-    use std::sync::Arc;
-use std::path::PathBuf;
-use xanterella_core::config::AppPaths;
+    use std::{path::PathBuf, sync::Arc};
 
     use tokio::sync::broadcast;
-    use xanterella_core::{config::AppConfig, database::db::Database};
+    use xanterella_core::{
+        config::{AppConfig, AppPaths},
+        database::db::Database,
+    };
 
     use crate::AppState;
 
@@ -27,7 +28,7 @@ use xanterella_core::config::AppPaths;
             tx,
             db,
             config,
-            paths
+            paths,
         })
     }
 }
