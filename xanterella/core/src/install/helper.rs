@@ -10,10 +10,9 @@ impl <C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunGetHardware);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .args(["nixos-generate-config", "--no-filesystem", "--show-hardware-config"])
-                .output()
+            let mut ssh_args = self.get_sshstring(User::Root);
+            ssh_args.push("nixos-generate-config --no-filesystem --show-hardware-config".to_string());
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {

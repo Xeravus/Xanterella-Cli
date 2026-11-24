@@ -58,17 +58,15 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunGetDrives);
 
         let parsed_drives = if !&self.ip.contains("127.0.0.1") {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .args(["lslbk", "--json"])
-                .output()
+            let mut ssh_args = self.get_sshstring(User::Root);
+            ssh_args.push("lsblk --json".to_string());
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
-                let cmd_again = Command::new("ssh")
-                    .args(self.get_sshstring(User::Cato))
-                    .args(["lslbk", "--json"])
-                    .output()
+                let mut ssh_args = self.get_sshstring(User::Cato);
+                ssh_args.push("lsblk --json".to_string());
+                let cmd_again = self.xanterella.runner.execute("ssh", &ssh_args, "")
                     .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
                 if !cmd_again.status.success() {
@@ -82,8 +80,8 @@ impl<C: CommandRunner> XanterellaInstall<C> {
                     .map_err(|err| EventsFailed::SerdeJson(err.to_string()))?
             }
         } else {
-            let cmd =
-                Command::new("lsblk").arg("--json").output().map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+            let cmd = self.xanterella.runner.execute("lsblk", &["--json"], "")
+                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
                 return Err(EventsFailed::Lsblk(String::from_utf8_lossy(&cmd.stderr).to_string()));
@@ -107,13 +105,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunPartEfi);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .args(["parted", "-s", &self.drive])
-                .args(["mklabel", "gpt"])
-                .args(["mkpart", "disk-main-boot", "fat32", "1Mib", "512MiB"])
-                .args(["set", "1", "esp", "on"])
-                .output()
+            let mut ssh_args = self.get_sshstring(User::Root);
+            ssh_args.push(format!("parted -s {} mklabel gpt mkpart disk-main-boot fat32 1MiB 512MiB set 1 esp on", &self.drive));
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -129,11 +123,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunPartRoot);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .args(["parted", "-s", &self.drive])
-                .args(["mkpart", "disk-main-root", "ext4", "512MiB", "100%"])
-                .output()
+            let mut ssh_args = self.get_sshstring(User::Root);
+            ssh_args.push(format!("parted -s {} mkpart disk-main-root extr 512MiB 100%", &self.drive));
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -149,11 +141,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunFormatEfi);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .arg("mkfs.fat")
-                .args([self.get_part_name(1), "-F".to_string(), "32".to_string(), "-n".to_string(), "boot".to_string()])
-                .output()
+            let mut ssh_args = self.get_sshstring(User::Root);
+            ssh_args.push(format!("mkfs.fat {} -F 32 -n boot", self.get_part_name(1)));
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -169,11 +159,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunFormatRoot);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .arg("mkfs.ext4")
-                .args([self.get_part_name(2), "-L".to_string(), "nixos".to_string()])
-                .output()
+            let mut ssh_args = self.get_sshstring(User::Root);
+            ssh_args.push(format!("mkfs.ext4 {} -L nixos", self.get_part_name(2)));
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -189,10 +177,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunCreateBootDir);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .args(["mkdir", "-p", "/mnt/boot"])
-                .output()
+            let mut ssh_args = self.get_sshstring(User::Root);
+            ssh_args.push("mkdir -p /mnt/boot".to_string());
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -208,10 +195,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunMountBoot);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .args(["mount", &self.get_part_name(1), "/mnt/boot"])
-                .output()
+            let mut ssh_args = self.get_sshstring(User::Root);
+            ssh_args.push(format!("mount {} /mnt/boot", &self.get_part_name(1)));
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -227,10 +213,9 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunMountRoot);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .args(["mount", &self.get_part_name(2), "/mnt"])
-                .output()
+            let mut ssh_args = self.get_sshstring(User::Root);
+            ssh_args.push(format!("mount {} /mnt", &self.get_part_name(2)));
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {

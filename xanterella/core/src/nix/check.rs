@@ -10,10 +10,8 @@ impl<C: CommandRunner> Xanterella<C> {
 
         eprintln!("Starte Check");
         if !self.debug {
-            let cmd = Command::new("nix")
-                .args(["flake", "check", "--impure"])
-                .current_dir(self.load_config().target_directory)
-                .output()
+            let dir = &self.load_config().target_directory;
+            let cmd = self.runner.execute("nix", &["flake", "check", "--impure"], dir)
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {

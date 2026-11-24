@@ -10,10 +10,7 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunPing);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ping")
-                .args(["-c", "3", "-W", "1"])
-                .arg(&self.ip)
-                .output()
+            let cmd = self.xanterella.runner.execute("ping", &["-c", "3", "-W", "1", &self.ip], "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -29,9 +26,8 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunPingSsh);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .output()
+            let ssh_args = &self.get_sshstring(User::Root);
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {

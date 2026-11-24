@@ -11,10 +11,8 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunNixBuild);
 
         if !self.xanterella.debug {
-            let cmd = Command::new("nix")
-                .args(["build", ".#nixosConfigurations.crylia.config.system.build.toplevel"])
-                .current_dir(self.xanterella.load_config().target_directory)
-                .output()
+            let dir = &self.xanterella.load_config().target_directory;
+            let cmd = self.xanterella.runner.execute("nix", &["build", ".#nixosConfigurations.crylia.config.system.build.toplevel"], &dir) 
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -35,11 +33,8 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         );
 
         if !self.xanterella.debug {
-            let cmd = Command::new("sh")
-                .arg("-c")
-                .arg(fast_cmd)
-                .current_dir(self.xanterella.load_config().target_directory)
-                .output()
+            let dir = &self.xanterella.load_config().target_directory;
+            let cmd = self.xanterella.runner.execute("sh", &["-c", &fast_cmd], &dir)
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -55,16 +50,14 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunCreateProfile);
 
         if !self.xanterella.debug {
+            let dir = &self.xanterella.load_config().target_directory;
             let sys_path = fs::read_link(format!("{}/result", self.xanterella.load_config().target_directory))
                 .map_err(|err| EventsFailed::ReadSymLink(err.to_string()))?
                 .to_string_lossy()
                 .into_owned();
-            let profile_cmd = format!("nix-env --store /mnt -p /mnt/nix/var/nix/profiles/system --set {}", sys_path);
-
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .arg(profile_cmd)
-                .output()
+            let mut ssh_args = self.get_sshstring(User::Root);
+            ssh_args.push(format!("nix-env --store /mnt -p /mnt/nix/var/nix/profiles/system --set {}", sys_path));
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -79,13 +72,11 @@ impl<C: CommandRunner> XanterellaInstall<C> {
     pub fn prep_sys(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunPrepSys);
 
-        let prep_cmd = "mkdir -m 0755 -p /mnt/etc && touch /mnt/etc/NIXOS";
+        let mut ssh_args = self.get_sshstring(User::Root);
+        ssh_args.push("mkdir -m 0755 -p /mnt/etc && touch /mnt/etc/NIXOS".to_string());
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .arg(prep_cmd)
-                .output()
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -100,14 +91,11 @@ impl<C: CommandRunner> XanterellaInstall<C> {
     pub fn activate_sys(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunActivateSys);
 
-        let activate_cmd =
-            "NIXOS_INSTALL_BOOTLOADER=1 nixos-enter --root /mnt --command '/nix/var/nix/profiles/system/activate'";
+        let mut ssh_args = self.get_sshstring(User::Root);
+        ssh_args.push("NIXOS_INSTALL_BOOTLOADER=1 nixos-enter --root /mnt --command '/nix/var/nix/profiles/system/activate'".to_string());
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .arg(activate_cmd)
-                .output()
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -122,13 +110,11 @@ impl<C: CommandRunner> XanterellaInstall<C> {
     pub fn activate_bootloader(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunActivateBootloader);
 
-        let bootloader_cmd = "nixos-enter --root /mnt --command 'NIXOS_INSTALL_BOOTLOADER=1 /nix/var/nix/profiles/system/bin/switch-to-configuration boot'";
+        let mut ssh_args = self.get_sshstring(User::Root);
+        ssh_args.push("nixos-enter --root /mnt --command 'NIXOS_INSTALL_BOOTLOADER=1 /nix/var/nix/profiles/system/bin/switch-to-configuration boot'".to_string());
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .arg(bootloader_cmd)
-                .output()
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -143,13 +129,11 @@ impl<C: CommandRunner> XanterellaInstall<C> {
     pub fn reboot_sys(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunRebootSys);
 
-        let reboot_cmd = "nohup sh -c 'sleep 3 && tailscale logout && reboot' > /dev/null 2>&1 &";
+        let mut ssh_args = self.get_sshstring(User::Root);
+        ssh_args.push("nohup sh -c 'sleep 3 && tailscale logout && reboot' > /dev/null 2>&1 &".to_string());
 
         if !self.xanterella.debug {
-            let cmd = Command::new("ssh")
-                .args(self.get_sshstring(User::Root))
-                .arg(reboot_cmd)
-                .output()
+            let cmd = self.xanterella.runner.execute("ssh", &ssh_args, "")
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
