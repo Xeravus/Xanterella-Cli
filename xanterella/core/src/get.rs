@@ -34,7 +34,7 @@ pub struct DeviceInfo {
 
 impl<C: CommandRunner> Xanterella<C> {
     pub fn get_taildevices(&self) -> Result<Taildevices, EventsFailed> {
-        let cmd = self.runner.execute("tailscale", &["status", "--json"], "")
+        let cmd = self.execute("tailscale", &["status", "--json"], "")
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
         if !cmd.status.success() {
             return Err(EventsFailed::Tailscale(String::from_utf8_lossy(&cmd.stderr).to_string()));
@@ -53,5 +53,39 @@ impl<C: CommandRunner> Xanterella<C> {
             }
         }
         ips
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+use std::process::ExitStatus;
+use std::process::Output;
+use mockall::predicate::always;
+use mockall::predicate::eq;
+use std::os::unix::process::ExitStatusExt;
+use crate::xanterella::MockCommandRunner;
+use mockall::automock;
+
+
+    #[test]
+    fn test_mock_get_taildevices() {
+        let mut mock = MockCommandRunner::new();
+
+        mock.expect_run_cmd()
+            .withf(|program, args, _dir| {
+                program == "tailscale" && args == ["status", "--json"]
+                })
+            .times(1).returning(|_, _, _| {
+                Ok(Output {
+                    status: ExitStatus::from_raw(0),
+stdout: br#"{"Peer": {}}"#.to_vec(),
+                    stderr: Vec::new(),
+                })
+            });
+
+        let mut xanterella = Xanterella::new(mock);
+        let result = xanterella.get_taildevices();
+        assert!(result.is_ok());
     }
 }

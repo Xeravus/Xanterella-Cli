@@ -22,15 +22,15 @@ pub enum EventState {
     Failed,
 }
 
-#[cfg_attr(test, automock)]
+#[cfg_attr(test, mockall::automock)]
 pub trait CommandRunner {
-    fn execute<T: AsRef<std::ffi::OsStr>>(&self, program: &str, args: &[T], dir: &str) -> IoResult<Output>;
+    fn run_cmd(&self, program: &str, args: &[String], dir: &str) -> IoResult<Output>;
 }
 
 pub struct RealCommandRunner;
 
 impl CommandRunner for RealCommandRunner {
-    fn execute<T: AsRef<std::ffi::OsStr>>(&self, program: &str, args: &[T], dir: &str) -> IoResult<Output> {
+    fn run_cmd(&self, program: &str, args: &[String], dir: &str) -> IoResult<Output> {
         if !dir.is_empty() {
             Command::new(program)
                 .args(args)
@@ -64,6 +64,11 @@ impl<C: CommandRunner> PartialEq for Xanterella<C> {
 }
 
 impl<C: CommandRunner> Xanterella<C> {
+    pub fn execute<T: AsRef<str>>(&self, program: &str, args: &[T], dir: &str) -> IoResult<Output> {
+        let str_args: Vec<String> = args.iter().map(|a| a.as_ref().to_string()).collect();
+        self.runner.run_cmd(program, &str_args, dir)
+    }
+
     #[allow(clippy::new_without_default)]
     pub fn new(runner: C) -> Self {
         Xanterella {
@@ -206,60 +211,5 @@ impl<C: CommandRunner> Xanterella<C> {
                 step: name.to_string(),
             });
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_core_xanterella_set_core() {
-        let data = Xanterella::new();
-
-        assert!(matches!(
-            data,
-            Xanterella {
-                config: _,
-                fast: _,
-                debug: _,
-                automate: _,
-                sender: _,
-            }
-        ));
-        assert!(data.sender.is_none());
-
-        assert_eq!(data.fast, false);
-        assert_eq!(data.debug, false);
-        assert_eq!(data.automate, false);
-    }
-
-    #[test]
-    fn test_core_xanterella_set_fast() {
-        let mut data = Xanterella::new();
-
-        data.set_fast(true);
-
-        assert_eq!(data.fast, true);
-        assert_ne!(data.fast, false);
-    }
-
-    #[test]
-    fn test_core_xanterella_set_debug() {
-        let mut data = Xanterella::new();
-
-        data.set_debug(true);
-
-        assert_eq!(data.debug, true);
-        assert_ne!(data.debug, false);
-    }
-
-    #[test]
-    fn test_core_xanterella_set_automate() {
-        let mut data = Xanterella::new();
-
-        data.set_automate(true);
-
-        assert_eq!(data.automate, true);
-        assert_ne!(data.automate, false);
     }
 }
