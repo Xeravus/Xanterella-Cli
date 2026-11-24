@@ -264,6 +264,53 @@ mod tests {
     use crate::{Xanterella, test_helpers::mock_ok, xanterella::MockCommandRunner};
 
     #[test]
+    fn test_get_drive_size() {
+        let install = XanterellaInstall::new(Xanterella::new(MockCommandRunner::new()));
+        assert_eq!(install.get_drive_size("1T"), 1024 * 1024 * 1024 * 1024);
+        assert_eq!(install.get_drive_size("1G"), 1024 * 1024 * 1024);
+        assert_eq!(install.get_drive_size("1M"), 1024 * 1024);
+        assert_eq!(install.get_drive_size("1K"), 1024);
+        assert_eq!(install.get_drive_size(" 1.5g "), (1.5 * 1024.0 * 1024.0 * 1024.0) as u64);
+        assert_eq!(install.get_drive_size("512"), 512);
+        assert_eq!(install.get_drive_size(""), 0);
+        assert_eq!(install.get_drive_size("invalid"), 0);
+        assert_eq!(install.get_drive_size("G"), 0);
+    }
+
+    #[test]
+    fn test_sort_drives() {
+        let mut install = XanterellaInstall::new(Xanterella::new(MockCommandRunner::new()));
+        let drives = StorageDrives {
+            blockdevices: vec![
+                BlockDevice {
+                    name: "sda".into(),
+                    size: "500M".into(),
+                    device_type: "disk".into(),
+                },
+                BlockDevice {
+                    name: "nvme0n1".into(),
+                    size: "2T".into(),
+                    device_type: "disk".into(),
+                },
+                BlockDevice {
+                    name: "sdb".into(),
+                    size: "100G".into(),
+                    device_type: "disk".into(),
+                },
+                BlockDevice {
+                    name: "sdc".into(),
+                    size: "1024K".into(),
+                    device_type: "disk".into(),
+                },
+            ],
+        };
+
+        let sorted = install.sort_drives(drives);
+        let names: Vec<&str> = sorted.blockdevices.iter().map(|d| d.name.as_str()).collect();
+        assert_eq!(names, vec!["nvme0n1", "sdb", "sda", "sdc"]);
+    }
+
+    #[test]
     fn test_mock_part_efi() {
         let mut mock = MockCommandRunner::new();
 
