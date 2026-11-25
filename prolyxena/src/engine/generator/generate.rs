@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use indexmap::IndexMap;
 
 use crate::engine::core::*;
@@ -369,10 +367,7 @@ mod tests {
                 ),
                 (
                     String::from("test_file.nix"),
-                    FsNodes::File {
-                        name: String::from("test_file.nix"),
-                        ast: NixValue::AttrSet(IndexMap::new())
-                    }
+                    FsNodes::File { name: String::from("test_file.nix"), ast: NixValue::AttrSet(IndexMap::new()) }
                 )
             ]))
         );
@@ -388,19 +383,13 @@ mod tests {
                 ),
                 (
                     String::from("test_file.nix"),
-                    FsNodes::File {
-                        name: String::from("test_file.nix"),
-                        ast: NixValue::AttrSet(IndexMap::new())
-                    }
+                    FsNodes::File { name: String::from("test_file.nix"), ast: NixValue::AttrSet(IndexMap::new()) }
                 ),
                 (
                     String::from("test"),
                     FsNodes::Dir(IndexMap::from([(
                         String::from("file.nix"),
-                        FsNodes::File {
-                            name: String::from("file.nix"),
-                            ast: NixValue::AttrSet(IndexMap::new())
-                        }
+                        FsNodes::File { name: String::from("file.nix"), ast: NixValue::AttrSet(IndexMap::new()) }
                     )]))
                 )
             ]))

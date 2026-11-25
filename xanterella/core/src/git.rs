@@ -88,8 +88,8 @@ impl GitManager<Initial> {
         }
 
         Ok(GitManager {
-            repo: self.repo.clone(),
-            directory: self.directory.clone(),
+            repo: self.repo,
+            directory: self.directory,
             main_br: self.main_br,
             state: Initialized,
         })
@@ -120,8 +120,8 @@ impl GitManager<Initialized> {
             }
         }
         Ok(GitManager {
-            repo: self.repo.clone(),
-            directory: self.directory.clone(),
+            repo: self.repo,
+            directory: self.directory,
             main_br: self.main_br,
             state: CheckedOut,
         })
@@ -141,8 +141,8 @@ impl GitManager<CheckedOut> {
             return Err(EventsFailed::GitMerge(String::from_utf8_lossy(&merge.stderr).to_string()));
         }
         Ok(GitManager {
-            repo: self.repo.clone(),
-            directory: self.directory.clone(),
+            repo: self.repo,
+            directory: self.directory,
             main_br: self.main_br,
             state: Merged,
         })
@@ -161,8 +161,8 @@ impl GitManager<Merged> {
             return Err(EventsFailed::GitAdd(String::from_utf8_lossy(&add.stderr).to_string()));
         }
         Ok(GitManager {
-            repo: self.repo.clone(),
-            directory: self.directory.clone(),
+            repo: self.repo,
+            directory: self.directory,
             main_br: self.main_br,
             state: Tracked,
         })
@@ -181,8 +181,8 @@ impl GitManager<Tracked> {
             return Err(EventsFailed::GitCommit(String::from_utf8_lossy(&commit.stderr).to_string()));
         }
         Ok(GitManager {
-            repo: self.repo.clone(),
-            directory: self.directory.clone(),
+            repo: self.repo,
+            directory: self.directory,
             main_br: self.main_br,
             state: Commited,
         })
@@ -200,8 +200,8 @@ impl GitManager<Tracked> {
             return Err(EventsFailed::GitReset(String::from_utf8_lossy(&reset.stderr).to_string()));
         }
         Ok(GitManager {
-            repo: self.repo.clone(),
-            directory: self.directory.clone(),
+            repo: self.repo,
+            directory: self.directory,
             main_br: self.main_br,
             state: Commited,
         })
@@ -220,8 +220,8 @@ impl GitManager<Commited> {
             return Err(EventsFailed::GitPush(String::from_utf8_lossy(&push.stderr).to_string()));
         }
         Ok(GitManager {
-            repo: self.repo.clone(),
-            directory: self.directory.clone(),
+            repo: self.repo,
+            directory: self.directory,
             main_br: self.main_br,
             state: Pushed,
         })
