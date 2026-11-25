@@ -1,8 +1,11 @@
 pub mod app;
+pub mod config;
+pub mod deploy;
 pub mod generate;
 pub mod hosts;
 pub mod modules;
 pub mod profiles;
+pub mod raw;
 pub mod templates;
 pub mod test_helper;
 
@@ -23,6 +26,7 @@ pub struct AppState {
     pub tx: broadcast::Sender<EventFormat>,
     pub db: Database,
     pub config: AppConfig,
+    pub paths: AppPaths,
 }
 
 #[allow(unused)]
@@ -60,6 +64,7 @@ async fn main() {
         tx,
         db,
         config: config.clone(),
+        paths: paths.clone(),
     });
 
     let app = create_app(state);
@@ -70,3 +75,7 @@ async fn main() {
 
     axum::serve(listener, app).await.expect("Failed to start Server");
 }
+
+#[cfg(test)]
+#[path = "../tests/support/router.rs"]
+mod router_integration;

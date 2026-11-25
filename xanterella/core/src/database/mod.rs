@@ -2,6 +2,7 @@ pub mod db;
 pub mod hosts;
 pub mod modules;
 pub mod profiles;
+pub mod raw;
 pub mod templates;
 
 use crate::database::db::Database;

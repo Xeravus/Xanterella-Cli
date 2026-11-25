@@ -1,4 +1,4 @@
-use std::{convert::Infallible, sync::Arc};
+use std::{convert::Infallible, fs::remove_dir_all, sync::Arc};
 
 use axum::{
     Json, Router,
@@ -13,17 +13,25 @@ use prolyxena::engine::lexer::vfs::*;
 use serde_json::{Value, json};
 use tokio_stream::{Stream, StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{
-    Ping, Xanterella, XanterellaInstall,
+    Xanterella, XanterellaInstall,
     prolyxena::Nixtractor,
-    xanterella::{EventFormat, EventState},
+    xanterella::{EventFormat, EventState, RealCommandRunner},
 };
 
 use crate::{
     ApiError, AppState,
+    config::check_config,
+    deploy::{deploy_all, deploy_selected},
     generate::generate_config,
-    hosts::*,
-    modules::*,
-    profiles::*,
+    hosts::{
+        check_host, create_host, delete_host, host_add_option, host_add_profile, host_remove_option,
+        host_remove_profile, list_hosts,
+    },
+    modules::{check_modul, create_modul, delete_modul, list_modules},
+    profiles::{
+        check_profile, create_profile, delete_profile, list_profiles, profile_add_option, profile_remove_option,
+    },
+    raw::{check_raw, create_raw, delete_raw, list_raw},
     templates::{check_template, create_template, delete_template, list_templates},
 };
 
@@ -46,7 +54,12 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/modules/:name", get(check_modul).delete(delete_modul))
         .route("/templates", get(list_templates).post(create_template))
         .route("/templates/:name", get(check_template).delete(delete_template))
+        .route("/raw", get(list_raw).post(create_raw))
+        .route("/raw/:name", get(check_raw).delete(delete_raw))
+        .route("/deploy", get(deploy_all).post(deploy_selected))
+        .route("/config/check", get(check_config))
         .route("/generate", get(generate_config))
+        .route("/wipe", get(wipe_config))
         .with_state(state)
 }
 
@@ -67,7 +80,7 @@ pub async fn event_stream(State(state): State<Arc<AppState>>) -> Sse<impl Stream
 }
 
 pub async fn get_ping(State(state): State<Arc<AppState>>, Path(ip): Path<String>) -> Result<Json<Value>, ApiError> {
-    let xanterella = Xanterella::new();
+    let xanterella = Xanterella::new(RealCommandRunner);
     let mut install = XanterellaInstall::new(xanterella);
     install.xanterella.set_sender(state.tx.clone());
     install.set_ip(&ip);
@@ -80,6 +93,18 @@ pub async fn get_ping(State(state): State<Arc<AppState>>, Path(ip): Path<String>
             "ip": ip,
         }))),
         Err(_) => Err(ApiError::InternalError),
+    }
+}
+
+pub async fn wipe_config(State(state): State<Arc<AppState>>) -> Result<Json<Value>, ApiError> {
+    match remove_dir_all(&state.config.target_directory) {
+        Ok(_) => Ok(Json(json!({
+            "wipe": "success"
+        }))),
+        Err(err) => {
+            eprintln!("Wipe-Fehler: {}", err);
+            Err(ApiError::InternalError)
+        }
     }
 }
 

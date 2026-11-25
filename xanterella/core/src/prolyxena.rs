@@ -1,4 +1,4 @@
-use std::fmt::Write;
+use std::{collections::hash_map::DefaultHasher, fmt::Write, fs, path::PathBuf, str::from_utf8};
 
 use prolyxena::engine::{
     core::NixValue,
@@ -8,6 +8,8 @@ use prolyxena::engine::{
 };
 use serde::*;
 use serde_json::Value;
+use tokio::task::spawn_blocking;
+use walkdir::{DirEntry, WalkDir};
 
 pub struct Nixtractor<'a> {
     pub prolyxena: &'a mut FsData,
@@ -47,6 +49,14 @@ pub struct CreateTemplate {
     pub name: String,
     pub path: String,
     pub config: Vec<Value>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateRaw {
+    pub name: String,
+    pub path: String,
+    pub content: Vec<u8>,
+    pub readable: bool,
 }
 
 impl<'a> Nixtractor<'a> {
@@ -152,8 +162,8 @@ impl<'a> Nixtractor<'a> {
                 }
             };
 
-            if check_single(&flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", &host_name])).is_ok() {
-                let with_system = flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", &host_name, "system"]);
+            if check_single(&flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", host_name])).is_ok() {
+                let with_system = flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", host_name, "system"]);
                 match check_single(&with_system) {
                     Ok(_) => {
                         let sys_string = with_system[0].format_nix(0);
@@ -169,7 +179,7 @@ impl<'a> Nixtractor<'a> {
                 };
 
                 let hosts_imports =
-                    flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", &host_name, "modules"]);
+                    flake_hosts.query_exact_mut(&["flake", "nixosConfigurations", host_name, "modules"]);
                 match check_single(&hosts_imports) {
                     Ok(_) => {
                         if let Some(NixValue::List(list)) = hosts_imports.first() {
@@ -201,7 +211,7 @@ impl<'a> Nixtractor<'a> {
 
                 system.push_str("x86_64-linux");
 
-                let hosts_imports = colmena_hosts.query_exact_mut(&[&host_name, "imports"]);
+                let hosts_imports = colmena_hosts.query_exact_mut(&[host_name, "imports"]);
                 match check_single(&hosts_imports) {
                     Ok(_) => {
                         if let Some(NixValue::List(list)) = hosts_imports.first() {
@@ -231,7 +241,7 @@ impl<'a> Nixtractor<'a> {
                 }
             };
 
-            let build_on_target = colmena_hosts.query_exact_mut(&[&host_name, "deployment", "buildOnTarget"]);
+            let build_on_target = colmena_hosts.query_exact_mut(&[host_name, "deployment", "buildOnTarget"]);
             match check_single(&build_on_target) {
                 Ok(_) => {
                     let outcome = build_on_target[0].format_nix(0);
@@ -459,6 +469,87 @@ impl<'a> Nixtractor<'a> {
 
         Ok(templates)
     }
+
+    pub async fn extract_raw(&mut self) -> Result<Vec<CreateRaw>, String> {
+        let mut raw: Vec<CreateRaw> = Vec::new();
+        let files = Self::extract_files_rec(self.prolyxena.path.clone()).await?;
+        let path_prefix = PathBuf::from(&self.prolyxena.path);
+
+        for i in files {
+            let path = match PathBuf::from(&i).strip_prefix(&path_prefix) {
+                Ok(stripped) => stripped.to_string_lossy().into_owned(),
+                Err(err) => {
+                    eprintln!(
+                        "Extraction-Fehler: Raw-File '{:#?}' Dateipfad konnte nicht korrigiert werden: '{}' Überspringe Datei",
+                        i, err
+                    );
+                    continue;
+                }
+            };
+
+            let name = match PathBuf::from(&i).file_name() {
+                Some(n) if !n.is_empty() => n.to_string_lossy().into_owned(),
+                _ => {
+                    eprintln!("Extraction-Fehler: Raw-File Dateiname konnte nicht extrahiert werden: Hashfallback");
+                    let mut hasher = DefaultHasher::new();
+                    std::hash::Hash::hash(&i, &mut hasher);
+                    format!("fallback_{:x}", std::hash::Hasher::finish(&hasher))
+                }
+            };
+            let content = match fs::read(&i) {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    eprintln!(
+                        "Extraction-Fehler: Raw-File Dateiinhalte '{:#?}' konnte nicht extrahiert werden: {}\n Überspringe Datei",
+                        i, err
+                    );
+                    continue;
+                }
+            };
+            match from_utf8(&content) {
+                Ok(string) => {
+                    raw.push(CreateRaw {
+                        name,
+                        path,
+                        content: string.into(),
+                        readable: true,
+                    });
+                }
+                Err(_) => {
+                    raw.push(CreateRaw {
+                        name,
+                        path,
+                        content,
+                        readable: false,
+                    });
+                }
+            }
+        }
+        Ok(raw)
+    }
+
+    fn is_hidden(entry: &DirEntry) -> bool {
+        entry
+            .file_name()
+            .to_str()
+            .map(|e| e.starts_with('.') || e.ends_with(".nix") || e.ends_with(".lock"))
+            .unwrap_or(false)
+    }
+
+    pub(crate) async fn extract_files_rec(dir: String) -> Result<Vec<PathBuf>, String> {
+        let files = spawn_blocking(move || {
+            WalkDir::new(dir)
+                .into_iter()
+                .filter_entry(|e| !Self::is_hidden(e))
+                .filter_map(|e| e.ok())
+                .filter(|e| e.file_type().is_file())
+                .map(|e| e.into_path())
+                .collect()
+        })
+        .await
+        .map_err(|err| err.to_string())?;
+        Ok(files)
+    }
 }
 
 pub(crate) fn check_single<T>(list: &[T]) -> Result<(), String> {
@@ -466,5 +557,108 @@ pub(crate) fn check_single<T>(list: &[T]) -> Result<(), String> {
         0 => Err("Query-Fehler: Kein Pfad/Option gefunden".to_string()),
         1 => Ok(()),
         _ => Err("Query-Fehler: Zu viele Pfade/Optionen gefunden".to_string()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use prolyxena::engine::generator::generate::Modify;
+
+    use super::*;
+
+    fn tree(entries: &[(&str, &str)]) -> FsData {
+        let mut data = FsData::new("");
+        for &(path, expression) in entries {
+            data.generate_file(path, expression).unwrap();
+        }
+        data
+    }
+
+    #[test]
+    fn exactly_one_match_is_required() {
+        assert!(check_single::<i32>(&[]).is_err());
+        assert!(check_single(&[1]).is_ok());
+        assert!(check_single(&[1, 2]).is_err());
+    }
+
+    #[tokio::test]
+    async fn profiles_keep_their_name_category_and_options() {
+        let mut data = tree(&[
+            ("profiles/common.nix", "{ enabled = true; }"),
+            ("profiles/apps/editor.nix", "{ enabled = false; }"),
+        ]);
+        let mut profiles = Nixtractor::new(&mut data).await.extract_profiles().await.unwrap();
+        profiles.sort_by(|a, b| a.name.cmp(&b.name));
+        assert_eq!(profiles.len(), 2);
+        assert_eq!((&*profiles[0].name, &*profiles[0].dir), ("common", "base"));
+        assert_eq!((&*profiles[1].name, &*profiles[1].dir), ("editor", "apps"));
+        for (profile, path) in profiles.iter().zip(["profiles/common.nix", "profiles/apps/editor.nix"]) {
+            assert_eq!(profile.options, vec![serde_json::json!(data.search_tree(path).unwrap())]);
+        }
+    }
+
+    #[tokio::test]
+    async fn modules_keep_nested_categories_and_skip_defaults() {
+        let mut data = tree(&[
+            ("modules/default.nix", "{}"),
+            ("modules/apps/default.nix", "{}"),
+            ("modules/apps/editor.nix", "{ options = { xanterella = { enabled = true; }; }; }"),
+            ("modules/apps/media/default.nix", "{}"),
+            ("modules/apps/media/player.nix", "{}"),
+        ]);
+        let mut modules = Nixtractor::new(&mut data).await.extract_modules().await.unwrap();
+        modules.sort_by(|a, b| a.name.cmp(&b.name));
+        assert_eq!(modules.len(), 2);
+        assert_eq!((&*modules[0].name, &*modules[0].category), ("editor", "apps"));
+        assert_eq!((&*modules[1].name, &*modules[1].category), ("player", "apps/media"));
+        assert_eq!(modules[0].options.len(), 1);
+        assert!(modules[1].options.is_empty());
+    }
+
+    #[tokio::test]
+    async fn templates_exclude_generated_host_definitions() {
+        let mut data = tree(&[
+            ("flake.nix", "{}"),
+            ("flake-modules/packages.nix", "{}"),
+            ("flake-modules/hosts.nix", "{}"),
+            ("flake-modules/colmena-hosts.nix", "{}"),
+        ]);
+        let templates = Nixtractor::new(&mut data).await.extract_templates().await.unwrap();
+        let paths: Vec<_> = templates.iter().map(|item| item.path.as_str()).collect();
+        assert_eq!(paths, ["flake.nix", "flake-modules/packages.nix"]);
+    }
+
+    #[tokio::test]
+    async fn hosts_resolve_native_configuration_and_colmena_fallback() {
+        let mut data = tree(&[
+            ("hosts/native/configuration.nix", "{ imports = [ ./common.nix ]; }"),
+            ("hosts/native/hardware-configuration.nix", "{}"),
+            ("hosts/worker/configuration.nix", "{}"),
+            ("profiles/apps/native.nix", "{ config = { xanterella = { enabled = true; }; }; }"),
+            (
+                "flake-modules/hosts.nix",
+                r#"{ flake = { nixosConfigurations = { native = {
+                system = "aarch64-linux"; modules = [ ./native.nix ]; }; }; }; }"#,
+            ),
+            (
+                "flake-modules/colmena-hosts.nix",
+                "{ native = { deployment = { buildOnTarget = false; }; };
+                worker = { imports = [ ./worker.nix ]; deployment = { buildOnTarget = true; }; }; }",
+            ),
+        ]);
+        let mut hosts = Nixtractor::new(&mut data).await.extract_hosts().await.unwrap();
+        hosts.sort_by(|a, b| a.hostname.cmp(&b.hostname));
+        assert_eq!(hosts.len(), 2);
+        let native = &hosts[0];
+        assert_eq!((&*native.hostname, &*native.system), ("native", "aarch64-linux"));
+        assert!(!native.remote_deploy);
+        assert_eq!(native.hardware.len(), 1);
+        assert_eq!(native.profiles.len(), 1);
+        assert_eq!(native.options.len(), 1);
+        let worker = &hosts[1];
+        assert_eq!((&*worker.hostname, &*worker.system), ("worker", "x86_64-linux"));
+        assert!(worker.remote_deploy);
+        assert_eq!(worker.imports.len(), 1);
+        assert!(worker.hardware.is_empty());
     }
 }

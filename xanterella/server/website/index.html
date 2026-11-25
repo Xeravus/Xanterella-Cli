@@ -579,6 +579,10 @@
                     <i class="fa-solid fa-file-code"></i>
                     Templates
                 </button>
+                <button class="nav-item" onclick="switchTab('raw')" id="nav-raw">
+                    <i class="fa-solid fa-file-lines"></i>
+                    Raw
+                </button>
             </nav>
         </aside>
 
@@ -745,6 +749,27 @@
                     </div>
                 </div>
 
+		<!-- TAB: Raw -->
+                <div id="tab-raw" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fa-solid fa-file-lines"></i> Raw Files</h3>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>File Name</th>
+                                        <th>Path / Source</th>
+                                        <th style="text-align: right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="raw-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -788,12 +813,13 @@
             document.getElementById(`nav-${tabId}`).classList.add('active');
 
             // Handle Title
-            const titles = {
+	    const titles = {
                 dashboard: 'Overview',
                 hosts: 'Host Management',
                 profiles: 'Profiles',
                 modules: 'Module Registry',
-                templates: 'Templates'
+                templates: 'Templates',
+                raw: 'Raw Files' 
             };
             document.getElementById('page-title').textContent = titles[tabId];
 
@@ -810,12 +836,13 @@
         }
 
         // --- Data Fetching ---
-        function loadData(type) {
+	function loadData(type) {
             switch(type) {
                 case 'hosts': fetchHosts(); break;
                 case 'profiles': fetchProfiles(); break;
                 case 'modules': fetchModules(); break;
                 case 'templates': fetchTemplates(); break;
+                case 'raw': fetchRaw(); break; 
             }
         }
 
@@ -873,6 +900,36 @@
                 renderError('templates-table-body', 3, err.message);
                 showToast(err.message, 'error');
             }
+        }
+
+	async function fetchRaw() {
+            renderLoading('raw-table-body', 3);
+            try {
+                const res = await fetch(`${apiBase}/raw`);
+                if (!res.ok) throw new Error('Failed to fetch raw files');
+                const data = await res.json();
+                renderRaw(data.raw || []); 
+            } catch (err) {
+                renderError('raw-table-body', 3, err.message);
+                showToast(err.message, 'error');
+            }
+        }
+
+        function renderRaw(data) {
+            const tbody = document.getElementById('raw-table-body');
+            if (data.length === 0) return renderEmpty(tbody, 3, "No raw files found.");
+            
+            tbody.innerHTML = data.map(r => `
+                <tr>
+                    <td><span style="color: white; font-weight: 500;">${r.name}</span></td>
+                    <td style="font-family: var(--font-mono); font-size: 13px;">${r.path}</td>
+                    <td style="text-align: right;">
+                        <button class="btn-icon-danger" onclick="confirmDelete('raw', '${r.name}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         // A quick way to refresh the dashboard numbers without rendering all tables

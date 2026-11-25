@@ -6,7 +6,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::prelude::*;
+use crate::{EventsFailed, Xanterella, xanterella::CommandRunner};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct AppPaths {
@@ -48,6 +48,8 @@ pub struct AppConfig {
     pub target_directory: String,
     pub ip: String,
     pub port: u64,
+    pub repo_url: String,
+    pub repo_main_branch: String,
 }
 
 impl Default for AppConfig {
@@ -56,6 +58,8 @@ impl Default for AppConfig {
             target_directory: "/etc/nixos".to_string(),
             ip: "0.0.0.0".to_string(),
             port: 3000,
+            repo_url: "".to_string(),
+            repo_main_branch: "main".to_string(),
         }
     }
 }
@@ -69,6 +73,12 @@ impl AppConfig {
                     eprintln!(
                         "Config-Fehler: Config.toml enthält nicht korrektes toml. \n{} \nFallback auf Standartwerte",
                         e
+                    );
+                    let old_config = format!("{}.old", path.config_file.display());
+                    let _ = write(old_config, content);
+                    let _ = Self::default().save(&AppPaths::init());
+                    eprintln!(
+                        "Config-Fehler: Ursprüngliche Config.toml wird zu 'config.toml.old' und neue Config.toml mit Standartwerte wird erstellt."
                     );
                     Self::default()
                 }
@@ -87,17 +97,12 @@ impl AppConfig {
     }
 }
 
-pub trait Config {
-    fn load_config(&mut self) -> AppConfig;
-    fn save_config(&mut self, content: AppConfig) -> Result<(), EventsFailed>;
-}
-
-impl Config for Xanterella {
-    fn load_config(&mut self) -> AppConfig {
+impl<C: CommandRunner> Xanterella<C> {
+    pub fn load_config(&mut self) -> AppConfig {
         AppConfig::load(&self.config)
     }
 
-    fn save_config(&mut self, content: AppConfig) -> Result<(), EventsFailed> {
+    pub fn save_config(&mut self, content: AppConfig) -> Result<(), EventsFailed> {
         let config = content;
         config.save(&self.config).map_err(|err| EventsFailed::ConfigSave(err.to_string()))?;
         Ok(())

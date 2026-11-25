@@ -17,9 +17,17 @@ pub enum EventsFailed {
     GitMerge(String),
     GitPr(String),
     GitReset(String),
+    GitPush(String),
+    GitPull(String),
+    GitInit(String),
+    GitRemote(String),
+    GitAdd(String),
 
     /// utils/Check.rs
     CheckNix(String),
+
+    /// utils/Colmena.rs
+    ColmenaApply(String),
 
     /// utils/Config.rs
     ConfigCreateDir(String),
@@ -68,6 +76,7 @@ pub enum Events {
     RunGitPr,
     RunGitRollback,
     RunGitReset,
+    RunGitPush,
 
     OkGitCommit,
     OkGitCheckout,
@@ -76,11 +85,17 @@ pub enum Events {
     OkGitPr,
     OkGitRollback,
     OkGitReset,
+    OkGitPush,
 
     /// utils/Check.rs
     RunCheckNix,
 
     OkCheckNix,
+
+    /// utils/Colmena.rs
+    RunColmenaApply,
+
+    OkColmenaApply,
 
     /// utils/Config.rs
     RunConfigCreateDir,

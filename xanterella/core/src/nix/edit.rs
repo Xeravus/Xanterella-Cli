@@ -8,27 +8,17 @@ use prolyxena::engine::{
     lexer::vfs::FsData,
 };
 
-use crate::{XanterellaInstall, config::Config, install::helper::Helper, prelude::*};
+use crate::{EventsFailed, XanterellaInstall, xanterella::CommandRunner};
 
-pub trait Edit {
-    fn crylia_edit_start(&mut self) -> Result<(), EventsFailed>;
-    fn crylia_add_hardware_conf(&mut self, config: &mut FsData) -> Result<(), EventsFailed>;
-    fn crylia_add_hardware_link(&mut self, config: &mut FsData) -> Result<(), EventsFailed>;
-
-    fn crylia_edit_finish(&mut self) -> Result<(), EventsFailed>;
-    fn crylia_remove_hardware_conf(&mut self, config: &mut FsData) -> Result<(), EventsFailed>;
-    fn crylia_remove_hardware_link(&mut self, config: &mut FsData) -> Result<(), EventsFailed>;
-}
-
-impl Edit for XanterellaInstall {
-    fn crylia_edit_start(&mut self) -> Result<(), EventsFailed> {
+impl<C: CommandRunner> XanterellaInstall<C> {
+    pub fn crylia_edit_start(&mut self) -> Result<(), EventsFailed> {
         let mut config = FsData::new(&self.xanterella.load_config().target_directory);
         self.crylia_add_hardware_conf(&mut config)?;
         self.crylia_add_hardware_link(&mut config)?;
         config.walk_tree().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
         Ok(())
     }
-    fn crylia_add_hardware_conf(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
+    pub fn crylia_add_hardware_conf(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
         if !self.xanterella.debug {
             config.load().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
             let hardware = self.get_hardware()?;
@@ -39,7 +29,7 @@ impl Edit for XanterellaInstall {
         Ok(())
     }
 
-    fn crylia_add_hardware_link(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
+    pub fn crylia_add_hardware_link(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
         if !self.xanterella.debug {
             let file = config
                 .search_tree("hosts/crylia/configuration.nix")
@@ -50,14 +40,14 @@ impl Edit for XanterellaInstall {
         Ok(())
     }
 
-    fn crylia_edit_finish(&mut self) -> Result<(), EventsFailed> {
+    pub fn crylia_edit_finish(&mut self) -> Result<(), EventsFailed> {
         let mut config = FsData::new(&self.xanterella.load_config().target_directory);
         self.crylia_remove_hardware_conf(&mut config)?;
         self.crylia_remove_hardware_link(&mut config)?;
         config.walk_tree().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
         Ok(())
     }
-    fn crylia_remove_hardware_conf(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
+    pub fn crylia_remove_hardware_conf(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
         if !self.xanterella.debug {
             config.load().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
             config
@@ -67,7 +57,7 @@ impl Edit for XanterellaInstall {
         Ok(())
     }
 
-    fn crylia_remove_hardware_link(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
+    pub fn crylia_remove_hardware_link(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
         if !self.xanterella.debug {
             let file = config
                 .search_tree("hosts/crylia/configuration.nix")
