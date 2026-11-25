@@ -559,3 +559,106 @@ pub(crate) fn check_single<T>(list: &[T]) -> Result<(), String> {
         _ => Err("Query-Fehler: Zu viele Pfade/Optionen gefunden".to_string()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use prolyxena::engine::generator::generate::Modify;
+
+    use super::*;
+
+    fn tree(entries: &[(&str, &str)]) -> FsData {
+        let mut data = FsData::new("");
+        for &(path, expression) in entries {
+            data.generate_file(path, expression).unwrap();
+        }
+        data
+    }
+
+    #[test]
+    fn exactly_one_match_is_required() {
+        assert!(check_single::<i32>(&[]).is_err());
+        assert!(check_single(&[1]).is_ok());
+        assert!(check_single(&[1, 2]).is_err());
+    }
+
+    #[tokio::test]
+    async fn profiles_keep_their_name_category_and_options() {
+        let mut data = tree(&[
+            ("profiles/common.nix", "{ enabled = true; }"),
+            ("profiles/apps/editor.nix", "{ enabled = false; }"),
+        ]);
+        let mut profiles = Nixtractor::new(&mut data).await.extract_profiles().await.unwrap();
+        profiles.sort_by(|a, b| a.name.cmp(&b.name));
+        assert_eq!(profiles.len(), 2);
+        assert_eq!((&*profiles[0].name, &*profiles[0].dir), ("common", "base"));
+        assert_eq!((&*profiles[1].name, &*profiles[1].dir), ("editor", "apps"));
+        for (profile, path) in profiles.iter().zip(["profiles/common.nix", "profiles/apps/editor.nix"]) {
+            assert_eq!(profile.options, vec![serde_json::json!(data.search_tree(path).unwrap())]);
+        }
+    }
+
+    #[tokio::test]
+    async fn modules_keep_nested_categories_and_skip_defaults() {
+        let mut data = tree(&[
+            ("modules/default.nix", "{}"),
+            ("modules/apps/default.nix", "{}"),
+            ("modules/apps/editor.nix", "{ options = { xanterella = { enabled = true; }; }; }"),
+            ("modules/apps/media/default.nix", "{}"),
+            ("modules/apps/media/player.nix", "{}"),
+        ]);
+        let mut modules = Nixtractor::new(&mut data).await.extract_modules().await.unwrap();
+        modules.sort_by(|a, b| a.name.cmp(&b.name));
+        assert_eq!(modules.len(), 2);
+        assert_eq!((&*modules[0].name, &*modules[0].category), ("editor", "apps"));
+        assert_eq!((&*modules[1].name, &*modules[1].category), ("player", "apps/media"));
+        assert_eq!(modules[0].options.len(), 1);
+        assert!(modules[1].options.is_empty());
+    }
+
+    #[tokio::test]
+    async fn templates_exclude_generated_host_definitions() {
+        let mut data = tree(&[
+            ("flake.nix", "{}"),
+            ("flake-modules/packages.nix", "{}"),
+            ("flake-modules/hosts.nix", "{}"),
+            ("flake-modules/colmena-hosts.nix", "{}"),
+        ]);
+        let templates = Nixtractor::new(&mut data).await.extract_templates().await.unwrap();
+        let paths: Vec<_> = templates.iter().map(|item| item.path.as_str()).collect();
+        assert_eq!(paths, ["flake.nix", "flake-modules/packages.nix"]);
+    }
+
+    #[tokio::test]
+    async fn hosts_resolve_native_configuration_and_colmena_fallback() {
+        let mut data = tree(&[
+            ("hosts/native/configuration.nix", "{ imports = [ ./common.nix ]; }"),
+            ("hosts/native/hardware-configuration.nix", "{}"),
+            ("hosts/worker/configuration.nix", "{}"),
+            ("profiles/apps/native.nix", "{ config = { xanterella = { enabled = true; }; }; }"),
+            (
+                "flake-modules/hosts.nix",
+                r#"{ flake = { nixosConfigurations = { native = {
+                system = "aarch64-linux"; modules = [ ./native.nix ]; }; }; }; }"#,
+            ),
+            (
+                "flake-modules/colmena-hosts.nix",
+                "{ native = { deployment = { buildOnTarget = false; }; };
+                worker = { imports = [ ./worker.nix ]; deployment = { buildOnTarget = true; }; }; }",
+            ),
+        ]);
+        let mut hosts = Nixtractor::new(&mut data).await.extract_hosts().await.unwrap();
+        hosts.sort_by(|a, b| a.hostname.cmp(&b.hostname));
+        assert_eq!(hosts.len(), 2);
+        let native = &hosts[0];
+        assert_eq!((&*native.hostname, &*native.system), ("native", "aarch64-linux"));
+        assert!(!native.remote_deploy);
+        assert_eq!(native.hardware.len(), 1);
+        assert_eq!(native.profiles.len(), 1);
+        assert_eq!(native.options.len(), 1);
+        let worker = &hosts[1];
+        assert_eq!((&*worker.hostname, &*worker.system), ("worker", "x86_64-linux"));
+        assert!(worker.remote_deploy);
+        assert_eq!(worker.imports.len(), 1);
+        assert!(worker.hardware.is_empty());
+    }
+}

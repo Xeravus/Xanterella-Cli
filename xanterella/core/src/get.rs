@@ -85,8 +85,37 @@ mod tests {
                 })
             });
 
-        let mut xanterella = Xanterella::new(mock);
-        let result = xanterella.get_taildevices();
-        assert!(result.is_ok());
+        let result = Xanterella::new(mock).get_taildevices().unwrap();
+        assert!(result.devices.is_empty());
+    }
+
+    #[test]
+    fn failed_tailscale_command_reports_stderr() {
+        let mut mock = MockCommandRunner::new();
+        mock.expect_run_cmd().once().returning(|_, _, _| crate::test_helpers::mock_err("offline"));
+        let result = Xanterella::new(mock).get_taildevices();
+        assert!(matches!(result, Err(EventsFailed::Tailscale(message)) if message == "offline"));
+    }
+
+    #[test]
+    fn invalid_peer_data_reports_parse_error() {
+        let mut mock = MockCommandRunner::new();
+        mock.expect_run_cmd().once().returning(|_, _, _| crate::test_helpers::mock_ok(r#"{"Peer":[]}"#));
+        let result = Xanterella::new(mock).get_taildevices();
+        assert!(matches!(result, Err(EventsFailed::SerdeJson(_))));
+    }
+
+    #[test]
+    fn selects_first_address_of_available_matching_linux_peers() {
+        let devices = serde_json::from_value(serde_json::json!({"Peer": {
+            "available": {"HostName":"worker","OS":"linux","TailscaleIPs":["100.1.1.1","::1"]},
+            "busy": {"HostName":"worker","OS":"linux","TailscaleIPs":["100.1.1.2"]},
+            "other_os": {"HostName":"worker","OS":"windows","TailscaleIPs":["100.1.1.3"]},
+            "other_name": {"HostName":"other","OS":"linux","TailscaleIPs":["100.1.1.4"]}
+        }}))
+        .unwrap();
+        let active = HashSet::from(["100.1.1.2".to_owned()]);
+        let ips = Xanterella::<MockCommandRunner>::get_taildevices_specific(devices, "worker", &active);
+        assert_eq!(ips, ["100.1.1.1"]);
     }
 }

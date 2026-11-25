@@ -16,3 +16,4 @@ indexmap = { version = "2", features = ["serde"] }
 
 [dev-dependencies]
 sqlx = { version = "0.8.1", features = ["sqlite", "runtime-tokio", "macros"] }
+tower = { version = "0.5", features = ["util"] }

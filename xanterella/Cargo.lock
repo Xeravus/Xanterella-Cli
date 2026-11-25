@@ -3326,6 +3326,7 @@ dependencies = [
  "sqlx",
  "tokio",
  "tokio-stream",
+ "tower",
  "xanterella-core",
 ]
 

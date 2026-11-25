@@ -75,3 +75,7 @@ async fn main() {
 
     axum::serve(listener, app).await.expect("Failed to start Server");
 }
+
+#[cfg(test)]
+#[path = "../tests/support/router.rs"]
+mod router_integration;
