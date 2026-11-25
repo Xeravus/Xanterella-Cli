@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS modules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name TEXT NOT NULL UNIQUE,
+    desc TEXT NOT NULL,
+    category TEXT NOT NULL,
+    options TEXT NOT NULL DEFAULT '[]',
+    config TEXT NOT NULL DEFAULT '[]'
+);

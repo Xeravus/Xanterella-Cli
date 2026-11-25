@@ -1,0 +1,70 @@
+use prolyxena::engine::{
+    formater::write::Write,
+    generator::{
+        generate::{Generate, Modify},
+        query::SearchContent,
+        remove::{Delete, Remove},
+    },
+    lexer::vfs::FsData,
+};
+
+use crate::{EventsFailed, XanterellaInstall, xanterella::CommandRunner};
+
+impl<C: CommandRunner> XanterellaInstall<C> {
+    pub fn crylia_edit_start(&mut self) -> Result<(), EventsFailed> {
+        let mut config = FsData::new(&self.xanterella.load_config().target_directory);
+        self.crylia_add_hardware_conf(&mut config)?;
+        self.crylia_add_hardware_link(&mut config)?;
+        config.walk_tree().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
+        Ok(())
+    }
+    pub fn crylia_add_hardware_conf(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
+        if !self.xanterella.debug {
+            config.load().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
+            let hardware = self.get_hardware()?;
+            config
+                .generate_file("/hosts/crylia/hardware-configuration.nix", hardware)
+                .map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
+        }
+        Ok(())
+    }
+
+    pub fn crylia_add_hardware_link(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
+        if !self.xanterella.debug {
+            let file = config
+                .search_tree("hosts/crylia/configuration.nix")
+                .map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
+            file.insert("imports", "./hardware-configuration.nix")
+                .map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
+        }
+        Ok(())
+    }
+
+    pub fn crylia_edit_finish(&mut self) -> Result<(), EventsFailed> {
+        let mut config = FsData::new(&self.xanterella.load_config().target_directory);
+        self.crylia_remove_hardware_conf(&mut config)?;
+        self.crylia_remove_hardware_link(&mut config)?;
+        config.walk_tree().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
+        Ok(())
+    }
+    pub fn crylia_remove_hardware_conf(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
+        if !self.xanterella.debug {
+            config.load().map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
+            config
+                .delete_file("/hosts/crylia/hardware-configuration.nix")
+                .map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
+        }
+        Ok(())
+    }
+
+    pub fn crylia_remove_hardware_link(&mut self, config: &mut FsData) -> Result<(), EventsFailed> {
+        if !self.xanterella.debug {
+            let file = config
+                .search_tree("hosts/crylia/configuration.nix")
+                .map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
+            file.remove("imports", "./hardware-configuration.nix")
+                .map_err(|err| EventsFailed::Prolyxena(err.to_string()))?;
+        }
+        Ok(())
+    }
+}

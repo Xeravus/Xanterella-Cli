@@ -23,9 +23,12 @@
         };
       };
     };
-    specialArgs = {inherit inputs pkgs-new pkgs-unstable;};
+    specialArgs = {
+      inputs = inputs;
+      pkgs-new = pkgs-new;
+      pkgs-unstable = pkgs-unstable;
+    };
   };
-  # --- Xanterella Hosts Start ---
   xeravus = {
     deployment = {
       targetHost = null;
@@ -33,34 +36,32 @@
       buildOnTarget = true;
     };
     imports = [
-      ./hosts/xeravus/configuration.nix
-      ./profiles/ssh-keys.nix
+      ./../hosts/xeravus/configuration.nix
+      ./../profiles/ssh-keys.nix
     ];
   };
-  vicuna = {
+  xorus = {
     deployment = {
-      targetHost = "192.168.178.30";
+      targetHost = "192.168.178.69";
       targetUser = taruser;
       buildOnTarget = false;
       keys = commonSSHKeys;
     };
     imports = [
-      ./hosts/vicuna/configuration.nix
-      ./profiles/ssh-keys.nix
-      inputs.nixos-hardware.nixosModules.raspberry-pi-5
+      ./../hosts/xorus/configuration.nix
+      ./../profiles/ssh-keys.nix
     ];
   };
   lutik = {
     deployment = {
-      targetHost = "192.168.178.34";
+      targetHost = "lutik";
       targetUser = taruser;
       buildOnTarget = false;
       keys = commonSSHKeys;
     };
     imports = [
-      ./hosts/lutik/configuration.nix
-      ./profiles/ssh-keys.nix
+      ./../hosts/lutik/configuration.nix
+      ./../profiles/ssh-keys.nix
     ];
   };
-  # --- Xanterella Hosts End ---
 }

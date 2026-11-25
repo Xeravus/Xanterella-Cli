@@ -1,0 +1,19 @@
+[package]
+name = "xanterella-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+xanterella-core = { path = "../core" }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+prolyxena.workspace = true
+
+axum = "0.7"
+tokio-stream = { version = "0.1", features = ["sync"] }
+indexmap = { version = "2", features = ["serde"] }
+
+[dev-dependencies]
+sqlx = { version = "0.8.1", features = ["sqlite", "runtime-tokio", "macros"] }
+tower = { version = "0.5", features = ["util"] }
