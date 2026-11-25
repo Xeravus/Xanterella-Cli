@@ -156,7 +156,9 @@ impl SearchContent for FsData {
         if let FsNodes::Dir(map) = pointer {
             match map.get_mut(*file_name) {
                 Some(FsNodes::File { ast, .. }) => Ok(ast),
-                Some(FsNodes::Dir(_)) => Err(format!("Query-Fehler: Gesuchte Datei '{}' stellt sich als Ordner heraus", name)),
+                Some(FsNodes::Dir(_)) => {
+                    Err(format!("Query-Fehler: Gesuchte Datei '{}' stellt sich als Ordner heraus", name))
+                }
                 None => Err(format!("Query-Fehler: Ordner enthält die Datei '{}' nicht", name)),
             }
         } else {
