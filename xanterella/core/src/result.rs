@@ -17,13 +17,22 @@ pub enum EventsFailed {
     GitMerge(String),
     GitPr(String),
     GitReset(String),
+    GitPush(String),
+    GitPull(String),
+    GitInit(String),
+    GitRemote(String),
+    GitAdd(String),
 
     /// utils/Check.rs
     CheckNix(String),
 
+    /// utils/Colmena.rs
+    ColmenaApply(String),
+
     /// utils/Config.rs
     ConfigCreateDir(String),
     ConfigGenBasic(String),
+    ConfigSave(String),
 
     /// Installer
     /// installer/Ping.rs
@@ -52,10 +61,6 @@ pub enum EventsFailed {
     GetHardware(String),
     GetDrives(String),
 
-    /// installer/Inject.rs
-    InjectTailscale(String),
-    InjectWifi(String),
-
     /// Prolyxena
     Prolyxena(String),
 }
@@ -71,6 +76,7 @@ pub enum Events {
     RunGitPr,
     RunGitRollback,
     RunGitReset,
+    RunGitPush,
 
     OkGitCommit,
     OkGitCheckout,
@@ -79,11 +85,17 @@ pub enum Events {
     OkGitPr,
     OkGitRollback,
     OkGitReset,
+    OkGitPush,
 
     /// utils/Check.rs
     RunCheckNix,
 
     OkCheckNix,
+
+    /// utils/Colmena.rs
+    RunColmenaApply,
+
+    OkColmenaApply,
 
     /// utils/Config.rs
     RunConfigCreateDir,
@@ -153,11 +165,4 @@ pub enum Events {
 
     OkGetHardware,
     OkGetDrives,
-
-    /// installer/Inject.rs
-    RunInjectTailscale,
-    RunInjectWifi,
-
-    OkInjectTailscale,
-    OkInjectWifi,
 }

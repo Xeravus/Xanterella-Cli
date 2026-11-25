@@ -57,7 +57,11 @@ impl Query for NixValue {
                     i.query_exact_inner(path, result);
                 }
             }
-            NixValue::Apply(_, right) | NixValue::Group(right) => {
+            NixValue::Apply(left, right) => {
+                left.query_exact_inner(path, result);
+                right.query_exact_inner(path, result);
+            }
+            NixValue::Group(right) => {
                 right.query_exact_inner(path, result);
             }
             _ => {}
@@ -152,8 +156,8 @@ impl SearchContent for FsData {
         if let FsNodes::Dir(map) = pointer {
             match map.get_mut(*file_name) {
                 Some(FsNodes::File { ast, .. }) => Ok(ast),
-                Some(FsNodes::Dir(_)) => Err("Query-Fehler: Gesuchte Datei stellt sich als Ordner heraus".to_string()),
-                None => Err("Query-Fehler: Ordner enthält die Datei nicht".to_string()),
+                Some(FsNodes::Dir(_)) => Err(format!("Query-Fehler: Gesuchte Datei '{}' stellt sich als Ordner heraus", name)),
+                None => Err(format!("Query-Fehler: Ordner enthält die Datei '{}' nicht", name)),
             }
         } else {
             Err("Query-Fehler: Versucht einen Ordner in einer Datei zu finden".to_string())
@@ -214,7 +218,7 @@ impl SearchObjekt for FsNodes {
         if let FsNodes::Dir(map) = pointer {
             Ok(map.keys().map(|f| f.to_string()).collect())
         } else {
-            Err("Search-Fehler: Ordner nicht gefunden".to_string())
+            Err(format!("Search-Fehler: Ordner '{}' nicht gefunden", name))
         }
     }
 
@@ -464,7 +468,7 @@ mod tests {
         let result = root.dir_list_files("config.nix");
         assert!(result.is_err());
         assert!(
-            result.clone().unwrap_err().contains("Ordner nicht gefunden")
+            result.clone().unwrap_err().contains("Ordner 'config.nix' nicht gefunden")
                 || result.unwrap_err().contains("Ordner in einer Datei")
         );
     }
@@ -487,6 +491,6 @@ mod tests {
         fs_data.fsnodes = FsNodes::Dir(IndexMap::from([("subfolder".to_string(), FsNodes::Dir(IndexMap::new()))]));
         let result = fs_data.search_tree("subfolder");
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Query-Fehler: Gesuchte Datei stellt sich als Ordner heraus");
+        assert_eq!(result.unwrap_err(), "Query-Fehler: Gesuchte Datei 'subfolder' stellt sich als Ordner heraus");
     }
 }

@@ -1,7 +1,6 @@
-use std::collections::HashSet;
-use std::env;
+use std::collections::{HashMap, HashSet};
 
-use crate::prelude::*;
+use crate::{EventsFailed, Xanterella, xanterella::CommandRunner};
 
 pub enum User {
     Root,
@@ -29,40 +28,20 @@ pub struct DeviceInfo {
     pub os: String,
 }
 
-pub trait Get {
-    fn get_path(&mut self, path: Paths) -> String;
-    fn get_taildevices(&self) -> Result<Taildevices, EventsFailed>;
-    fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String>;
-}
-
-impl Get for Xanterella {
-    fn get_path(&mut self, path: Paths) -> String {
-        let home = if self.home.is_empty() {
-            env::var("HOME").expect("Konnte die Home Varialbe nichht extrahieren")
-        } else {
-            self.home.clone()
-        };
-        let config = PathBuf::from(&home).join(".config").join("xanterella");
-        let result: PathBuf = match path {
-            Paths::Nixconf => self.path.as_str().into(),
-            Paths::Config => config,
-        };
-        result.to_str().expect("[ FAILED ] - Get Path is fehlgeschlagen").to_string()
-    }
-
-    fn get_taildevices(&self) -> Result<Taildevices, EventsFailed> {
-        let cmd = Command::new("tailscale")
-            .args(["status", "--json"])
-            .output()
+impl<C: CommandRunner> Xanterella<C> {
+    pub fn get_taildevices(&self) -> Result<Taildevices, EventsFailed> {
+        let cmd = self
+            .execute("tailscale", &["status", "--json"], "")
             .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
-
         if !cmd.status.success() {
             return Err(EventsFailed::Tailscale(String::from_utf8_lossy(&cmd.stderr).to_string()));
         }
         serde_json::from_slice::<Taildevices>(&cmd.stdout).map_err(|err| EventsFailed::SerdeJson(err.to_string()))
     }
 
-    fn get_taildevices_specific(devices: Taildevices, name: &str, active_installs: &HashSet<String>) -> Vec<String> {
+    pub fn get_taildevices_specific(
+        devices: Taildevices, name: &str, active_installs: &HashSet<String>,
+    ) -> Vec<String> {
         let mut ips: Vec<String> = vec![];
         for (_nodekey, device) in devices.devices {
             if device.name == name && device.os == "linux" {
@@ -73,5 +52,65 @@ impl Get for Xanterella {
             }
         }
         ips
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        os::unix::process::ExitStatusExt,
+        process::{ExitStatus, Output},
+    };
+
+    use super::*;
+    use crate::xanterella::MockCommandRunner;
+
+    #[test]
+    fn test_mock_get_taildevices() {
+        let mut mock = MockCommandRunner::new();
+
+        mock.expect_run_cmd()
+            .withf(|program, args, _dir| program == "tailscale" && args == ["status", "--json"])
+            .times(1)
+            .returning(|_, _, _| {
+                Ok(Output {
+                    status: ExitStatus::from_raw(0),
+                    stdout: br#"{"Peer": {}}"#.to_vec(),
+                    stderr: Vec::new(),
+                })
+            });
+
+        let result = Xanterella::new(mock).get_taildevices().unwrap();
+        assert!(result.devices.is_empty());
+    }
+
+    #[test]
+    fn failed_tailscale_command_reports_stderr() {
+        let mut mock = MockCommandRunner::new();
+        mock.expect_run_cmd().once().returning(|_, _, _| crate::test_helpers::mock_err("offline"));
+        let result = Xanterella::new(mock).get_taildevices();
+        assert!(matches!(result, Err(EventsFailed::Tailscale(message)) if message == "offline"));
+    }
+
+    #[test]
+    fn invalid_peer_data_reports_parse_error() {
+        let mut mock = MockCommandRunner::new();
+        mock.expect_run_cmd().once().returning(|_, _, _| crate::test_helpers::mock_ok(r#"{"Peer":[]}"#));
+        let result = Xanterella::new(mock).get_taildevices();
+        assert!(matches!(result, Err(EventsFailed::SerdeJson(_))));
+    }
+
+    #[test]
+    fn selects_first_address_of_available_matching_linux_peers() {
+        let devices = serde_json::from_value(serde_json::json!({"Peer": {
+            "available": {"HostName":"worker","OS":"linux","TailscaleIPs":["100.1.1.1","::1"]},
+            "busy": {"HostName":"worker","OS":"linux","TailscaleIPs":["100.1.1.2"]},
+            "other_os": {"HostName":"worker","OS":"windows","TailscaleIPs":["100.1.1.3"]},
+            "other_name": {"HostName":"other","OS":"linux","TailscaleIPs":["100.1.1.4"]}
+        }}))
+        .unwrap();
+        let active = HashSet::from(["100.1.1.2".to_owned()]);
+        let ips = Xanterella::<MockCommandRunner>::get_taildevices_specific(devices, "worker", &active);
+        assert_eq!(ips, ["100.1.1.1"]);
     }
 }

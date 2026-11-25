@@ -1,7 +1,4 @@
-mod commands;
-mod execute;
-
-use commands::cli_parse;
+use xanterella_cli::commands::cli_parse;
 
 #[tokio::main]
 pub async fn main() {

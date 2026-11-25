@@ -1,28 +1,13 @@
+use std::{
+    io::Result as IoResult,
+    path::PathBuf,
+    process::{Command, Output},
+};
+
 use serde::Serialize;
 use tokio::sync::broadcast::*;
 
-use crate::config::Config;
-use crate::prelude::*;
-
-#[derive(Debug, Clone)]
-pub struct Xanterella {
-    pub path: String,
-    pub home: String,
-    pub fast: bool,
-    pub debug: bool,
-    pub automate: bool,
-    pub sender: Option<Sender<EventFormat>>,
-}
-
-impl PartialEq for Xanterella {
-    fn eq(&self, other: &Self) -> bool {
-        self.path == other.path
-            && self.home == other.home
-            && self.fast == other.fast
-            && self.debug == other.debug
-            && self.automate == other.automate
-    }
-}
+use crate::{Events, EventsFailed, config::AppPaths};
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct EventFormat {
@@ -37,30 +22,61 @@ pub enum EventState {
     Failed,
 }
 
-impl Xanterella {
+#[cfg_attr(test, mockall::automock)]
+pub trait CommandRunner {
+    fn run_cmd(&self, program: &str, args: &[String], dir: &str) -> IoResult<Output>;
+}
+
+pub struct RealCommandRunner;
+
+impl CommandRunner for RealCommandRunner {
+    fn run_cmd(&self, program: &str, args: &[String], dir: &str) -> IoResult<Output> {
+        if !dir.is_empty() {
+            Command::new(program).args(args).current_dir(dir).output()
+        } else {
+            Command::new(program).args(args).output()
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Xanterella<C: CommandRunner> {
+    pub config: AppPaths,
+    pub fast: bool,
+    pub debug: bool,
+    pub automate: bool,
+    pub sender: Option<Sender<EventFormat>>,
+    pub runner: C,
+}
+
+impl<C: CommandRunner> PartialEq for Xanterella<C> {
+    fn eq(&self, other: &Self) -> bool {
+        self.config == other.config
+            && self.fast == other.fast
+            && self.debug == other.debug
+            && self.automate == other.automate
+    }
+}
+
+impl<C: CommandRunner> Xanterella<C> {
+    pub fn execute<T: AsRef<str>>(&self, program: &str, args: &[T], dir: &str) -> IoResult<Output> {
+        let str_args: Vec<String> = args.iter().map(|a| a.as_ref().to_string()).collect();
+        self.runner.run_cmd(program, &str_args, dir)
+    }
+
     #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
+    pub fn new(runner: C) -> Self {
         Xanterella {
-            path: String::new(),
-            home: String::new(),
+            config: AppPaths {
+                config_file: PathBuf::new(),
+                database_url: String::new(),
+            },
             fast: false,
             debug: false,
             automate: false,
             sender: None,
+            runner,
         }
-    }
-
-    pub fn set_path(&mut self, value: &str) -> Result<(), EventsFailed> {
-        if !value.is_empty() {
-            self.path = value.to_string();
-        } else {
-            self.path = self.config_parse()?.flake;
-        }
-        Ok(())
-    }
-
-    pub fn set_home(&mut self, value: &str) {
-        self.home = value.to_string();
     }
 
     pub fn set_fast(&mut self, value: bool) {
@@ -79,6 +95,17 @@ impl Xanterella {
         self.sender = Some(value);
     }
 
+    pub fn set_flake_path(&mut self, value: &str) -> Result<(), EventsFailed> {
+        let mut pre_change = self.load_config();
+        pre_change.target_directory = value.to_string();
+        self.save_config(pre_change)?;
+        Ok(())
+    }
+
+    pub fn set_config(&mut self, config: AppPaths) {
+        self.config = config;
+    }
+
     pub fn log_event(&mut self, event: Events) {
         let (state, name): (EventState, &str) = match event {
             // Utils
@@ -90,6 +117,7 @@ impl Xanterella {
             Events::RunGitPr => (EventState::Run, "Git Pull Request"),
             Events::RunGitRollback => (EventState::Run, "Git Rollback"),
             Events::RunGitReset => (EventState::Run, "Git Reset"),
+            Events::RunGitPush => (EventState::Run, "Git Push"),
 
             Events::OkGitCommit => (EventState::Finish, "Git Commit"),
             Events::OkGitCheckout => (EventState::Finish, "Git Checkout"),
@@ -98,10 +126,15 @@ impl Xanterella {
             Events::OkGitPr => (EventState::Finish, "Git Pull Request"),
             Events::OkGitRollback => (EventState::Run, "Git Rollback"),
             Events::OkGitReset => (EventState::Run, "Git Reset"),
+            Events::OkGitPush => (EventState::Run, "Git Push"),
             // utils/Check.rs
             Events::RunCheckNix => (EventState::Run, "Nix Flake Check"),
 
             Events::OkCheckNix => (EventState::Finish, "Nix Flake Check"),
+            // utils/Colmena.rs
+            Events::RunColmenaApply => (EventState::Run, "Colmena Apply"),
+
+            Events::OkColmenaApply => (EventState::Finish, "Colmena Apply"),
             // utils/Config.rs
             Events::RunConfigCreateDir => (EventState::Run, "Create Config Dir"),
             Events::RunConfigGenBasic => (EventState::Run, "Create basic Config"),
@@ -165,12 +198,6 @@ impl Xanterella {
 
             Events::OkGetHardware => (EventState::Finish, "Get Hardware"),
             Events::OkGetDrives => (EventState::Finish, "Get Drives"),
-            // installer/Inject.rs
-            Events::RunInjectTailscale => (EventState::Run, "Inject Tailscale"),
-            Events::RunInjectWifi => (EventState::Run, "Inject Wifi"),
-
-            Events::OkInjectTailscale => (EventState::Finish, "Inject Tailscale"),
-            Events::OkInjectWifi => (EventState::Finish, "Inject Wifi"),
         };
 
         if let Some(ref tx) = self.sender {
@@ -185,77 +212,61 @@ impl Xanterella {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn test_core_xanterella_set_core() {
-        let data = Xanterella::new();
-
-        assert!(matches!(
-            data,
-            Xanterella {
-                path: _,
-                home: _,
-                fast: _,
-                debug: _,
-                automate: _,
-                sender: _,
-            }
-        ));
-        assert!(data.path.is_empty());
-        assert!(data.home.is_empty());
-        assert!(data.sender.is_none());
-
-        assert_eq!(data.fast, false);
-        assert_eq!(data.debug, false);
-        assert_eq!(data.automate, false);
-    }
 
     #[test]
-    fn test_core_xanterella_set_path() {
-        let mut data = Xanterella::new();
+    fn test_setter() {
+        let mut xanterella = Xanterella::new(RealCommandRunner);
 
-        let _ = data.set_path("test.path");
+        assert!(!xanterella.fast);
+        assert!(!xanterella.debug);
+        assert!(!xanterella.automate);
+        assert_eq!(xanterella.config.config_file, PathBuf::new());
+        assert_eq!(xanterella.config.database_url, String::new());
 
-        assert!(!data.path.is_empty());
-        assert_eq!(data.path, String::from("test.path"));
-    }
+        xanterella.set_fast(true);
 
-    #[test]
-    fn test_core_xanterella_set_home() {
-        let mut data = Xanterella::new();
+        assert!(xanterella.fast);
+        assert!(!xanterella.debug);
+        assert!(!xanterella.automate);
+        assert_eq!(xanterella.config.config_file, PathBuf::new());
+        assert_eq!(xanterella.config.database_url, String::new());
 
-        data.set_home("test.path");
+        xanterella.set_debug(true);
 
-        assert!(!data.home.is_empty());
-        assert_eq!(data.home, String::from("test.path"));
-    }
+        assert!(xanterella.fast);
+        assert!(xanterella.debug);
+        assert!(!xanterella.automate);
+        assert_eq!(xanterella.config.config_file, PathBuf::new());
+        assert_eq!(xanterella.config.database_url, String::new());
 
-    #[test]
-    fn test_core_xanterella_set_fast() {
-        let mut data = Xanterella::new();
+        xanterella.set_automate(true);
 
-        data.set_fast(true);
+        assert!(xanterella.fast);
+        assert!(xanterella.debug);
+        assert!(xanterella.automate);
+        assert_eq!(xanterella.config.config_file, PathBuf::new());
+        assert_eq!(xanterella.config.database_url, String::new());
 
-        assert_eq!(data.fast, true);
-        assert_ne!(data.fast, false);
-    }
+        xanterella.set_config(AppPaths {
+            config_file: PathBuf::from("test"),
+            database_url: String::new(),
+        });
 
-    #[test]
-    fn test_core_xanterella_set_debug() {
-        let mut data = Xanterella::new();
+        assert!(xanterella.fast);
+        assert!(xanterella.debug);
+        assert!(xanterella.automate);
+        assert_eq!(xanterella.config.config_file, PathBuf::from("test"));
+        assert_eq!(xanterella.config.database_url, String::new());
 
-        data.set_debug(true);
+        xanterella.set_config(AppPaths {
+            config_file: PathBuf::from("test"),
+            database_url: String::from("test"),
+        });
 
-        assert_eq!(data.debug, true);
-        assert_ne!(data.debug, false);
-    }
-
-    #[test]
-    fn test_core_xanterella_set_automate() {
-        let mut data = Xanterella::new();
-
-        data.set_automate(true);
-
-        assert_eq!(data.automate, true);
-        assert_ne!(data.automate, false);
+        assert!(xanterella.fast);
+        assert!(xanterella.debug);
+        assert!(xanterella.automate);
+        assert_eq!(xanterella.config.config_file, PathBuf::from("test"));
+        assert_eq!(xanterella.config.database_url, String::from("test"));
     }
 }

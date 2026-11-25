@@ -1,4 +1,4 @@
-use std::{convert::Infallible, sync::Arc};
+use std::{convert::Infallible, fs::remove_dir_all, sync::Arc};
 
 use axum::{
     Json, Router,
@@ -11,15 +11,29 @@ use axum::{
 };
 use prolyxena::engine::lexer::vfs::*;
 use serde_json::{Value, json};
-use tokio_stream::Stream;
-use tokio_stream::{StreamExt, wrappers::BroadcastStream};
+use tokio_stream::{Stream, StreamExt, wrappers::BroadcastStream};
 use xanterella_core::{
-    Ping, Xanterella, XanterellaInstall,
+    Xanterella, XanterellaInstall,
     prolyxena::Nixtractor,
-    xanterella::{EventFormat, EventState},
+    xanterella::{EventFormat, EventState, RealCommandRunner},
 };
 
-use crate::{ApiError, AppState, hosts::*, modules::*, profiles::*};
+use crate::{
+    ApiError, AppState,
+    config::check_config,
+    deploy::{deploy_all, deploy_selected},
+    generate::generate_config,
+    hosts::{
+        check_host, create_host, delete_host, host_add_option, host_add_profile, host_remove_option,
+        host_remove_profile, list_hosts,
+    },
+    modules::{check_modul, create_modul, delete_modul, list_modules},
+    profiles::{
+        check_profile, create_profile, delete_profile, list_profiles, profile_add_option, profile_remove_option,
+    },
+    raw::{check_raw, create_raw, delete_raw, list_raw},
+    templates::{check_template, create_template, delete_template, list_templates},
+};
 
 pub fn create_app(state: Arc<AppState>) -> Router {
     Router::new()
@@ -38,6 +52,14 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/profiles/:name/option", post(profile_add_option).delete(profile_remove_option))
         .route("/modules", get(list_modules).post(create_modul))
         .route("/modules/:name", get(check_modul).delete(delete_modul))
+        .route("/templates", get(list_templates).post(create_template))
+        .route("/templates/:name", get(check_template).delete(delete_template))
+        .route("/raw", get(list_raw).post(create_raw))
+        .route("/raw/:name", get(check_raw).delete(delete_raw))
+        .route("/deploy", get(deploy_all).post(deploy_selected))
+        .route("/config/check", get(check_config))
+        .route("/generate", get(generate_config))
+        .route("/wipe", get(wipe_config))
         .with_state(state)
 }
 
@@ -58,7 +80,7 @@ pub async fn event_stream(State(state): State<Arc<AppState>>) -> Sse<impl Stream
 }
 
 pub async fn get_ping(State(state): State<Arc<AppState>>, Path(ip): Path<String>) -> Result<Json<Value>, ApiError> {
-    let xanterella = Xanterella::new();
+    let xanterella = Xanterella::new(RealCommandRunner);
     let mut install = XanterellaInstall::new(xanterella);
     install.xanterella.set_sender(state.tx.clone());
     install.set_ip(&ip);
@@ -71,6 +93,18 @@ pub async fn get_ping(State(state): State<Arc<AppState>>, Path(ip): Path<String>
             "ip": ip,
         }))),
         Err(_) => Err(ApiError::InternalError),
+    }
+}
+
+pub async fn wipe_config(State(state): State<Arc<AppState>>) -> Result<Json<Value>, ApiError> {
+    match remove_dir_all(&state.config.target_directory) {
+        Ok(_) => Ok(Json(json!({
+            "wipe": "success"
+        }))),
+        Err(err) => {
+            eprintln!("Wipe-Fehler: {}", err);
+            Err(ApiError::InternalError)
+        }
     }
 }
 
@@ -87,7 +121,7 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
         step: "Extract of Files".to_string(),
     });
 
-    let mut fs_data = FsData::new("/home/cato/xanterella/config");
+    let mut fs_data = FsData::new(&state.config.target_directory);
     fs_data.load().map_err(|err| {
         eprintln!("Extractions-Fehler: VFS Init Fehler: '{}'", err);
         ApiError::InternalError
@@ -108,6 +142,11 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
         ApiError::InternalError
     })?;
 
+    let templates = extractor.extract_templates().await.map_err(|err| {
+        eprintln!("Extractions-Fehler: Templates: \n{}", err);
+        ApiError::InternalError
+    })?;
+
     let _ = state.tx.send(EventFormat {
         state: EventState::Finish,
         step: "Extraction of Files".to_string(),
@@ -119,7 +158,21 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
     });
 
     for h in &hosts {
-        if let Err(e) = state.db.add_host(&h.hostname, &h.ip, h.profiles.clone(), h.options.clone()).await {
+        if let Err(e) = state
+            .db
+            .add_host(
+                &h.hostname,
+                &h.ip,
+                h.system.clone(),
+                h.remote_deploy,
+                h.profiles.clone(),
+                h.hardware.clone(),
+                h.options.clone(),
+                h.config.clone(),
+                h.imports.clone(),
+            )
+            .await
+        {
             eprintln!("Sync-Fehler: Host '{}': {}", h.hostname, e);
         }
     }
@@ -131,8 +184,14 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
     }
 
     for m in &modules {
-        if let Err(e) = state.db.add_modul(&m.name, &m.desc, &m.category, m.options.clone()).await {
+        if let Err(e) = state.db.add_modul(&m.name, &m.desc, &m.category, m.options.clone(), m.config.clone()).await {
             eprintln!("Sync-Fehler: Modul '{}': {}", m.name, e);
+        }
+    }
+
+    for t in &templates {
+        if let Err(e) = state.db.add_template(&t.name, &t.path, t.config.clone()).await {
+            eprintln!("Sync-Fehler: Template '{}': {}", t.name, e);
         }
     }
 
@@ -143,7 +202,7 @@ pub async fn extract_configs(State(state): State<Arc<AppState>>) -> Result<Json<
 
     Ok(Json(json!({
         "status": "success",
-        "message": format!("Synchronisiert: {} Hosts, {} Profile, {} Module", hosts.len(), profiles.len(), modules.len())
+        "message": format!("Synchronisiert: {} Hosts, {} Profiles, {} Modules, {} Templates", hosts.len(), profiles.len(), modules.len(), templates.len())
     })))
 }
 
@@ -170,34 +229,25 @@ pub async fn clear(State(state): State<Arc<AppState>>) -> Result<Json<Value>, Ap
 
 #[cfg(test)]
 mod tests {
-    use tokio::sync::broadcast;
-    use xanterella_core::database::db::Database;
 
     use super::*;
-
-    async fn test_state() -> Arc<AppState> {
-        let (tx, _rx) = broadcast::channel(100);
-        let db = Database::init("sqlite::memory:").await.unwrap();
-        Arc::new(AppState {
-            tx,
-            db,
-        })
-    }
+    use crate::test_helper::tests_utils::test_state;
 
     #[tokio::test]
     async fn test_api_clear_db() {
         let state = test_state().await;
 
-        // Füge einen Dummy-Host hinzu, um zu testen, ob er gelöscht wird
-        state.db.add_host("delete-me", "0.0.0.0", vec![], vec![]).await.unwrap();
+        state
+            .db
+            .add_host("delete-me", "0.0.0.0", "x86-64_linux".to_string(), true, vec![], vec![], vec![], vec![], vec![])
+            .await
+            .unwrap();
 
-        // Clear aufrufen
         let app_state = State(state.clone());
         let res = clear(app_state).await;
 
         assert!(res.is_ok());
 
-        // Prüfen ob die DB leer ist
         let hosts = state.db.list_hosts().await.unwrap();
         assert!(hosts.is_empty());
     }
