@@ -4,8 +4,6 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use indexmap::IndexMap;
-use prolyxena::engine::{core::NixValue, formater::core::Format};
 use serde::Serialize;
 use serde_json::{Value, json};
 use xanterella_core::{
@@ -14,7 +12,7 @@ use xanterella_core::{
     xanterella::{EventFormat, EventState},
 };
 
-use crate::{ApiError, AppState};
+use crate::{ApiError, AppState, NixValuesExtract};
 
 #[derive(Serialize)]
 pub struct ApiProfilesResponse {
@@ -32,26 +30,11 @@ pub struct ProfilesResponse {
 
 impl From<DBProfile> for ProfilesResponse {
     fn from(db_profile: DBProfile) -> Self {
-        let process_values = |vec: &Vec<serde_json::Value>| {
-            vec.iter()
-                .map(|val| {
-                    if let Ok(nix_ast) = serde_json::from_value::<NixValue>(val.clone()) {
-                        return nix_ast.format_nix(0);
-                    }
-                    if let Ok(map) = serde_json::from_value::<IndexMap<String, NixValue>>(val.clone()) {
-                        return NixValue::AttrSet(map).format_nix(0);
-                    }
-                    format!("Deserialisierungs-Fehler beim Lesen. \n Ursprüngliches JSON: {} ", val)
-                })
-                .collect::<Vec<String>>()
-                .join("\n")
-        };
-
         Self {
             id: db_profile.id,
             name: db_profile.name,
             dir: db_profile.dir,
-            options: process_values(&db_profile.options.0),
+            options: db_profile.options.0.format_nix_values(),
         }
     }
 }

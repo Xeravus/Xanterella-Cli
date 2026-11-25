@@ -4,8 +4,6 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use indexmap::IndexMap;
-use prolyxena::engine::{core::NixValue, formater::core::Format};
 use serde::Serialize;
 use serde_json::{Value, json};
 use xanterella_core::{
@@ -14,7 +12,7 @@ use xanterella_core::{
     xanterella::{EventFormat, EventState},
 };
 
-use crate::{ApiError, AppState};
+use crate::{ApiError, AppState, NixValuesExtract};
 
 #[derive(Serialize)]
 pub struct ApiHostsResponse {
@@ -38,32 +36,17 @@ pub struct HostsResponse {
 
 impl From<DBHost> for HostsResponse {
     fn from(db_host: DBHost) -> Self {
-        let process_values = |vec: &Vec<serde_json::Value>| {
-            vec.iter()
-                .map(|val| {
-                    if let Ok(nix_ast) = serde_json::from_value::<NixValue>(val.clone()) {
-                        return nix_ast.format_nix(0);
-                    }
-                    if let Ok(map) = serde_json::from_value::<IndexMap<String, NixValue>>(val.clone()) {
-                        return NixValue::AttrSet(map).format_nix(0);
-                    }
-                    format!("Deserialisierungs-Fehler beim Lesen. \n Ursprüngliches JSON: {} ", val)
-                })
-                .collect::<Vec<String>>()
-                .join("\n")
-        };
-
         Self {
             id: db_host.id,
             hostname: db_host.hostname,
             ip: db_host.ip,
             system: db_host.system,
             remote_deploy: db_host.remote_deploy,
-            profiles: process_values(&db_host.profiles.0),
-            hardware: process_values(&db_host.hardware.0),
-            options: process_values(&db_host.options.0),
-            config: process_values(&db_host.config.0),
-            imports: process_values(&db_host.imports.0),
+            profiles: db_host.profiles.0.format_nix_values(),
+            hardware: db_host.hardware.0.format_nix_values(),
+            options: db_host.options.0.format_nix_values(),
+            config: db_host.config.0.format_nix_values(),
+            imports: db_host.imports.0.format_nix_values(),
         }
     }
 }

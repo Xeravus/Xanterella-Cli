@@ -12,6 +12,8 @@ pub mod test_helper;
 use std::sync::Arc;
 
 use axum::{Json, http::StatusCode, response::IntoResponse};
+use indexmap::IndexMap;
+use prolyxena::engine::{core::NixValue, formater::core::Format};
 use serde_json::json;
 use tokio::sync::broadcast;
 use xanterella_core::{
@@ -49,6 +51,27 @@ impl IntoResponse for ApiError {
             "error": error_msg,
         }));
         (status, body).into_response()
+    }
+}
+
+pub(crate) trait NixValuesExtract {
+    fn format_nix_values(&self) -> String;
+}
+
+impl NixValuesExtract for [serde_json::Value] {
+    fn format_nix_values(&self) -> String {
+        self.iter()
+            .map(|val| {
+                if let Ok(nix_ast) = serde_json::from_value::<NixValue>(val.clone()) {
+                    return nix_ast.format_nix(0);
+                }
+                if let Ok(map) = serde_json::from_value::<IndexMap<String, NixValue>>(val.clone()) {
+                    return NixValue::AttrSet(map).format_nix(0);
+                }
+                format!("Deserialisierungs-Fehler beim Lesen. \n Ursprüngliches JSON: {}", val)
+            })
+            .collect::<Vec<String>>()
+            .join("\n")
     }
 }
 

@@ -4,8 +4,6 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use indexmap::IndexMap;
-use prolyxena::engine::{core::NixValue, formater::core::Format};
 use serde::Serialize;
 use serde_json::{Value, json};
 use xanterella_core::{
@@ -14,7 +12,7 @@ use xanterella_core::{
     xanterella::{EventFormat, EventState},
 };
 
-use crate::{ApiError, AppState};
+use crate::{ApiError, AppState, NixValuesExtract};
 
 #[derive(Serialize)]
 pub struct ApiModulesResponse {
@@ -34,28 +32,13 @@ pub struct ModulesResponse {
 
 impl From<DBModul> for ModulesResponse {
     fn from(db_modul: DBModul) -> Self {
-        let process_values = |vec: &Vec<serde_json::Value>| {
-            vec.iter()
-                .map(|val| {
-                    if let Ok(nix_ast) = serde_json::from_value::<NixValue>(val.clone()) {
-                        return nix_ast.format_nix(0);
-                    }
-                    if let Ok(map) = serde_json::from_value::<IndexMap<String, NixValue>>(val.clone()) {
-                        return NixValue::AttrSet(map).format_nix(0);
-                    }
-                    format!("Deserialisierungs-Fehler beim Lesen. \n Ursprüngliches JSON: {} ", val)
-                })
-                .collect::<Vec<String>>()
-                .join("\n")
-        };
-
         Self {
             id: db_modul.id,
             name: db_modul.name,
             desc: db_modul.desc,
             category: db_modul.category,
-            options: process_values(&db_modul.options.0),
-            config: process_values(&db_modul.config.0),
+            options: db_modul.options.0.format_nix_values(),
+            config: db_modul.config.0.format_nix_values(),
         }
     }
 }

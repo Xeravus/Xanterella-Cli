@@ -5,8 +5,7 @@ mod support;
 
 use mockito::{Matcher, Server};
 use serde_json::json;
-use xanterella_cli::{execute::execute_extract};
-use xanterella_cli::server::import::import;
+use xanterella_cli::{execute::execute_extract, server::import::import};
 
 #[tokio::test]
 async fn imports_each_resource_from_a_real_flake() {
