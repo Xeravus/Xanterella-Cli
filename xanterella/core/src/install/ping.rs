@@ -1,5 +1,3 @@
-use std::process::Command;
-
 use crate::{Events, EventsFailed, User, XanterellaInstall, xanterella::CommandRunner};
 
 impl<C: CommandRunner> XanterellaInstall<C> {
@@ -26,10 +24,8 @@ impl<C: CommandRunner> XanterellaInstall<C> {
 
         if !self.xanterella.debug {
             let ssh_args = &self.get_sshstring(User::Root);
-            let cmd = self
-                .xanterella
-                .execute("ssh", &ssh_args, "")
-                .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+            let cmd =
+                self.xanterella.execute("ssh", ssh_args, "").map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
                 return Err(EventsFailed::PingSsh(String::from_utf8_lossy(&cmd.stderr).to_string()));
@@ -43,15 +39,6 @@ impl<C: CommandRunner> XanterellaInstall<C> {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        os::unix::process::ExitStatusExt,
-        process::{ExitStatus, Output},
-    };
-
-    use mockall::{
-        automock,
-        predicate::{always, eq},
-    };
 
     use super::*;
     use crate::{Xanterella, test_helpers::mock_ok, xanterella::MockCommandRunner};
@@ -65,7 +52,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         let result = xanterellainstall.ping();
@@ -85,7 +72,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         let result = xanterellainstall.ping_ssh();

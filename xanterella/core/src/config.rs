@@ -6,7 +6,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Events, EventsFailed, Xanterella, xanterella::CommandRunner};
+use crate::{EventsFailed, Xanterella, xanterella::CommandRunner};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct AppPaths {

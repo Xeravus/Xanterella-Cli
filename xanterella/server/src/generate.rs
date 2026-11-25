@@ -82,8 +82,10 @@ pub async fn generate_config(State(state): State<Arc<AppState>>) -> Result<Json<
         prolyxena.set_sort(true);
         let mut name = String::with_capacity(64);
         let mut colmena_string = String::new();
+        #[allow(unused)]
         /// Soll später mit einer Template verbunden werden
         let mut hosts_string = String::new();
+        #[allow(unused)]
         /// Soll später mit einer Template verbunden werden
 
         colmena_string.push_str("{inputs,systemarch,taruser,commonSSHKeys,pkgs-new,pkgs-unstable,pkgs-bleeding}:{meta={nixpkgs = import inputs.nixpkgs { system = systemarch; config = { allowUnfree = true; }; purity = \"impure\"; }; specialArgs = { inputs = inputs; pkgs-new = pkgs-new; pkgs-unstable = pkgs-unstable; pkgs-bleeding = pkgs-bleeding; }; };");

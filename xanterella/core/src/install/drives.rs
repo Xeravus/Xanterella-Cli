@@ -1,5 +1,3 @@
-use std::process::Command;
-
 use crate::{Events, EventsFailed, User, XanterellaInstall, xanterella::CommandRunner};
 
 #[derive(serde::Deserialize, Debug, Clone, PartialEq)]
@@ -111,7 +109,7 @@ impl<C: CommandRunner> XanterellaInstall<C> {
             let mut ssh_args = self.get_sshstring(User::Root);
             ssh_args.push(format!(
                 "parted -s /dev/{} mklabel gpt mkpart disk-main-boot fat32 1MiB 512MiB set 1 esp on",
-                &self.drive
+                self.drive
             ));
             let cmd = self
                 .xanterella
@@ -132,7 +130,7 @@ impl<C: CommandRunner> XanterellaInstall<C> {
 
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
-            ssh_args.push(format!("parted -s /dev/{} mkpart disk-main-root extr 512MiB 100%", &self.drive));
+            ssh_args.push(format!("parted -s /dev/{} mkpart disk-main-root extr 512MiB 100%", self.drive));
             let cmd = self
                 .xanterella
                 .execute("ssh", &ssh_args, "")
@@ -212,7 +210,7 @@ impl<C: CommandRunner> XanterellaInstall<C> {
 
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
-            ssh_args.push(format!("mount {} /mnt/boot", &self.get_part_name(1)));
+            ssh_args.push(format!("mount {} /mnt/boot", self.get_part_name(1)));
             let cmd = self
                 .xanterella
                 .execute("ssh", &ssh_args, "")
@@ -232,7 +230,7 @@ impl<C: CommandRunner> XanterellaInstall<C> {
 
         if !self.xanterella.debug {
             let mut ssh_args = self.get_sshstring(User::Root);
-            ssh_args.push(format!("mount {} /mnt", &self.get_part_name(2)));
+            ssh_args.push(format!("mount {} /mnt", self.get_part_name(2)));
             let cmd = self
                 .xanterella
                 .execute("ssh", &ssh_args, "")
@@ -250,15 +248,6 @@ impl<C: CommandRunner> XanterellaInstall<C> {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        os::unix::process::ExitStatusExt,
-        process::{ExitStatus, Output},
-    };
-
-    use mockall::{
-        automock,
-        predicate::{always, eq},
-    };
 
     use super::*;
     use crate::{Xanterella, test_helpers::mock_ok, xanterella::MockCommandRunner};
@@ -330,7 +319,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         xanterellainstall.set_drive("sda");
@@ -358,7 +347,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         xanterellainstall.set_drive("sda");
@@ -386,7 +375,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         xanterellainstall.set_drive("sda");
@@ -414,7 +403,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         xanterellainstall.set_drive("sda");
@@ -442,7 +431,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         xanterellainstall.set_drive("sda");
@@ -470,7 +459,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         xanterellainstall.set_drive("sda");
@@ -498,7 +487,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         xanterellainstall.set_drive("sda");

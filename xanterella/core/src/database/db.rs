@@ -7,8 +7,6 @@ use sqlx::{
     types::Json,
 };
 
-use crate::Events;
-
 #[derive(Debug, Clone)]
 pub struct Database {
     pub pool: SqlitePool,

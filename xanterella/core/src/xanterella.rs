@@ -217,33 +217,33 @@ mod tests {
     fn test_setter() {
         let mut xanterella = Xanterella::new(RealCommandRunner);
 
-        assert_eq!(xanterella.fast, false);
-        assert_eq!(xanterella.debug, false);
-        assert_eq!(xanterella.automate, false);
+        assert!(!xanterella.fast);
+        assert!(!xanterella.debug);
+        assert!(!xanterella.automate);
         assert_eq!(xanterella.config.config_file, PathBuf::new());
         assert_eq!(xanterella.config.database_url, String::new());
 
         xanterella.set_fast(true);
 
-        assert_eq!(xanterella.fast, true);
-        assert_eq!(xanterella.debug, false);
-        assert_eq!(xanterella.automate, false);
+        assert!(xanterella.fast);
+        assert!(!xanterella.debug);
+        assert!(!xanterella.automate);
         assert_eq!(xanterella.config.config_file, PathBuf::new());
         assert_eq!(xanterella.config.database_url, String::new());
 
         xanterella.set_debug(true);
 
-        assert_eq!(xanterella.fast, true);
-        assert_eq!(xanterella.debug, true);
-        assert_eq!(xanterella.automate, false);
+        assert!(xanterella.fast);
+        assert!(xanterella.debug);
+        assert!(!xanterella.automate);
         assert_eq!(xanterella.config.config_file, PathBuf::new());
         assert_eq!(xanterella.config.database_url, String::new());
 
         xanterella.set_automate(true);
 
-        assert_eq!(xanterella.fast, true);
-        assert_eq!(xanterella.debug, true);
-        assert_eq!(xanterella.automate, true);
+        assert!(xanterella.fast);
+        assert!(xanterella.debug);
+        assert!(xanterella.automate);
         assert_eq!(xanterella.config.config_file, PathBuf::new());
         assert_eq!(xanterella.config.database_url, String::new());
 
@@ -252,9 +252,9 @@ mod tests {
             database_url: String::new(),
         });
 
-        assert_eq!(xanterella.fast, true);
-        assert_eq!(xanterella.debug, true);
-        assert_eq!(xanterella.automate, true);
+        assert!(xanterella.fast);
+        assert!(xanterella.debug);
+        assert!(xanterella.automate);
         assert_eq!(xanterella.config.config_file, PathBuf::from("test"));
         assert_eq!(xanterella.config.database_url, String::new());
 
@@ -263,9 +263,9 @@ mod tests {
             database_url: String::from("test"),
         });
 
-        assert_eq!(xanterella.fast, true);
-        assert_eq!(xanterella.debug, true);
-        assert_eq!(xanterella.automate, true);
+        assert!(xanterella.fast);
+        assert!(xanterella.debug);
+        assert!(xanterella.automate);
         assert_eq!(xanterella.config.config_file, PathBuf::from("test"));
         assert_eq!(xanterella.config.database_url, String::from("test"));
     }

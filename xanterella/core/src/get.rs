@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::{Events, EventsFailed, Xanterella, xanterella::CommandRunner};
+use crate::{EventsFailed, Xanterella, xanterella::CommandRunner};
 
 pub enum User {
     Root,
@@ -60,11 +60,6 @@ mod tests {
     use std::{
         os::unix::process::ExitStatusExt,
         process::{ExitStatus, Output},
-    };
-
-    use mockall::{
-        automock,
-        predicate::{always, eq},
     };
 
     use super::*;

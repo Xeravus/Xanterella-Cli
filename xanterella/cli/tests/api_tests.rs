@@ -105,7 +105,7 @@ async fn test_request_deployment_success() {
         .create_async()
         .await;
     let url = server.host_with_port();
-    let result = request_deployment(&url, &vec!["hosts"]).await;
+    let result = request_deployment(&url, &["hosts"]).await;
 
     assert!(result.is_ok());
 }
@@ -123,7 +123,7 @@ async fn test_request_deployment_failed() {
         .create_async()
         .await;
     let url = server.host_with_port();
-    let result = request_deployment(&url, &vec!["hosts"]).await;
+    let result = request_deployment(&url, &["hosts"]).await;
 
     assert!(result.is_err());
 }
@@ -134,7 +134,7 @@ async fn test_request_deployment_success_all() {
 
     let _mock = server.mock("GET", "/deploy").with_status(200).create_async().await;
     let url = server.host_with_port();
-    let result = request_deployment::<&str>(&url, &vec![]).await;
+    let result = request_deployment::<&str>(&url, &[]).await;
 
     assert!(result.is_ok());
 }
@@ -145,7 +145,7 @@ async fn test_request_deployment_failed_all() {
 
     let _mock = server.mock("GET", "/deploy").with_status(500).create_async().await;
     let url = server.host_with_port();
-    let result = request_deployment::<&str>(&url, &vec![]).await;
+    let result = request_deployment::<&str>(&url, &[]).await;
 
     assert!(result.is_err());
 }

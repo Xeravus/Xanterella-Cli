@@ -1,4 +1,4 @@
-use std::{fs, process::Command};
+use std::fs;
 
 use crate::{Events, EventsFailed, User, XanterellaInstall, xanterella::CommandRunner};
 
@@ -10,7 +10,7 @@ impl<C: CommandRunner> XanterellaInstall<C> {
             let dir = &self.xanterella.load_config().target_directory;
             let cmd = self
                 .xanterella
-                .execute("nix", &["build", ".#nixosConfigurations.crylia.config.system.build.toplevel"], &dir)
+                .execute("nix", &["build", ".#nixosConfigurations.crylia.config.system.build.toplevel"], dir)
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -22,6 +22,7 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         Ok(())
     }
 
+    #[allow(unused)]
     fn nix_copy(&mut self) -> Result<(), EventsFailed> {
         self.xanterella.log_event(Events::RunNixCopy);
 
@@ -34,7 +35,7 @@ impl<C: CommandRunner> XanterellaInstall<C> {
             let dir = &self.xanterella.load_config().target_directory;
             let cmd = self
                 .xanterella
-                .execute("sh", &["-c", &fast_cmd], &dir)
+                .execute("sh", &["-c", &fast_cmd], dir)
                 .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
             if !cmd.status.success() {
@@ -50,7 +51,7 @@ impl<C: CommandRunner> XanterellaInstall<C> {
         self.xanterella.log_event(Events::RunCreateProfile);
 
         if !self.xanterella.debug {
-            let dir = &self.xanterella.load_config().target_directory;
+            let _dir = &self.xanterella.load_config().target_directory;
             let sys_path = fs::read_link(format!("{}/result", self.xanterella.load_config().target_directory))
                 .map_err(|err| EventsFailed::ReadSymLink(err.to_string()))?
                 .to_string_lossy()
@@ -161,15 +162,6 @@ impl<C: CommandRunner> XanterellaInstall<C> {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        os::unix::process::ExitStatusExt,
-        process::{ExitStatus, Output},
-    };
-
-    use mockall::{
-        automock,
-        predicate::{always, eq},
-    };
 
     use super::*;
     use crate::{Xanterella, test_helpers::mock_ok, xanterella::MockCommandRunner};
@@ -185,7 +177,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         let result = xanterellainstall.nix_build();
         assert!(result.is_ok());
@@ -200,7 +192,7 @@ mod tests {
             program == "sh" && args == ["-c", "nix-store --export $(nix.store -qR ./result) | zstd -T0 -3 | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -C root@127.0.0.1 'zstdcat | nix-store --store /mnt --import'"] 
         }).times(1).returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         let result = xanterellainstall.nix_copy();
@@ -227,7 +219,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         let result = xanterellainstall.prep_sys();
@@ -243,7 +235,7 @@ mod tests {
             program == "ssh" && args == ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@127.0.0.1", "NIXOS_INSTALL_BOOTLOADER=1 nixos-enter --root /mnt --command '/nix/var/nix/profiles/system/activate'"] 
         }).times(1).returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         let result = xanterellainstall.activate_sys();
@@ -259,7 +251,7 @@ mod tests {
             program == "ssh" && args == ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "root@127.0.0.1", "nixos-enter --root /mnt --command 'NIXOS_INSTALL_BOOTLOADER=1 /nix/var/nix/profiles/system/bin/switch-to-configuration boot'"] 
         }).times(1).returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         let result = xanterellainstall.activate_bootloader();
@@ -286,7 +278,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _| mock_ok(""));
 
-        let mut xanterella = Xanterella::new(mock);
+        let xanterella = Xanterella::new(mock);
         let mut xanterellainstall = XanterellaInstall::new(xanterella);
         xanterellainstall.set_ip("127.0.0.1");
         let result = xanterellainstall.reboot_sys();

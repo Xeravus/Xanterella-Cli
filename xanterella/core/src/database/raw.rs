@@ -1,7 +1,4 @@
-use crate::{
-    Events,
-    database::db::{DBRaw, Database},
-};
+use crate::database::db::{DBRaw, Database};
 
 pub trait RawString {
     fn to_blop(&self) -> Vec<u8>;
@@ -84,7 +81,7 @@ mod tests {
         assert_eq!(raws[0].name, "test");
         assert_eq!(raws[0].path, "test.test");
         assert_eq!(raws[0].content, raw.as_bytes());
-        assert_eq!(raws[0].readable, true);
+        assert!(raws[0].readable);
     }
 
     #[tokio::test]

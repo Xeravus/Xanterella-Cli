@@ -1,5 +1,3 @@
-use std::process::Command;
-
 use crate::{Events, EventsFailed, Xanterella, xanterella::CommandRunner};
 
 impl<C: CommandRunner> Xanterella<C> {
@@ -26,17 +24,7 @@ impl<C: CommandRunner> Xanterella<C> {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        os::unix::process::ExitStatusExt,
-        process::{ExitStatus, Output},
-    };
 
-    use mockall::{
-        automock,
-        predicate::{always, eq},
-    };
-
-    use super::*;
     use crate::{Xanterella, test_helpers::mock_ok, xanterella::MockCommandRunner};
 
     #[test]

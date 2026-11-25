@@ -1,5 +1,3 @@
-use std::process::Command;
-
 use crate::{Events, EventsFailed, Xanterella, xanterella::CommandRunner};
 
 impl<C: CommandRunner> Xanterella<C> {
@@ -13,16 +11,15 @@ impl<C: CommandRunner> Xanterella<C> {
                 let host_string: Vec<&str> = hosts.iter().map(|s| s.as_ref()).collect();
                 let host_string = host_string.join(",");
                 let colmena = self
-                    .execute("colmena", &["apply", "--on", &host_string], &dir)
+                    .execute("colmena", &["apply", "--on", &host_string], dir)
                     .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
                 if !colmena.status.success() {
                     return Err(EventsFailed::ColmenaApply(String::from_utf8_lossy(&colmena.stderr).to_string()));
                 }
             } else {
-                let colmena = self
-                    .execute("colmena", &["apply"], &dir)
-                    .map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
+                let colmena =
+                    self.execute("colmena", &["apply"], dir).map_err(|err| EventsFailed::FailedCmd(err.to_string()))?;
 
                 if !colmena.status.success() {
                     return Err(EventsFailed::ColmenaApply(String::from_utf8_lossy(&colmena.stderr).to_string()));
@@ -37,15 +34,6 @@ impl<C: CommandRunner> Xanterella<C> {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        os::unix::process::ExitStatusExt,
-        process::{ExitStatus, Output},
-    };
-
-    use mockall::{
-        automock,
-        predicate::{always, eq},
-    };
 
     use super::*;
     use crate::{test_helpers::mock_ok, xanterella::MockCommandRunner};

@@ -3303,7 +3303,6 @@ dependencies = [
 name = "xanterella-core"
 version = "0.1.0"
 dependencies = [
- "indexmap",
  "mockall",
  "prolyxena",
  "serde",

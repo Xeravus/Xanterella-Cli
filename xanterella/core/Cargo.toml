@@ -11,7 +11,6 @@ serde_json.workspace = true
 prolyxena.workspace = true
 
 sqlx = { version = "0.8.1", features = ["sqlite", "runtime-tokio", "macros"] }
-indexmap = { version = "2", features = ["serde"] }
 toml = "1.1.8"
 walkdir = "2.5.0"
 
