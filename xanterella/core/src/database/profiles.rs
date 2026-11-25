@@ -48,8 +48,13 @@ impl Database {
                 id as "id!", 
                 hostname, 
                 ip, 
+                system,
+                remote_deploy,
                 profiles as "profiles: Json<Vec<serde_json::Value>>", 
-                options as "options: Json<Vec<serde_json::Value>>" 
+                hardware as "hardware: Json<Vec<serde_json::Value>>", 
+                options as "options: Json<Vec<serde_json::Value>>",
+                config as "config: Json<Vec<serde_json::Value>>",
+                imports as "imports: Json<Vec<serde_json::Value>>"
             FROM hosts 
             WHERE EXISTS (
                 SELECT 1 FROM json_each(profiles) WHERE value = ?
@@ -164,8 +169,22 @@ mod tests {
         let db = setup_test_db().await;
 
         let profiles = vec![json!("target-profile"), json!("other-profile")];
-        db.add_host("test-node", "1.1.1.1", profiles, vec![]).await.unwrap();
-        db.add_host("other-node", "2.2.2.2", vec![json!("other-profile")], vec![]).await.unwrap();
+        db.add_host("test-node", "1.1.1.1", "x86-64_linux".to_string(), true, profiles, vec![], vec![], vec![], vec![])
+            .await
+            .unwrap();
+        db.add_host(
+            "other-node",
+            "2.2.2.2",
+            "x86-64_linux".to_string(),
+            true,
+            vec![json!("other-profile")],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+        )
+        .await
+        .unwrap();
 
         let hosts = db.profile_get_hosts("target-profile").await.unwrap();
         assert_eq!(hosts.len(), 1);

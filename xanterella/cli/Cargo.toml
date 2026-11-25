@@ -5,10 +5,15 @@ edition = "2024"
 
 [dependencies]
 xanterella-core = { path = "../core" }
-
 tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
-prolyxena = { git = "https://github.com/Xeravus/Xanterella-Cli", branch = "final/staging" }
+prolyxena.workspace = true
 
 clap = { version = "4.6.1", features = ["derive"]}
-cliclack = "0.5.6"
+reqwest = { version = "0.13.5", features = ["json"] }
+
+[dev-dependencies]
+mockito = "1.6"
+tokio = { version = "1", features = ["full"] }

@@ -46,6 +46,7 @@ pub enum Operator {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum StringFragment {
     Text(String),
     Antiquotation(Box<NixValue>),

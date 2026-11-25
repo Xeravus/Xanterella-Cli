@@ -340,7 +340,7 @@ mod tests {
         assert!(result5.is_err());
 
         assert!(matches!(result1, Ok(NixValue::LetIn(..))));
-        assert!(matches!(result3, Err(_)));
+        assert!(result3.is_err());
 
         assert!(!matches!(result1, Ok(NixValue::AttrSet(_))));
     }
@@ -369,7 +369,7 @@ mod tests {
         let content1 = "{test, }:";
         let data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.is_lambda_ahead();
-        assert_eq!(result1, true);
+        assert!(result1);
     }
 
     #[test]
@@ -387,7 +387,7 @@ mod tests {
         let content1 = "{test, } @ inputs:";
         let data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.is_lambda_ahead();
-        assert_eq!(result1, true);
+        assert!(result1);
     }
 
     #[test]
@@ -405,7 +405,7 @@ mod tests {
         let content1 = "inputs @ {test, }:";
         let data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.is_lambda_ahead();
-        assert_eq!(result1, true);
+        assert!(result1);
     }
 
     #[test]
@@ -423,7 +423,7 @@ mod tests {
         let content1 = "test:";
         let data1 = Lexer::new(content1, String::from("path.nix"));
         let result1 = data1.is_lambda_ahead();
-        assert_eq!(result1, true);
+        assert!(result1);
     }
 
     #[test]

@@ -8,13 +8,34 @@ pub mod prolyxena;
 pub mod result;
 pub mod xanterella;
 
-pub mod prelude;
-
-pub use config::{Config, Data};
 pub use get::{Paths, User};
-pub use git::{Branches, Git, PrType};
 pub use install::install::XanterellaInstall;
 pub use result::{Events, EventsFailed};
 pub use xanterella::Xanterella;
 
-pub use crate::install::ping::Ping;
+#[cfg(test)]
+pub(crate) mod test_helpers {
+    use std::{
+        io::Result as IoResult,
+        os::unix::process::ExitStatusExt,
+        process::{ExitStatus, Output},
+    };
+
+    pub fn mock_output(code: i32, stdout: &str, stderr: &str) -> IoResult<Output> {
+        Ok(Output {
+            status: ExitStatus::from_raw(code << 8),
+            stdout: stdout.as_bytes().to_vec(),
+            stderr: stderr.as_bytes().to_vec(),
+        })
+    }
+
+    /// Kurzform für den häufigsten Fall (Erfolg)
+    pub fn mock_ok(stdout: &str) -> IoResult<Output> {
+        mock_output(0, stdout, "")
+    }
+
+    /// Kurzform für Fehlerfälle
+    pub fn mock_err(stderr: &str) -> IoResult<Output> {
+        mock_output(1, "", stderr)
+    }
+}

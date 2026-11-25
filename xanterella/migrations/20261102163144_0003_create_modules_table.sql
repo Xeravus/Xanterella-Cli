@@ -3,5 +3,6 @@ CREATE TABLE IF NOT EXISTS modules (
     name TEXT NOT NULL UNIQUE,
     desc TEXT NOT NULL,
     category TEXT NOT NULL,
-    options TEXT NOT NULL DEFAULT '[]'
+    options TEXT NOT NULL DEFAULT '[]',
+    config TEXT NOT NULL DEFAULT '[]'
 );
