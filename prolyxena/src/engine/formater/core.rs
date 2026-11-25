@@ -298,6 +298,7 @@ mod tests {
 
     #[test]
     fn test_engine_formater_core_float() {
+        #[allow(clippy::approx_constant)]
         let initial_content = NixValue::Float(3.14);
         let expected_content = "3.14";
 
