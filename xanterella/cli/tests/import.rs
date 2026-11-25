@@ -5,7 +5,8 @@ mod support;
 
 use mockito::{Matcher, Server};
 use serde_json::json;
-use xanterella_cli::{execute::execute_extract, server::import::import_all};
+use xanterella_cli::{execute::execute_extract};
+use xanterella_cli::server::import::import;
 
 #[tokio::test]
 async fn imports_each_resource_from_a_real_flake() {
@@ -25,7 +26,7 @@ async fn imports_each_resource_from_a_real_flake() {
     ] {
         expected.push(server.mock("POST", endpoint).match_body(Matcher::PartialJson(fields)).create_async().await);
     }
-    import_all(path, &server.host_with_port()).await;
+    import(path, &server.host_with_port(), &false, &false, &false, &false, &false, &true).await;
     for request in expected {
         request.assert_async().await;
     }

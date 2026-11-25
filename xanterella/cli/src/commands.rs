@@ -4,7 +4,7 @@ use xanterella_core::{Xanterella, XanterellaInstall, xanterella::RealCommandRunn
 use crate::{
     execute::*,
     server::{
-        import::{import_all, import_hosts, import_modules, import_profiles, import_raw, import_templates},
+        import::import,
         requests::{request_check, request_clear, request_deployment, request_generate, request_wipe},
     },
 };
@@ -84,21 +84,9 @@ pub async fn cli_parse() {
             modules,
             templates,
             raw,
-            all: _,
+            all,
         } => {
-            if *hosts {
-                import_hosts(flake, url).await;
-            } else if *profiles {
-                import_profiles(flake, url).await;
-            } else if *modules {
-                import_modules(flake, url).await;
-            } else if *templates {
-                import_templates(flake, url).await;
-            } else if *raw {
-                import_raw(flake, url).await;
-            } else {
-                import_all(flake, url).await;
-            }
+            import(flake, url, hosts, profiles, modules, templates, raw, all).await;
         }
         Commands::Clear {
             url,

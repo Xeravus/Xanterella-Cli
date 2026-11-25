@@ -5,48 +5,62 @@ use serde::Serialize;
 use xanterella_core::prolyxena::{CreateHost, CreateModul, CreateProfile, CreateRaw, CreateTemplate, Nixtractor};
 
 trait ApiSend: Serialize {
-    fn endpoint(&self) -> &str;
+    const ENDPOINT: &'static str;
 }
 
 impl ApiSend for CreateHost {
-    fn endpoint(&self) -> &str {
-        "/hosts"
-    }
+    const ENDPOINT: &'static str = "/hosts";
 }
 
 impl ApiSend for CreateProfile {
-    fn endpoint(&self) -> &str {
-        "/profiles"
-    }
+    const ENDPOINT: &'static str = "/profiles";
 }
 
 impl ApiSend for CreateModul {
-    fn endpoint(&self) -> &str {
-        "/modules"
-    }
+    const ENDPOINT: &'static str = "/modules";
 }
 
 impl ApiSend for CreateTemplate {
-    fn endpoint(&self) -> &str {
-        "/templates"
-    }
+    const ENDPOINT: &'static str = "/templates";
 }
 
 impl ApiSend for CreateRaw {
-    fn endpoint(&self) -> &str {
-        "/raw"
+    const ENDPOINT: &'static str = "/raw";
+}
+
+pub async fn import(
+    flake: &str, url: &str, hosts: &bool, profiles: &bool, modules: &bool, templates: &bool, raw: &bool, all: &bool,
+) {
+    if !*hosts && !*profiles && !*modules && !*templates && !*raw && !*all {
+        import_hosts(flake, url).await;
+        import_profiles(flake, url).await;
+        import_modules(flake, url).await;
+        import_templates(flake, url).await;
+        import_raw(flake, url).await;
+    } else {
+        if *hosts || *all {
+            import_hosts(flake, url).await;
+        }
+
+        if *profiles || *all {
+            import_profiles(flake, url).await;
+        }
+
+        if *modules || *all {
+            import_modules(flake, url).await;
+        }
+
+        if *templates || *all {
+            import_templates(flake, url).await;
+        }
+
+        if *raw || *all {
+            import_raw(flake, url).await;
+        }
     }
 }
 
-pub async fn import_all(flake: &str, url: &str) {
-    import_hosts(flake, url).await;
-    import_profiles(flake, url).await;
-    import_modules(flake, url).await;
-    import_templates(flake, url).await;
-    import_raw(flake, url).await;
-}
-
-pub async fn import_hosts(flake: &str, url: &str) {
+pub(crate) async fn import_hosts(flake: &str, url: &str) {
     let mut prolyxena = FsData::new(flake);
     if let Err(e) = prolyxena.load() {
         eprintln!("Fehler: {}", e);
@@ -65,7 +79,7 @@ pub async fn import_hosts(flake: &str, url: &str) {
     }
 }
 
-pub async fn import_profiles(flake: &str, url: &str) {
+pub(crate) async fn import_profiles(flake: &str, url: &str) {
     let mut prolyxena = FsData::new(flake);
     if let Err(e) = prolyxena.load() {
         eprintln!("Fehler: {}", e);
@@ -84,7 +98,7 @@ pub async fn import_profiles(flake: &str, url: &str) {
     }
 }
 
-pub async fn import_modules(flake: &str, url: &str) {
+pub(crate) async fn import_modules(flake: &str, url: &str) {
     let mut prolyxena = FsData::new(flake);
     if let Err(e) = prolyxena.load() {
         eprintln!("Fehler: {}", e);
@@ -103,7 +117,7 @@ pub async fn import_modules(flake: &str, url: &str) {
     }
 }
 
-pub async fn import_templates(flake: &str, url: &str) {
+pub(crate) async fn import_templates(flake: &str, url: &str) {
     let mut prolyxena = FsData::new(flake);
     if let Err(e) = prolyxena.load() {
         eprintln!("Fehler: {}", e);
@@ -122,7 +136,7 @@ pub async fn import_templates(flake: &str, url: &str) {
     }
 }
 
-pub async fn import_raw(flake: &str, url: &str) {
+pub(crate) async fn import_raw(flake: &str, url: &str) {
     let mut prolyxena = FsData::new(flake);
 
     let extractor = Nixtractor::new(&mut prolyxena);
@@ -138,8 +152,12 @@ pub async fn import_raw(flake: &str, url: &str) {
 }
 
 async fn send_to_api<I: ApiSend>(data: Vec<I>, url: &str) -> Result<(), Box<dyn std::error::Error>> {
+    if data.is_empty() {
+        return Ok(());
+    }
+
     let client = reqwest::Client::new();
-    let full_url = format!("http://{}{}", url, data.first().expect("Nichts zu versenden").endpoint());
+    let full_url = format!("http://{}{}", url, I::ENDPOINT);
     for i in data {
         let response = client.post(&full_url).json(&i).send().await?;
 
@@ -149,4 +167,16 @@ async fn send_to_api<I: ApiSend>(data: Vec<I>, url: &str) -> Result<(), Box<dyn 
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_send_to_api_no_data() {
+        let result = send_to_api::<CreateHost>(Vec::new(), "127.0.0.1");
+
+        assert!(result.await.is_ok());
+    }
 }
