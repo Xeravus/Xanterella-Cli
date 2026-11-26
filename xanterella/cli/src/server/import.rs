@@ -28,6 +28,7 @@ impl ApiSend for CreateRaw {
     const ENDPOINT: &'static str = "/raw";
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn import(
     flake: &str, url: &str, hosts: &bool, profiles: &bool, modules: &bool, templates: &bool, raw: &bool, all: &bool,
 ) {
